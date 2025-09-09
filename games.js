@@ -12,12 +12,12 @@ Object.assign(gamelist.style, {
     margin: "auto"
 });
 const buttons = [
-    { "name": "Flappy Bird", "win": `` }
+    { "filename": "flappy_bird", "name": "Flappy Bird", "win": `` }
 ];
 buttons.forEach(b => {
     const btn = document.createElement("button");
     btn.textContent = b.name;
-    btn.addEventListener("click", () => launch(b.win));
+    btn.addEventListener("click", () => launch(b.win, b.filename));
     gamelist.appendChild(btn);
     const div = document.createElement("div");
     div.className = "space";
@@ -25,9 +25,10 @@ buttons.forEach(b => {
 });
 document.body.appendChild(gamelist);
 
-function launch(wincontent) {
+function launch(wincontent, fname) {
     const win = window.open("about:blank");
-    win.document.writeln(wincontent);
+    const down = `<div style="margin-bottom:10px;"></div><a id="down"></a><script>const el=getElementById("down");el.textContent="download";const blob=new Blob([${wincontent}], {type:"text/javascript"});const url=URL.createObjectURL(blob);el.href=url;el.download=${fname};`;
+    win.document.writeln(wincontent + down);
     // win.close();
 }
 
