@@ -1,8 +1,6 @@
 import '/utils.js';
 import { random, chance, getEl, wait, isTrue, isFalse, safeEval, RandomNums, ClickRegion, copyToClipboard, dist, mouse, lsGet, lsSet, quadratic, getQuerys } from '/utils.js';
 
-window.addEventListener("error", (e) => alert(e.message));
-
 const gamelist = document.createElement("div");
 Object.assign(gamelist.style, {
     display: "flex",
