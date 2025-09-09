@@ -12,7 +12,7 @@ Object.assign(gamelist.style, {
     margin: "auto"
 });
 const buttons = [
-    { "filename": "flappy_bird", "name": "Flappy Bird", "win": `` }
+    { "filename": "flappybird", "name": "Flappy Bird", "win": `` }
 ];
 buttons.forEach(b => {
     const btn = document.createElement("button");
