@@ -1,0 +1,12 @@
+.space {
+    margin-bottom: 10px;
+}
+.container {
+    display: flex;
+    justify-content: space-evenly;
+}
+.cbtn {
+    background-color: red;
+    border-radius: 10px;
+    cursor: pointer;
+}

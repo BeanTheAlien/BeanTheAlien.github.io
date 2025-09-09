@@ -1,0 +1,18 @@
+const topbarContainer = document.createElement("div");
+topbarContainer.className = "container";
+const buttonHome = document.createElement("button");
+buttonHome.className = "cbtn";
+buttonHome.textContent = "Home";
+const buttonGames = document.createElement("button");
+buttonGames.className = "cbtn";
+buttonGames.textContent = "Games";
+const buttonProjects = document.createElement("button");
+buttonProjects.className = "cbtn";
+buttonProjects.textContent = "Projects";
+topbarContainer.appendChild(buttonHome);
+topbarContainer.appendChild(buttonGames);
+topbarContainer.appendChild(buttonProjects);
+document.body.appendChild(topbarContainer);
+buttonHome.addEventListener("click", () => window.location.href = "index.html");
+buttonGames.addEventListener("click", () => window.location.href = "games.html");
+buttonProjects.addEventListener("click", () => window.location.href = "projects.html");
