@@ -24,12 +24,13 @@ const buttons = [{
                 this.grav = 0.05;
                 this.gspd = 0;
                 this.x = 15;
+                this.y = 30;
                 this.w = 20;
                 this.h = 20;
             }
             upd() {
                 this.gspd += this.grav;
-                this.height += this.gspd;
+                this.y += this.gspd;
             }
         }
         class Pipe {
@@ -76,7 +77,7 @@ const buttons = [{
                 const pipeX = pipe.x;
                 const pipeY = pipe.pt;
                 const birdX = player.x;
-                const birdY = player.h;
+                const birdY = player.y;
                 const birdW = player.w;
                 const birdH = player.h;
                 // AABB collision
@@ -98,7 +99,7 @@ const buttons = [{
             ctx.fill();
             ctx.fillStyle = "yellow";
             ctx.beginPath();
-            ctx.rect(player.x, player.h, player.w, player.w);
+            ctx.rect(player.x, player.y, player.w, player.h);
             ctx.fill();
             delta++;
         }
@@ -165,11 +166,11 @@ function gameEnd(hsname) {
     return `
         clearInterval(runtime);
         const div = document.createElement("div");
-        div.innerHTML = \`<div class="score1"><div class="score2" id="scr"></div></div>\`;
+        div.innerHTML = '<div class="score1"><div class="score2" id="scr"></div></div>';
         document.body.appendChild(div);
         const display = document.getElementById("scr");
         let i = 0;
-        const hs = parseInt(localStorage.getItem(${hsname}) ?? 0);
+        const hs = parseInt(localStorage.getItem("${hsname}") ?? 0);
         const trophy = setInterval(() => {
             display.textContent = i;
             if(0 <= i && i <= 30) display.style.color = "#CD7F32";
@@ -189,12 +190,12 @@ function gameEnd(hsname) {
                     const text = "New Highscore!";
                     const len = text.length;
                     for(let i = 0; i < len; i++) {
-                        newhs.innerHTML += \`<span id="nhs_${i}" style="color: #0068e0; font-weight: bold">\${text[i]}</span>\`;
+                        newhs.innerHTML += \`<span id="nhs_\${i}" style="color: #0068e0; font-weight: bold">\${text[i]}</span>\`;
                     }
                     let waveIndex = 0;
                     const nhsInterval = setInterval(() => {
                         for(let i = 0; i < len; i++) {
-                            const char = getElement(\`nhs_\${i}\`);
+                            const char = document.getElementById(\`nhs_\${i}\`);
                             if(char) {
                                 if(i == waveIndex) {
                                     char.style.color = "#489dff"; // teal focus
@@ -207,7 +208,7 @@ function gameEnd(hsname) {
                         if(waveIndex >= len) waveIndex = 0; // loop back for infinite wave
                     }, 30);
                 } else {
-                    display.innerHTML = \`\${score}<br><div>Highscore: \${parseInt(localStorage.getItem(${hsname}) ?? 0)}</div>\`
+                    display.innerHTML = \`\${score}<br><div>Highscore: \${parseInt(localStorage.getItem("${hsname}") ?? 0)}</div>\`
                 }
             }
             else i++;
