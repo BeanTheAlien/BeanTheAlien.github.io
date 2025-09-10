@@ -1,7 +1,7 @@
 import '/utils.js';
 import { random, chance, getEl, wait, isTrue, isFalse, safeEval, RandomNums, ClickRegion, copyToClipboard, dist, mouse, lsGet, lsSet, quadratic, getQuerys } from '/utils.js';
 
-window.addEventListener("error", (e) => alert(e.message, "\n", e.line));
+window.addEventListener("error", (e) => alert(e.message));
 
 const gamelist = document.createElement("div");
 Object.assign(gamelist.style, {
@@ -17,6 +17,7 @@ const buttons = [{
     "filename": "flappybird",
     "name": "Flappy Bird",
     "win": `
+        const c = document.createElement("canvas");
         class Player {
             constructor() {
                 this.height = Math.round(c.height / 2);
@@ -39,8 +40,6 @@ const buttons = [{
                 this.w = 50;
             }
         }
-
-        const c = document.createElement("canvas");
         c.style.border = "2px solid black";
         c.width = 800;
         c.height = 600;
@@ -51,6 +50,7 @@ const buttons = [{
         var delta = 0;
         var deltasr = 500;
         var gap = 150;
+        var score = 0;
         const ctx = c.getContext("2d");
 
         var runtime = null;
@@ -71,14 +71,14 @@ const buttons = [{
             ctx.fillStyle = "green";
             ctx.beginPath();
             pipes.forEach(pipe => {
-                const pipeW = 50;
-                const pipeH = pipe.pYb - pipe.pYt;
-                const pipeX = pipe.pX;
-                const pipeY = pipe.pYt;
-                const birdX = 15;
-                const birdY = player.height;
-                const birdW = 20;
-                const birdH = 20;
+                const pipeW = player.w;
+                const pipeH = pipe.pb - pipe.pt;
+                const pipeX = pipe.x;
+                const pipeY = pipe.pt;
+                const birdX = player.x;
+                const birdY = player.h;
+                const birdW = player.w;
+                const birdH = player.h;
                 // AABB collision
                 const collide = birdX < pipeX + pipeW &&
                             birdX + birdW > pipeX &&
@@ -87,18 +87,18 @@ const buttons = [{
                 if(collide) {
                     ${gameEnd("flappybird-hs")}
                 }
-                const height = pipe.pYb - pipe.pYt;
-                ctx.rect(pipe.pX, pipe.pYt, 50, height);
-                pipe.pX--;
-                if(pipe.pX + 50 < 0) {
-                    pipes.remove(pipe);
+                const height = pipe.pb - pipe.pt;
+                ctx.rect(pipe.x, pipe.pt, 50, height);
+                pipe.x--;
+                if(pipe.x + 50 < 0) {
+                    pipes.splice(pipes.indexOf(pipe), 1);
                     score++;
                 }
             }
             ctx.fill();
             ctx.fillStyle = "yellow";
             ctx.beginPath();
-            ctx.rect(15, player.height, 20, 20);
+            ctx.rect(player.x, player.h, player.w, player.w);
             ctx.fill();
             delta++;
         }
