@@ -34,9 +34,11 @@ buttons.forEach(b => {
 document.body.appendChild(gamelist);
 
 function launch(wincontent, fname) {
-    const newWindow = window.open("", "_blank");
-    if (newWindow) {
-        newWindow.document.write(`
+    const blob = new Blob([wincontent], { type: "text/javascript" });
+    const url = URL.createObjectURL(blob);
+    const win = window.open("", "_blank");
+    if(win) {
+        win.document.write(`
             <!DOCTYPE html>
             <html>
             <head>
@@ -47,10 +49,12 @@ function launch(wincontent, fname) {
                 <script>
                     ${wincontent}
                 </script>
+                <div style="margin-bottom: 10px;"></div>
+                <a href="${url}" download="${fname}.js">download</a>
             </body>
             </html>
         `);
-        newWindow.document.close();
+        win.document.close();
     } else {
         alert("Pop-up blocked! Please allow pop-ups for this site to launch the game.");
     }
@@ -61,6 +65,3 @@ function launch(wincontent, fname) {
 
 // const querys = getQuerys()
 // if(querys.has("id")) { const g = buttons[parseInt(querys.get("id"))]; launch(g.win, g.filename) }
-/*
-const blob = new Blob([wincontent], { type: "text/javascript" }); const url = URL.createObjectURL(blob);
-*/
