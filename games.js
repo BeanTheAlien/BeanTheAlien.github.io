@@ -25,7 +25,6 @@ const buttons = [{
                 this.x = 15;
                 this.w = 20;
                 this.h = 20;
-                this.colour = "yellow";
             }
             upd() {
                 this.gspd += this.grav;
@@ -38,7 +37,6 @@ const buttons = [{
                 this.pt = pt;
                 this.pb = pb;
                 this.w = 50;
-                this.colour = "green";
             }
         }
 
@@ -55,36 +53,42 @@ const buttons = [{
         var gap = 150;
         const ctx = c.getContext("2d");
 
-        if((delta % deltaSpawn) == 0) {
-            let topHeight = Math.floor(Math.random() * (c.height - gap - 50));
-            let bottomYt = topHeight + gap;
-            pipes.push(new Pipe(c.width, 0, topHeight));
-            pipes.push(new Pipe(c.width, bottomYt, c.height));
+        function game() {
+            if((delta % deltaSpawn) == 0) {
+                let topHeight = Math.floor(Math.random() * (c.height - gap - 50));
+                let bottomYt = topHeight + gap;
+                pipes.push(new Pipe(c.width, 0, topHeight));
+                pipes.push(new Pipe(c.width, bottomYt, c.height));
+            }
+            ctx.clearRect(0, 0, c.width, c.height);
+            ctx.fillStyle = "green";
+            ctx.beginPath();
+            pipes.forEach(pipe => {
+                const pipeW = 50;
+                const pipeH = pipe.pYb - pipe.pYt;
+                const pipeX = pipe.pX;
+                const pipeY = pipe.pYt;
+                const birdX = 15;
+                const birdY = player.height;
+                const birdW = 20;
+                const birdH = 20;
+                // AABB collision
+                const collide = birdX < pipeX + pipeW &&
+                            birdX + birdW > pipeX &&
+                            birdY < pipeY + pipeH &&
+                            birdY + birdH > pipeY;
+                if(collide) {
+                    ${gameEnd()}
+                }
+                const height = pipe.pYb - pipe.pYt;
+                ctx.rect(pipe.pX, pipe.pYt, 50, height);
+                pipe.pX--;
+                if(pipe.pX + 50 < 0) {
+                    pipes.remove(pipe);
+                    score++;
+                }
+            }
         }
-    ctx.clearRect(0, 0, gameboard.width, gameboard.height);
-
-        export class BirdPlayer {
-    constructor(canvas) {
-        this.height = Math.round(canvas.height / 2);
-        this.gravity = 0.05;
-        this.gravitySpeed = 0;
-    }
-    update(Runtime, gravRuntime) {
-        this.gravitySpeed += this.gravity;
-        this.height += this.gravitySpeed;
-        // if(this.height <= 600) {
-        //     clearInterval(Runtime);
-        //     clearInterval(gravRuntime);
-        // }
-    }
-}
-export class BirdPipe {
-    constructor(x, yTop, yBottom) {
-        this.pX = x;
-        this.pYt = yTop;
-        this.pYb = yBottom;
-    }
-}
     `
 }];
 
@@ -122,6 +126,62 @@ function launch(wincontent, fname) {
     } else {
         alert("Pop-up blocked! Please allow pop-ups for this site to launch the game.");
     }
+}
+
+function gameEnd(hsname) {
+    return `
+        clearInterval(runtime);
+        // clearInterval(gravity);
+        // clearInterval(deltaSpawner);
+        const div = document.createElement("div");
+        div.innerHTML = \`<div class="score1"><div class="score2" id="scr"></div></div>\`;
+        document.body.appendChild(div);
+        const display = document.getElementById("scr");
+        let i = 0;
+        const hs = parseInt(localStorage.getItem(${hsname}) ?? 0);
+        const trophy = setInterval(() => {
+            display.textContent = i;
+            if(0 <= i && i <= 30) display.style.color = "#CD7F32";
+            else if(30 <= i && i <= 60) display.style.color = "#C0C0C0";
+            else if(60 <= i && i <= 90) display.style.color = "#FFD700";
+            else if(90 <= i && i <= 120) display.style.color = "#9D00FF";
+            else if(120 <= i <= 150) display.style.color = "#FF0000";
+            else display.style.color = "#4EE2EC";
+            display.style.fontSize = \`clamp(10px, \${5 + i}px, 100px)\`;
+            if(i >= score) {
+                clearInterval(trophy);
+                if(hs < score) {
+                    localStorage.setItem("${hsname}", JSON.stringify(score));
+                    display.innerHTML = \`\${score}<br><div id="newhs"></div>\`;
+                    const newhs = document.getElementById("newhs");
+                    newhs.style.fontSize = \`clamp(10px, \${display.style.fontSize - 10}px, 80px)\`;
+                    const text = "New Highscore!";
+                    const len = text.length;
+                    for(let i = 0; i < len; i++) {
+                        newhs.innerHTML += \`<span id="nhs_${i}" style="color: #0068e0; font-weight: bold">\${text[i]}</span>\`;
+                    }
+                    let waveIndex = 0;
+                    const nhsInterval = setInterval(() => {
+                        for(let i = 0; i < len; i++) {
+                            const char = getElement(\`nhs_\${i}\`);
+                            if(char) {
+                                if(i == waveIndex) {
+                                    char.style.color = "#489dff"; // teal focus
+                                } else {
+                                    char.style.color = "#0068e0"; // default blue
+                                }
+                            }
+                        }
+                        waveIndex++;
+                        if(waveIndex >= len) waveIndex = 0; // loop back for infinite wave
+                    }, 30);
+                } else {
+                    display.innerHTML = \`\${score}<br><div>Highscore: \${parseInt(localStorage.getItem(${hsname}) ?? 0)}</div>\`
+                }
+            }
+            else i++;
+        }, 50);
+    `;
 }
 
 
