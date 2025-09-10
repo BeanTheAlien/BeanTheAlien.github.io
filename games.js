@@ -78,7 +78,7 @@ const buttons = [{
                             birdY < pipeY + pipeH &&
                             birdY + birdH > pipeY;
                 if(collide) {
-                    ${gameEnd()}
+                    ${gameEnd("flappybird-hs")}
                 }
                 const height = pipe.pYb - pipe.pYt;
                 ctx.rect(pipe.pX, pipe.pYt, 50, height);
@@ -88,9 +88,31 @@ const buttons = [{
                     score++;
                 }
             }
+            ctx.fill();
+            ctx.fillStyle = "yellow";
+            ctx.beginPath();
+            ctx.rect(15, player.height, 20, 20);
+            ctx.fill();
+            delta++;
         }
     `
 }];
+/*
+function setup() {
+    runtime = setInterval(game, 5);
+    gravity = setInterval(() => player.update(runtime, gravity), 10);
+    deltaSpawner = setInterval(() => {
+        deltaSpawn -= 25;
+        if(deltaSpawn <= 100) deltaSpawn = 100;
+        console.log(`delta spawn time reduced: ${deltaSpawn}`);
+    }, 20000);
+    document.addEventListener("keydown", (event) => {
+        if(["a", " ", "w", "ArrowUp", "8", "q", "r", "z", "o", "3", "k"].has(event.key)) {
+            player.gravitySpeed = -3;
+        }
+    });
+}
+*/
 
 buttons.forEach(b => {
     const btn = document.createElement("button");
