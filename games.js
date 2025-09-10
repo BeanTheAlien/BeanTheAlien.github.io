@@ -53,12 +53,19 @@ const buttons = [{
         var gap = 150;
         const ctx = c.getContext("2d");
 
+        var runtime = null;
+
         function game() {
-            if((delta % deltaSpawn) == 0) {
+            if((delta % 2) == 0) player.upd();
+            if((delta % deltasr) == 0) {
                 let topHeight = Math.floor(Math.random() * (c.height - gap - 50));
                 let bottomYt = topHeight + gap;
                 pipes.push(new Pipe(c.width, 0, topHeight));
                 pipes.push(new Pipe(c.width, bottomYt, c.height));
+            }
+            if((delta % 4000) == 0) { // 20000 ms => 5 ms upd => 4000 ticks
+                deltasr -= 25;
+                if(deltasr < 100) deltasr = 100;
             }
             ctx.clearRect(0, 0, c.width, c.height);
             ctx.fillStyle = "green";
@@ -95,12 +102,16 @@ const buttons = [{
             ctx.fill();
             delta++;
         }
+        function setup() {
+            runtime = setInterval(game, 5);
+            document.addEventListener("keydown", (e) => {
+                if(["w", "ArrowUp"].includes(e.key)) player.gspd = 3;
+            });
+        }
     `
 }];
 /*
 function setup() {
-    runtime = setInterval(game, 5);
-    gravity = setInterval(() => player.update(runtime, gravity), 10);
     deltaSpawner = setInterval(() => {
         deltaSpawn -= 25;
         if(deltaSpawn <= 100) deltaSpawn = 100;
@@ -153,8 +164,6 @@ function launch(wincontent, fname) {
 function gameEnd(hsname) {
     return `
         clearInterval(runtime);
-        // clearInterval(gravity);
-        // clearInterval(deltaSpawner);
         const div = document.createElement("div");
         div.innerHTML = \`<div class="score1"><div class="score2" id="scr"></div></div>\`;
         document.body.appendChild(div);
