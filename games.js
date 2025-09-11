@@ -3,6 +3,16 @@ import { random, chance, getEl, wait, isTrue, isFalse, safeEval, RandomNums, Cli
 
 window.addEventListener("error", (e) => alert(e.message));
 
+window.addEventListener("load", () => {
+    const querys = getQuerys();
+    if(querys.has("id")) {
+        const idx = parseInt(querys.get("id"));
+        if(idx >= games.length) return;
+        const item = games[idx];
+        launch(item.exec, item.filename);
+    }
+});
+
 const gamelist = document.createElement("div");
 Object.assign(gamelist.style, {
     display: "flex",
@@ -13,11 +23,20 @@ Object.assign(gamelist.style, {
     gap: "20px" // Added gap for spacing
 });
 
-const buttons = [{
+const games = [{
     "filename": "flappybird",
     "name": "Flappy Bird",
-    "win": `
+    "exec": (popup) => {
+        const d1 = document.createElement("div");
+        const d2 = document.createElement("div");
+        d1.className = "score1";
+        d2.className = "score2";
         const c = document.createElement("canvas");
+        c.style.border = "2px solid black";
+        c.width = 800;
+        c.height = 600;
+        d2.appendChild(c);
+        popup.appendChild(d2);
         class Player {
             constructor() {
                 this.height = Math.round(c.height / 2);
@@ -41,10 +60,6 @@ const buttons = [{
                 this.w = 50;
             }
         }
-        c.style.border = "2px solid black";
-        c.width = 800;
-        c.height = 600;
-        document.body.appendChild(c);
 
         var player = new Player();
         var pipes = [];
@@ -86,7 +101,7 @@ const buttons = [{
                             birdY < pipeY + pipeH &&
                             birdY + birdH > pipeY;
                 if(collide) {
-                    ${gameEnd("flappybird-hs")}
+                    gameEnd(runtime, score, "flappybird-hs");
                 }
                 const height = pipe.pb - pipe.pt;
                 ctx.rect(pipe.x, pipe.pt, 50, height);
@@ -95,7 +110,7 @@ const buttons = [{
                     pipes.splice(pipes.indexOf(pipe), 1);
                     score++;
                 }
-            }
+            });
             ctx.fill();
             ctx.fillStyle = "yellow";
             ctx.beginPath();
@@ -106,114 +121,81 @@ const buttons = [{
         function setup() {
             runtime = setInterval(game, 5);
             document.addEventListener("keydown", (e) => {
-                if(["w", "ArrowUp"].includes(e.key)) player.gspd = 3;
+                if(["w", "ArrowUp"].includes(e.key)) player.gspd = -3;
             });
         }
-    `
+        setup();
+    }
 }];
-/*
-function setup() {
-    deltaSpawner = setInterval(() => {
-        deltaSpawn -= 25;
-        if(deltaSpawn <= 100) deltaSpawn = 100;
-        console.log(`delta spawn time reduced: ${deltaSpawn}`);
-    }, 20000);
-    document.addEventListener("keydown", (event) => {
-        if(["a", " ", "w", "ArrowUp", "8", "q", "r", "z", "o", "3", "k"].has(event.key)) {
-            player.gravitySpeed = -3;
-        }
-    });
-}
-*/
 
-buttons.forEach(b => {
-    const btn = document.createElement("button");
-    btn.textContent = b.name;
-    btn.addEventListener("click", () => launch(b.win, b.filename));
-    gamelist.appendChild(btn);
+games.forEach(g => {
+    const b = document.createElement("button");
+    b.textContent = g.name;
+    b.addEventListener("click", () => launch(g.exec, g.filename));
+    gamelist.appendChild(b);
 });
 
 document.body.appendChild(gamelist);
 
-function launch(wincontent, fname) {
-    const blob = new Blob([wincontent], { type: "text/javascript" });
+function launch(exec, fname) {
+    const blob = new Blob([exec], { type: "text/javascript" });
     const url = URL.createObjectURL(blob);
-    const win = window.open("", "_blank");
-    if(win) {
-        win.document.write(`
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>${fname}</title>
-                <style>body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }</style>
-            </head>
-            <body>
-                <script>
-                    ${wincontent}
-                </script>
-                <div style="margin-bottom: 10px;"></div>
-                <a href="${url}" download="${fname}.js">download</a>
-            </body>
-            </html>
-        `);
-        win.document.close();
-    } else {
-        alert("Pop-up blocked! Please allow pop-ups for this site to launch the game.");
-    }
+    const popup = document.createElement("div");
+    popup.className = "overlay";
+    document.body.appendChild(popup);
+    exec(popup);
 }
 
-function gameEnd(hsname) {
-    return `
-        clearInterval(runtime);
-        const div = document.createElement("div");
-        div.innerHTML = '<div class="score1"><div class="score2" id="scr"></div></div>';
-        document.body.appendChild(div);
-        const display = document.getElementById("scr");
-        let i = 0;
-        const hs = parseInt(localStorage.getItem("${hsname}") ?? 0);
-        const trophy = setInterval(() => {
-            display.textContent = i;
-            if(0 <= i && i <= 30) display.style.color = "#CD7F32";
-            else if(30 <= i && i <= 60) display.style.color = "#C0C0C0";
-            else if(60 <= i && i <= 90) display.style.color = "#FFD700";
-            else if(90 <= i && i <= 120) display.style.color = "#9D00FF";
-            else if(120 <= i <= 150) display.style.color = "#FF0000";
-            else display.style.color = "#4EE2EC";
-            display.style.fontSize = \`clamp(10px, \${5 + i}px, 100px)\`;
-            if(i >= score) {
-                clearInterval(trophy);
-                if(hs < score) {
-                    localStorage.setItem("${hsname}", JSON.stringify(score));
-                    display.innerHTML = \`\${score}<br><div id="newhs"></div>\`;
-                    const newhs = document.getElementById("newhs");
-                    newhs.style.fontSize = \`clamp(10px, \${display.style.fontSize - 10}px, 80px)\`;
-                    const text = "New Highscore!";
-                    const len = text.length;
+function gameEnd(runtime, score, hsname) {
+    clearInterval(runtime);
+    const div = document.createElement("div");
+    div.innerHTML = `<div class="score1"><div class="score2" id="scr"></div></div>`;
+    document.body.appendChild(div);
+    const display = document.getElementById("scr");
+    let i = 0;
+    const hs = parseInt(localStorage.getItem(hsname) ?? 0);
+    const trophy = setInterval(() => {
+        display.textContent = i;
+        if(0 <= i && i <= 30) display.style.color = "#CD7F32";
+        else if(30 <= i && i <= 60) display.style.color = "#C0C0C0";
+        else if(60 <= i && i <= 90) display.style.color = "#FFD700";
+        else if(90 <= i && i <= 120) display.style.color = "#9D00FF";
+        else if(120 <= i <= 150) display.style.color = "#FF0000";
+        else display.style.color = "#4EE2EC";
+        display.style.fontSize = `clamp(10px, ${5 + i}px, 100px)`;
+        if(i >= score) {
+            clearInterval(trophy);
+            if(hs < score) {
+                localStorage.setItem(hsname, JSON.stringify(score));
+                display.innerHTML = `${score}<br><div id="newhs"></div>`;
+                const newhs = document.getElementById("newhs");
+                newhs.style.fontSize = `clamp(10px, ${display.style.fontSize - 10}px, 80px)`;
+                const text = "New Highscore!";
+                const len = text.length;
+                for(let i = 0; i < len; i++) {
+                    newhs.innerHTML += `<span id="nhs_${i}" style="color: #0068e0; font-weight: bold">${text[i]}</span>`;
+                }
+                let waveIndex = 0;
+                const nhsInterval = setInterval(() => {
                     for(let i = 0; i < len; i++) {
-                        newhs.innerHTML += \`<span id="nhs_\${i}" style="color: #0068e0; font-weight: bold">\${text[i]}</span>\`;
-                    }
-                    let waveIndex = 0;
-                    const nhsInterval = setInterval(() => {
-                        for(let i = 0; i < len; i++) {
-                            const char = document.getElementById(\`nhs_\${i}\`);
-                            if(char) {
-                                if(i == waveIndex) {
-                                    char.style.color = "#489dff"; // teal focus
-                                } else {
-                                    char.style.color = "#0068e0"; // default blue
-                                }
+                        const char = document.getElementById(`nhs_${i}`);
+                        if(char) {
+                            if(i == waveIndex) {
+                                char.style.color = "#489dff"; // teal focus
+                            } else {
+                                char.style.color = "#0068e0"; // default blue
                             }
                         }
-                        waveIndex++;
-                        if(waveIndex >= len) waveIndex = 0; // loop back for infinite wave
-                    }, 30);
-                } else {
-                    display.innerHTML = \`\${score}<br><div>Highscore: \${parseInt(localStorage.getItem("${hsname}") ?? 0)}</div>\`
-                }
+                    }
+                    waveIndex++;
+                    if(waveIndex >= len) waveIndex = 0; // loop back for infinite wave
+                }, 30);
+            } else {
+                display.innerHTML = `${score}<br><div>Highscore: ${parseInt(localStorage.getItem(hsname) ?? 0)}</div>`;
             }
-            else i++;
-        }, 50);
-    `;
+        }
+        else i++;
+    }, 50);
 }
 
 

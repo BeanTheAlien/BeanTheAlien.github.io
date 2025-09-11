@@ -10,3 +10,15 @@
     border-radius: 10px;
     cursor: pointer;
 }
+.score1 { position: relative; }
+.score2 {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+}
+body {
+    text-align: center;
+    font-family: verdana;
+}
