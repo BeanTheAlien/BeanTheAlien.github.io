@@ -132,6 +132,7 @@ games.forEach(g => {
     const b = document.createElement("button");
     b.textContent = g.name;
     b.addEventListener("click", () => launch(g.exec, g.filename));
+    b.id = g.filename;
     gamelist.appendChild(b);
 });
 
@@ -198,5 +199,14 @@ function gameEnd(runtime, score, hsname) {
     }, 50);
 }
 
+function disableGL() {
+    games.forEach(g => {
+        const id = g.filename;
+        const el = document.getElementById(id);
+    });
+}
+function enableGL() {
+    //
+}
 
 // see https://codehs.com/sandbox/bengoldstein/i-am-really-stupid
