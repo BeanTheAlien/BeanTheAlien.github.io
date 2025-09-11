@@ -200,6 +200,3 @@ function gameEnd(runtime, score, hsname) {
 
 
 // see https://codehs.com/sandbox/bengoldstein/i-am-really-stupid
-
-// const querys = getQuerys()
-// if(querys.has("id")) { const g = buttons[parseInt(querys.get("id"))]; launch(g.win, g.filename) }
