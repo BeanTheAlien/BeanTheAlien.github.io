@@ -168,6 +168,9 @@ const games = [
                     this.tasks = [];
                     this.dead = false;
                 }
+                upd() {
+                    //
+                }
             }
             class Imposter {
                 constructor(s) {
@@ -181,24 +184,40 @@ const games = [
                     this.killcd = 120;
                     this.dead = false;
                 }
+                upd() {
+                    //
+                }
             }
             var lobby = [];
             const lobsize = 10;
             const impcount = 3;
             const ctx = c.getContext("2d");
             var runtime = null;
+            var keys = {};
             for(let i = 0; i < lobsize; i++) {
                 const imps = lobby.filter(p => p.role == "imposter").length;
                 if(imps < impcount) if(chance(50)) lobby.push(new Imposter({"colour":"red", "x":0, "y":0, "name":"Imposer"})); else lobby.push(new Crewmate({"colour":"green", "x":0, "y":0, "name":"Crowmate"}));
                 else lobby.push(new Crewmate({"colour":"green", "x":0, "y":0, "name":"Crowmate"}));
             }
-            ctx.
-            lobby.forEach(l => {
-                ctx.fillStyle = l.colour;
-                ctx.beginPath();
-                ctx.rect(l.x, l.y, 5, 10);
-                ctx.fill();
-            });
+            function game() {
+                if(keys["w"]) lobby[0].y++;
+                if(keys["a"]) lobby[0].x--;
+                if(keys["s"]) lobby[0].y--;
+                if(keys["d"]) lobby[0].x++;
+                lobby.forEach(l => {
+                    l.upd();
+                    ctx.fillStyle = l.colour;
+                    ctx.beginPath();
+                    ctx.rect(l.x, l.y, 5, 10);
+                    ctx.fill();
+                });
+            }
+            function setup() {
+                runtime = setInterval(game, 5);
+                document.addEventListener("keydown", (e) => keys[e.key] = true);
+                document.addEventListener("keyup", (e) => keys[e.key] = false);
+            }
+            setup();
         }
     }
 ];
