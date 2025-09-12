@@ -67,6 +67,8 @@ const games = [
                 upd() {
                     this.gspd += this.grav;
                     this.y += this.gspd;
+                    if(this.y <= 0) this.y = 0;
+                    if(this.y >= c.height + 15) this.y = c.height + 15;
                 }
             }
             class Pipe {
