@@ -1,7 +1,7 @@
 # BeanTheAlien.github.io
 i am a blueberry
 
-# Version 0.0.4
+# Version 0.0.5
 
 # Changelog
 ### 0.0.1
@@ -17,3 +17,5 @@ i am a blueberry
 ### 0.0.4
 - Fixed issue <a href="https://github.com/BeanTheAlien/BeanTheAlien.github.io/issues/5">#5</a>
 - Started Among Us development
+### 0.0.5
+- Minor bug fix to clamp bird
