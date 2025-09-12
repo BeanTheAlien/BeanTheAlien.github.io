@@ -1,6 +1,22 @@
 import '/utils.js';
 import { random, chance, getEl, wait, isTrue, isFalse, safeEval, RandomNums, ClickRegion, copyToClipboard, dist, mouse, lsGet, lsSet, quadratic, getQuerys } from '/utils.js';
 
+/*
+games:
+around us (among us)
+btd6
+geometric jump (geo dash)
+snake
+2048
+pong
+breakout
+pvz
+angry birds
+fruit ninja
+tag
+fnaf
+*/
+
 window.addEventListener("error", (e) => alert(e.message));
 
 window.addEventListener("load", () => {
@@ -23,110 +39,169 @@ Object.assign(gamelist.style, {
     gap: "20px" // Added gap for spacing
 });
 
-const games = [{
-    "filename": "flappybird",
-    "name": "Flappy Bird",
-    "exec": (popup) => {
-        const d1 = document.createElement("div");
-        const d2 = document.createElement("div");
-        d1.className = "score1";
-        d2.className = "score2";
-        const c = document.createElement("canvas");
-        c.style.border = "2px solid black";
-        c.width = 800;
-        c.height = 600;
-        d2.appendChild(c);
-        popup.appendChild(d2);
-        class Player {
-            constructor() {
-                this.height = Math.round(c.height / 2);
-                this.grav = 0.05;
-                this.gspd = 0;
-                this.x = 15;
-                this.y = 30;
-                this.w = 20;
-                this.h = 20;
-            }
-            upd() {
-                this.gspd += this.grav;
-                this.y += this.gspd;
-            }
-        }
-        class Pipe {
-            constructor(x, pt, pb) {
-                this.x = x;
-                this.pt = pt;
-                this.pb = pb;
-                this.w = 50;
-            }
-        }
-
-        var player = new Player();
-        var pipes = [];
-        var delta = 0;
-        var deltasr = 500;
-        var gap = 150;
-        var score = 0;
-        const ctx = c.getContext("2d");
-
-        var runtime = null;
-
-        function game() {
-            if((delta % 2) == 0) player.upd();
-            if((delta % deltasr) == 0) {
-                let topHeight = Math.floor(Math.random() * (c.height - gap - 50));
-                let bottomYt = topHeight + gap;
-                pipes.push(new Pipe(c.width, 0, topHeight));
-                pipes.push(new Pipe(c.width, bottomYt, c.height));
-            }
-            if((delta % 4000) == 0) { // 20000 ms => 5 ms upd => 4000 ticks
-                deltasr -= 25;
-                if(deltasr < 100) deltasr = 100;
-            }
-            ctx.clearRect(0, 0, c.width, c.height);
-            ctx.fillStyle = "green";
-            ctx.beginPath();
-            pipes.forEach(pipe => {
-                const pipeW = player.w;
-                const pipeH = pipe.pb - pipe.pt;
-                const pipeX = pipe.x;
-                const pipeY = pipe.pt;
-                const birdX = player.x;
-                const birdY = player.y;
-                const birdW = player.w;
-                const birdH = player.h;
-                // AABB collision
-                const collide = birdX < pipeX + pipeW &&
-                            birdX + birdW > pipeX &&
-                            birdY < pipeY + pipeH &&
-                            birdY + birdH > pipeY;
-                if(collide) {
-                    gameEnd(runtime, score, "flappybird-hs");
+const games = [
+    {
+        "filename": "flappybird",
+        "name": "Flappy Bird",
+        "exec": (popup) => {
+            const d1 = document.createElement("div");
+            const d2 = document.createElement("div");
+            d1.className = "score1";
+            d2.className = "score2";
+            const c = document.createElement("canvas");
+            c.style.border = "2px solid black";
+            c.width = 800;
+            c.height = 600;
+            d2.appendChild(c);
+            popup.appendChild(d2);
+            class Player {
+                constructor() {
+                    this.height = Math.round(c.height / 2);
+                    this.grav = 0.05;
+                    this.gspd = 0;
+                    this.x = 15;
+                    this.y = 30;
+                    this.w = 20;
+                    this.h = 20;
                 }
-                const height = pipe.pb - pipe.pt;
-                ctx.rect(pipe.x, pipe.pt, 50, height);
-                pipe.x--;
-                if(pipe.x + 50 < 0) {
-                    pipes.splice(pipes.indexOf(pipe), 1);
-                    score++;
+                upd() {
+                    this.gspd += this.grav;
+                    this.y += this.gspd;
                 }
-            });
-            ctx.fill();
-            ctx.fillStyle = "yellow";
-            ctx.beginPath();
-            ctx.rect(player.x, player.y, player.w, player.h);
-            ctx.fill();
-            delta++;
+            }
+            class Pipe {
+                constructor(x, pt, pb) {
+                    this.x = x;
+                    this.pt = pt;
+                    this.pb = pb;
+                    this.w = 50;
+                }
+            }
+
+            var player = new Player();
+            var pipes = [];
+            var delta = 0;
+            var deltasr = 500;
+            var gap = 150;
+            var score = 0;
+            const ctx = c.getContext("2d");
+
+            var runtime = null;
+
+            function game() {
+                if((delta % 2) == 0) player.upd();
+                if((delta % deltasr) == 0) {
+                    let topHeight = Math.floor(Math.random() * (c.height - gap - 50));
+                    let bottomYt = topHeight + gap;
+                    pipes.push(new Pipe(c.width, 0, topHeight));
+                    pipes.push(new Pipe(c.width, bottomYt, c.height));
+                }
+                if((delta % 4000) == 0) { // 20000 ms => 5 ms upd => 4000 ticks
+                    deltasr -= 25;
+                    if(deltasr < 100) deltasr = 100;
+                }
+                ctx.clearRect(0, 0, c.width, c.height);
+                ctx.fillStyle = "green";
+                ctx.beginPath();
+                pipes.forEach(pipe => {
+                    const pipeW = player.w;
+                    const pipeH = pipe.pb - pipe.pt;
+                    const pipeX = pipe.x;
+                    const pipeY = pipe.pt;
+                    const birdX = player.x;
+                    const birdY = player.y;
+                    const birdW = player.w;
+                    const birdH = player.h;
+                    // AABB collision
+                    const collide = birdX < pipeX + pipeW &&
+                                birdX + birdW > pipeX &&
+                                birdY < pipeY + pipeH &&
+                                birdY + birdH > pipeY;
+                    if(collide) {
+                        gameEnd(runtime, score, "flappybird-hs");
+                    }
+                    const height = pipe.pb - pipe.pt;
+                    ctx.rect(pipe.x, pipe.pt, 50, height);
+                    pipe.x--;
+                    if(pipe.x + 50 < 0) {
+                        pipes.splice(pipes.indexOf(pipe), 1);
+                        score++;
+                    }
+                });
+                ctx.fill();
+                ctx.fillStyle = "yellow";
+                ctx.beginPath();
+                ctx.rect(player.x, player.y, player.w, player.h);
+                ctx.fill();
+                delta++;
+            }
+            function setup() {
+                runtime = setInterval(game, 5);
+                document.addEventListener("keydown", (e) => {
+                    if(["w", "ArrowUp"].includes(e.key)) player.gspd = -3;
+                });
+            }
+            setup();
         }
-        function setup() {
-            runtime = setInterval(game, 5);
-            document.addEventListener("keydown", (e) => {
-                if(["w", "ArrowUp"].includes(e.key)) player.gspd = -3;
+    },
+    {
+        "filename": "amongus",
+        "name": "Among Us",
+        "exec": (popup) => {
+            const d1 = document.createElement("div");
+            const d2 = document.createElement("div");
+            d1.className = "score1";
+            d2.className = "score2";
+            const c = document.createElement("canvas");
+            c.style.border = "2px solid black";
+            c.width = 800;
+            c.height = 600;
+            d2.appendChild(c);
+            popup.appendChild(d2);
+            class Crewmate {
+                constructor(s) {
+                    this.colour = s.colour;
+                    this.x = s.x;
+                    this.y = s.y;
+                    this.name = s.name;
+                    this.role = "crewmate";
+                    this.tasks = [];
+                    this.dead = false;
+                }
+            }
+            class Imposter {
+                constructor(s) {
+                    this.colour = s.colour;
+                    this.x = s.x;
+                    this.y = s.y;
+                    this.name = s.name;
+                    this.role = "imposter";
+                    this.tasks = [];
+                    this.killtimer = 0;
+                    this.killcd = 120;
+                    this.dead = false;
+                }
+            }
+            var lobby = [];
+            const lobsize = 10;
+            const impcount = 3;
+            const ctx = c.getContext("2d");
+            var runtime = null;
+            for(let i = 0; i < lobsize; i++) {
+                const imps = lobby.filter(p => p.role == "imposter").length;
+                if(imps < impcount) if(chance(50)) lobby.push(new Imposter({"colour":"red", "x":0, "y":0, "name":"Imposer"})); else lobby.push(new Crewmate({"colour":"green", "x":0, "y":0, "name":"Crowmate"}));
+                else lobby.push(new Crewmate({"colour":"green", "x":0, "y":0, "name":"Crowmate"}));
+            }
+            ctx.
+            lobby.forEach(l => {
+                ctx.fillStyle = l.colour;
+                ctx.beginPath();
+                ctx.rect(l.x, l.y, 5, 10);
+                ctx.fill();
             });
         }
-        setup();
     }
-}];
+];
 
 games.forEach(g => {
     const b = document.createElement("button");
@@ -139,6 +214,7 @@ games.forEach(g => {
 document.body.appendChild(gamelist);
 
 function launch(exec, fname) {
+    disableGL();
     const blob = new Blob([exec], { type: "text/javascript" });
     const url = URL.createObjectURL(blob);
     const popup = document.createElement("div");
@@ -203,10 +279,19 @@ function disableGL() {
     games.forEach(g => {
         const id = g.filename;
         const el = document.getElementById(id);
+        el.style.opacity = "0";
+        el.style.pointerEvents = "none";
+        el.disabled = true;
     });
 }
 function enableGL() {
-    //
+    games.forEach(g => {
+        const id = g.filename;
+        const el = document.getElementById(id);
+        el.style.opacity = "1";
+        el.style.pointerEvents = "auto";
+        el.disabled = false;
+    });
 }
 
 // see https://codehs.com/sandbox/bengoldstein/i-am-really-stupid
