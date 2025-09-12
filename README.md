@@ -1,7 +1,7 @@
 # BeanTheAlien.github.io
 i am a blueberry
 
-# Version 0.0.3
+# Version 0.0.4
 
 # Changelog
 ### 0.0.1
@@ -14,3 +14,6 @@ i am a blueberry
 - Changed development direction to be in-site popup
 - Fixed flappy bird to initalize
 - Fixed issues <a href="https://github.com/BeanTheAlien/BeanTheAlien.github.io/issues/2">#2</a> and <a href="https://github.com/BeanTheAlien/BeanTheAlien.github.io/issues/3">#3</a>
+### 0.0.4
+- Fixed issue <a href="https://github.com/BeanTheAlien/BeanTheAlien.github.io/issues/5">#5</a>
+- Started Among Us development
