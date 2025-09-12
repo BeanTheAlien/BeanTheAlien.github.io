@@ -67,8 +67,8 @@ const games = [
                 upd() {
                     this.gspd += this.grav;
                     this.y += this.gspd;
-                    if(this.y <= 0) this.y = 0;
-                    if(this.y >= c.height + 15) this.y = c.height + 15;
+                    if(this.y <= 0) this.y = 0; gameEnd(runtime, score, "flappybird-hs");
+                    if(this.y >= c.height) this.y = c.height;
                 }
             }
             class Pipe {
