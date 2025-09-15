@@ -276,7 +276,6 @@ const games = [
             var player = new Player();
             var enemy = new Enemy();
             var ball = new Ball();
-            var keys = {};
             var score = 0;
             var delta = 0;
             const ctx = c.getContext("2d");
