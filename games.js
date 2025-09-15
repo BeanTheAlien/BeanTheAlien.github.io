@@ -1,8 +1,6 @@
 import '/utils.js';
 import { random, chance, getEl, wait, isTrue, isFalse, safeEval, RandomNums, ClickRegion, copyToClipboard, dist, mouse, lsGet, lsSet, quadratic, getQuerys, isFactorable, makeEl } from '/utils.js';
 
-window.onload = () => alert();
-
 /*
 games:
 around us (among us)
