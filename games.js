@@ -272,7 +272,7 @@ const games = [
                     player.pop();
                 }
                 // Draw
-                ctx.clearRect(0, 0, gameboard.width, gameboard.height);
+                ctx.clearRect(0, 0, c.width, c.height);
                 // Draw apple
                 drawRect(apl.x, apl.y, "#ff0000");
                 // Draw snake
