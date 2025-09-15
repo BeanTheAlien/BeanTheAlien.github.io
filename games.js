@@ -275,6 +275,7 @@ const games = [
             var player = new Player();
             var enemy = new Enemy();
             var ball = new Ball();
+            var keys = {};
             var score = 0;
             var delta = 0;
             const ctx = c.getContext("2d");
@@ -295,21 +296,29 @@ const games = [
                     ball.vy *= 1.05;
                     ball.x = 120;
                 }
+                if(ball.x + 10 >= 700 && ball.x <= 720 && ball.y >= enemy.y && ball.y <= enemy.y + 100) {
+                    ball.vx *= -1.05;
+                    ball.vy *= 1.05;
+                    ball.x = 690;
+                }
+                if(ball.x <= 0) gameEnd(runtime, score, "pong-hs");
+                else if(ball.x >= gameboard.width) {
+                    score++;
+                    enemy.speed += 0.5;
+                    ball = new Ball();
+                }
                 delta++;
             }
             function setup() {
-                runtime = setInterval(game, 80);
+                runtime = setInterval(game, 10);
                 document.addEventListener("keydown", (e) => {
-                    switch(e.key) {
-                        case "w": if(dir.y == 0) dir = {x:0, y:-1}; break;
-                        case "ArrowUp": if(dir.y == 0) dir = {x:0, y:-1}; break;
-                        case "s": if(dir.y == 0) dir = {x:0, y:1}; break;
-                        case "ArrowDown": if(dir.y == 0) dir = {x:0, y:1}; break;
-                        case "a": if(dir.x == 0) dir = {x:-1, y:0}; break;
-                        case "ArrowLeft": if(dir.x == 0) dir = {x:-1, y:0}; break;
-                        case "d": if(dir.x == 0) dir = {x:1, y:0}; break;
-                        case "ArrowRight": if(dir.x == 0) dir = {x:1, y:0}; break;
-                    }
+                    const k = e.key;
+                    if(k == "ArrowUp" || k == "w") player.spd = -player.mspd;
+                    if(k == "ArrowDown" || k == "s") player.spd = player.mspd;
+                });
+                document.addEventListener("keyup", (e) => {
+                    const k = e.key;
+                    if(["ArrowUp", "ArrowDown", "w", "s"].includes(k)) player.spd = 0;
                 });
             }
             setup();
