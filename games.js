@@ -223,6 +223,99 @@ const games = [
         }
     },
     {
+        "filename": "pong",
+        "name": "Pong",
+        "exec": (popup) => {
+            const d1 = document.createElement("div");
+            const d2 = document.createElement("div");
+            d1.className = "score1";
+            d2.className = "score2";
+            const c = document.createElement("canvas");
+            c.style.border = "2px solid black";
+            c.width = 800;
+            c.height = 600;
+            d2.appendChild(c);
+            popup.appendChild(d2);
+            class Player {
+                constructor() {
+                    this.y = 300;
+                    this.spd = 0;
+                    this.mspd = 5;
+                }
+                upd() {
+                    this.y += this.spd;
+                    if(this.y < 0) this.y = 0;
+                    if(this.y + 100 > c.height) this.y = c.height - 100;
+            }
+            class Enemy {
+                constructor() {
+                    this.spd = 1;
+                    this.y = 300;
+                }
+                upd() {
+                    if(ball.y < this.y + 50) this.y -= this.spd;
+                    else if(ball.y > this.y + 50) this.y += this.spd;
+                    if(this.y < 0) this.y = 0;
+                    if(this.y + 100 > c.height) this.y = c.height - 100;
+                }
+            }
+            class Ball {
+                constructor() {
+                    this.x = 400;
+                    this.y = 300;
+                    this.vx = 3;
+                    this.vy = 2;
+                }
+                upd() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    if(this.y <= 0 || this.y + 10 >= c.height) this.vy *= -1;
+                }
+            }
+            var player = new Player();
+            var enemy = new Enemy();
+            var ball = new Ball();
+            var score = 0;
+            var delta = 0;
+            const ctx = c.getContext("2d");
+            var runtime = null;
+            function game() {
+                ball.upd();
+                player.upd();
+                enemy.upd();
+                ctx.clearRect(0, 0, c.width, c.height);
+                ctx.fillStyle = "white";
+                ctx.beginPath();
+                ctx.rect(100, player.y, 20, 100);
+                ctx.rect(700, enemy.y, 20, 100);
+                ctx.rect(ball.x, ball.y, 10, 10);
+                ctx.fill();
+                if(ball.x <= 120 && ball.x + 10 >= 100 && ball.y >= player.y && ball.y <= player.y + 100) {
+                    ball.vx *= -1.05;
+                    ball.vy *= 1.05;
+                    ball.x = 120;
+                }
+                delta++;
+            }
+            function setup() {
+                runtime = setInterval(game, 80);
+                document.addEventListener("keydown", (e) => {
+                    switch(e.key) {
+                        case "w": if(dir.y == 0) dir = {x:0, y:-1}; break;
+                        case "ArrowUp": if(dir.y == 0) dir = {x:0, y:-1}; break;
+                        case "s": if(dir.y == 0) dir = {x:0, y:1}; break;
+                        case "ArrowDown": if(dir.y == 0) dir = {x:0, y:1}; break;
+                        case "a": if(dir.x == 0) dir = {x:-1, y:0}; break;
+                        case "ArrowLeft": if(dir.x == 0) dir = {x:-1, y:0}; break;
+                        case "d": if(dir.x == 0) dir = {x:1, y:0}; break;
+                        case "ArrowRight": if(dir.x == 0) dir = {x:1, y:0}; break;
+                    }
+                });
+            }
+            setup();
+        }
+    },
+    {
         "filename": "snake",
         "name": "Snake",
         "exec": (popup) => {
