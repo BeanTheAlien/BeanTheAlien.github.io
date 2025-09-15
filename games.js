@@ -247,7 +247,7 @@ const games = [
             var apl = new sqr(random(cols), random(rows));
             const ctx = c.getContext("2d");
             var runtime = null;
-            function rect(x, y, colour) {
+            function drawRect(x, y, colour) {
                 ctx.fillStyle = colour;
                 ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
             }
