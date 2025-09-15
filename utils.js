@@ -1,7 +1,21 @@
-export function random(a = 0, b = 101) {
-    const x = Math.min(a, b);
-    const y = Math.max(a, b);
-    return Math.floor(Math.random() * (Math.floor(y) - Math.ceil(x)) + Math.ceil(x));
+export function random(a = null, b = null) {
+    if(a == null && b == null) {
+        return Math.floor(Math.random() * 101);
+    } else if(a != null && b == null) {
+        return Math.floor(Math.random() * a);
+    } else if(a != null && b != null) {
+        if(a > b) {
+            min = Math.ceil(b);
+            max = Math.floor(a);
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        } else if(a < b) {
+            min = Math.ceil(a);
+            max = Math.floor(b);
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        } else {
+            return Math.floor(Math.random() * a);
+        }
+    }
 }
 
 export function chance(floor = 50) {
@@ -528,7 +542,7 @@ export function roundMult(n) {
 
 Number.prototype.roundMult = roundMult;
 
-export function closest(string, count = this.length) {
+export function closest(string, count = Infinity, minscore = 0) {
     let result = this.map(item => {
         const stringItem = typeof item == "string" ? item : JSON.stringify(item);
         let score = 0;
@@ -544,7 +558,9 @@ export function closest(string, count = this.length) {
         return { item, score };
     });
     result.sort((a, b) => b.score - a.score);
-    return result.slice(0, count);
+    result = result.slice(0, count);
+    result = result.filter(e => e.score > minscore);
+    return result;
 }
 
 Array.prototype.closest = closest;
@@ -694,7 +710,14 @@ export function same(keys, val) {
 Object.prototype.same = same;
 
 // export function similar(a, b) {
-//     let score;
+//     let score = 0;
+//     if(typeof a == typeof b) score++;
+//     let same = 0;
+//     const splits = [String(a).split(''), String(b).split('')];
+//     for(let i = 0; i < Math.min(splits[0].length, splits[1].length)) if(splits[0][i] == splits[1][i]) same++;
+//     score += same;
+//     if(a == b) score++;
+//     return score / checks.length;
 // }
 
 export function quadratic(a, b, c) {
@@ -803,6 +826,33 @@ Number.prototype.isInt = isInt;
 Number.prototype.isFloat = isFloat;
 Object.prototype.isArr = isArr;
 
+export function is(cl) {
+    return this instanceof cl;
+}
+
+Object.prototype.is = is;
+
+export function isFactorable(a, b, c) {
+    const r = Math.sqrt(Math.pow(b, 2) - (4 * a * c));
+    return r == Math.round(r);
+}
+
+export function appendChildren(...elements) {
+    for(const el of elements) this.appendChild(el);
+}
+
+Element.prototype.appendChildren = appendChildren;
+
+export function styleize(s) {
+    Object.assign(this.style, s);
+}
+
+Element.prototype.styleize = styleize;
+
+export function makeEl(id) {
+    return document.createElement(id);
+}
+
 // export class Point {
 //     constructor(x, y) {
 //         this.x = x;
@@ -852,5 +902,5 @@ return collide;
 
 /*
 import '/functionpack.js';
-import { random, chance, getEl, wait, isTrue, isFalse, safeEval, RandomNums, ClickRegion, copyToClipboard, dist, mouse, lsGet, lsSet, quadratic, getQuerys } from '/functionpack.js';
+import { random, chance, getEl, wait, isTrue, isFalse, safeEval, RandomNums, ClickRegion, copyToClipboard, dist, mouse, lsGet, lsSet, quadratic, getQuerys, isFactorable, makeEl } from '/functionpack.js';
 */
