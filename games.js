@@ -444,7 +444,7 @@ function gameEnd(runtime, score, hsname) {
         else if(30 <= i && i <= 60) display.style.color = "#C0C0C0";
         else if(60 <= i && i <= 90) display.style.color = "#FFD700";
         else if(90 <= i && i <= 120) display.style.color = "#9D00FF";
-        else if(120 <= i <= 150) display.style.color = "#FF0000";
+        else if(120 <= i && <= 150) display.style.color = "#FF0000";
         else display.style.color = "#4EE2EC";
         display.style.fontSize = `clamp(10px, ${5 + i}px, 100px)`;
         if(i >= score) {
