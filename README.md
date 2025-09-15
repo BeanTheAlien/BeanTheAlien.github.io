@@ -1,7 +1,7 @@
 # BeanTheAlien.github.io
 i am a blueberry
 
-# Version 0.0.5
+# Version 0.0.6
 
 # Changelog
 ### 0.0.1
@@ -19,3 +19,5 @@ i am a blueberry
 - Started Among Us development
 ### 0.0.5
 - Minor bug fix to clamp bird
+### 0.0.6
+- Addes snake
