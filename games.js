@@ -316,13 +316,14 @@ function launch(exec, fname) {
     const popup = document.createElement("div");
     popup.className = "overlay";
     document.body.appendChild(popup);
-    const btn = document.createElement("button");
-    const a = document.createElement("a");
-    a.textContent = "download";
-    a.href = url;
-    a.download = fname + ".js";
-    btn.appendChild(a);
-    document.body.appendChild(btn);
+    // const btn = document.createElement("button");
+    // const a = document.createElement("a");
+    // a.textContent = "download";
+    // a.href = url;
+    // a.download = fname + ".js";
+    // btn.appendChild(a);
+    // document.body.appendChild(btn);
+    // TODO: fix CSS/JS so <div><button> instead of static pos of button
     exec(popup);
 }
 
