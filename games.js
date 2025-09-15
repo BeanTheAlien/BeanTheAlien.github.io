@@ -295,6 +295,7 @@ const games = [
                     }
                 });
             }
+            setup();
         }
     }
 ];
