@@ -246,6 +246,7 @@ const games = [
                     this.y += this.spd;
                     if(this.y < 0) this.y = 0;
                     if(this.y + 100 > c.height) this.y = c.height - 100;
+                }
             }
             class Enemy {
                 constructor() {
@@ -302,9 +303,9 @@ const games = [
                     ball.x = 690;
                 }
                 if(ball.x <= 0) gameEnd(runtime, score, "pong-hs");
-                else if(ball.x >= gameboard.width) {
+                else if(ball.x >= c.width) {
                     score++;
-                    enemy.speed += 0.5;
+                    enemy.spd += 0.5;
                     ball = new Ball();
                 }
                 delta++;
