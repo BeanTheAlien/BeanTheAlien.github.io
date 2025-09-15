@@ -17,7 +17,7 @@ tag
 fnaf
 */
 
-window.addEventListener("error", (e) => alert(e.message));
+window.addEventListener("error", (e) => alert(`msg: ${e.message}, ln: ${e.lineno}`));
 
 window.addEventListener("load", () => {
     const querys = getQuerys();
