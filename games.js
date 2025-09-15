@@ -280,7 +280,7 @@ const games = [
                 delta++;
             }
             function setup() {
-                runtime = setInterval(game, 5);
+                runtime = setInterval(game, 80);
                 document.addEventListener("keydown", (e) => {
                     switch(e.key) {
                         case "w": if(dir.y == 0) dir = {x:0, y:-1}; break;
@@ -316,6 +316,13 @@ function launch(exec, fname) {
     const popup = document.createElement("div");
     popup.className = "overlay";
     document.body.appendChild(popup);
+    const btn = document.createElement("button");
+    const a = document.createElement("a");
+    a.textContent = "download";
+    a.href = url;
+    a.download = fname + ".js";
+    btn.appendChild(a);
+    document.body.appendChild(btn);
     exec(popup);
 }
 
