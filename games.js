@@ -1,5 +1,5 @@
-import '/utils.js';
-import { random, chance, getEl, wait, isTrue, isFalse, safeEval, RandomNums, ClickRegion, copyToClipboard, dist, mouse, lsGet, lsSet, quadratic, getQuerys } from '/utils.js';
+import '/functionpack.js';
+import { random, chance, getEl, wait, isTrue, isFalse, safeEval, RandomNums, ClickRegion, copyToClipboard, dist, mouse, lsGet, lsSet, quadratic, getQuerys, isFactorable, makeEl } from '/functionpack.js';
 
 /*
 games:
@@ -220,6 +220,81 @@ const games = [
                 document.addEventListener("keyup", (e) => keys[e.key] = false);
             }
             setup();
+        }
+    },
+    {
+        "filename": "snake",
+        "name": "Snake",
+        "exec": (popup) => {
+            const d1 = document.createElement("div");
+            const d2 = document.createElement("div");
+            d1.className = "score1";
+            d2.className = "score2";
+            const c = document.createElement("canvas");
+            c.style.border = "2px solid black";
+            const tileSize = 5;
+            const cols = 50; // 1000/10
+            const rows = 50; // 1000/10
+            c.width = cols * tileSize;
+            c.height = rows * tileSize;
+            d2.appendChild(c);
+            popup.appendChild(d2);
+            class sqr { constructor(x, y) { this.x = x; this.y = y; } }
+            var player = [new sqr(5, 25), new sqr(4, 25), new sqr(3, 25)];
+            var dir = { x: 1, y: 0 };
+            var score = 0;
+            var delta = 0;
+            var apl = new sqr(random(cols), random(rows));
+            var keys = {};
+            const ctx = c.getContext("2d");
+            var runtime = null;
+            function rect(x, y, colour) {
+                ctx.fillStyle = colour;
+                ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+            }
+            function game() {
+                const head = player[0];
+                const nhead = new sqr(head.x + dir.x, head.y + dir.y);
+                if(nhead.x < 0 || nhead.x >= cols || nhead.y < 0 || nhead.y >= rows || player.some(p => p.x == nhead.x && p.y == nhead.y)) {
+                    gameEnd(runtime, score, "snake-hs");
+                    return;
+                }
+                player.unshift(nhead);
+                if(nhead.x == apl.x && nhead.y == apl.y) {
+                    score++;
+                    let nx = random(cols);
+                    let ny = random(rows);
+                    while(player.some(p => p.x == nx && p.y == ny)) {
+                        nx = random(cols);
+                        ny = random(rows);
+                    }
+                    apl = new sqr(nx, ny);
+                } else {
+                    player.pop();
+                }
+                // Draw
+                ctx.clearRect(0, 0, gameboard.width, gameboard.height);
+                // Draw apple
+                drawRect(apl.x, apl.y, "#ff0000");
+                // Draw snake
+                player.forEach(p => drawRect(p.x, p.y, "#26c400"));
+                delta++;
+            }
+            function setup() {
+                runtime = setInterval(game, 5);
+                document.addEventListener("keydown", (e) => {
+                    switch(e.key) {
+                        case "w": if(dir.y == 0) dir = {x:0, y:-1}; break;
+                        case "ArrowUp": if(dir.y == 0) dir = {x:0, y:-1}; break;
+                        case "s": if(dir.y == 0) dir = {x:0, y:1}; break;
+                        case "ArrowDown": if(dir.y == 0) dir = {x:0, y:1}; break;
+                        case "a": if(dir.x == 0) dir = {x:-1, y:0}; break;
+                        case "ArrowLeft": if(dir.x == 0) dir = {x:-1, y:0}; break;
+                        case "d": if(dir.x == 0) dir = {x:1, y:0}; break;
+                        case "ArrowRight": if(dir.x == 0) dir = {x:1, y:0}; break;
+                    }
+                });
+            }
         }
     }
 ];
