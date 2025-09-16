@@ -416,32 +416,59 @@ const games = [
             popup.appendChild(d2);
             class Player {
                 constructor() {
+                    this.x = 100;
                     this.y = 0;
+                    this.w = 20;
+                    this.h = 20;
                     this.grav = 0.5;
                     this.gspd = 0;
                 }
                 upd() {
                     this.gspd += this.grav;
                     this.y += this.gspd;
-                    if(this.y + 20 > c.height) this.y = c.height - 20;
+                    if(this.y + this.h > c.height) {
+                        this.y = c.height - this.h;
+                        this.gspd = 0;
+                    }
                 }
             }
             class Spike {
                 constructor(x, y) {
                     this.x = x;
                     this.y = y;
+                    this.w = 15;
+                    this.h = 20;
                 }
+            }
+            class Platform {
+                constructor(x, y, w, h) {
+                    this.x = x;
+                    this.y = y;
+                    this.w = w;
+                    this.h = h;
+                }
+            }
+            function aabb(a, b) {
+                return (
+                    a.x < b.x + b.w &&
+                    a.x + a.w > b.x &&
+                    a.y < b.y + b.h &&
+                    a.y + a.h > b.y
+                );
             }
             var player = new Player();
             var spikes = [];
+            var pforms = [];
             var gy = 500;
-            for(let i = 0; i < 100; i++) spikes.push(new Spike(i * 500, c.height - 20));
             var score = 0;
             var delta = 0;
             const ctx = c.getContext("2d");
             var runtime = null;
             function game() {
-                if(delta % 3 == 0) player.upd();
+                if(delta % 3 == 0) {
+                    player.upd();
+                    player.minH = c.height;
+                }
                 ctx.clearRect(0, 0, c.width, c.height);
                 ctx.fillStyle = "yellow";
                 ctx.beginPath();
@@ -449,24 +476,22 @@ const games = [
                 ctx.fill();
                 spikes.forEach(s => {
                     s.x--;
-                    const spikeW = 15;
-                    const spikeH = 20;
-                    const spikeX = s.x;
-                    const spikeY = s.y;
-                    const playerX = 100;
-                    const playerY = player.y;
-                    const playerW = 20;
-                    const playerH = 20;
-                    // AABB collision
-                    const collide = playerX < spikeX + spikeW &&
-                                playerX + playerW > spikeX &&
-                                playerY < spikeY + spikeH &&
-                                playerY + playerH > spikeY;
-                    if(collide) {
+                    if(aabb(player, s)) {
                         gameEnd(runtime, score, "geo-hs");
                         return;
                     }
                 });
+                pforms.forEach(p => {
+                    p.x--;
+                    if(aabb(player, p) && player.gspd >= 0) {
+                        player.y = p.y - player.h; // stand on top
+                        player.gspd = 0;
+                    }
+                });
+                ctx.fillStyle = "#3194b4ff";
+                ctx.beginPath();
+                pforms.forEach(p => ctx.rect(p.x, p.y, p.w, p.h));
+                ctx.fill();
                 ctx.fillStyle = "white";
                 ctx.beginPath();
                 spikes.forEach(s => ctx.rect(s.x, s.y, 15, 20));

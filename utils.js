@@ -4,6 +4,8 @@ export function random(a = null, b = null) {
     } else if(a != null && b == null) {
         return Math.floor(Math.random() * a);
     } else if(a != null && b != null) {
+        let min;
+        let max;
         if(a > b) {
             min = Math.ceil(b);
             max = Math.floor(a);
