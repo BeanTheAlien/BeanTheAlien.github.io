@@ -409,6 +409,7 @@ const games = [
             d2.className = "score2";
             const c = document.createElement("canvas");
             c.style.border = "2px solid black";
+            c.style.backgroundColor = "darkblue";
             c.width = 800;
             c.height = 600;
             d2.appendChild(c);
@@ -422,80 +423,61 @@ const games = [
                 upd() {
                     this.gspd += this.grav;
                     this.y += this.gspd;
+                    if(this.y + 20 > c.height) this.y = c.height - 20;
                 }
             }
-            class Enemy {
-                constructor() {
-                    this.spd = 1;
-                    this.y = 300;
-                }
-                upd() {
-                    if(ball.y < this.y + 50) this.y -= this.spd;
-                    else if(ball.y > this.y + 50) this.y += this.spd;
-                    if(this.y < 0) this.y = 0;
-                    if(this.y + 100 > c.height) this.y = c.height - 100;
-                }
-            }
-            class Ball {
-                constructor() {
-                    this.x = 400;
-                    this.y = 300;
-                    this.vx = 3;
-                    this.vy = 2;
-                }
-                upd() {
-                    this.x += this.vx;
-                    this.y += this.vy;
-                    if(this.y <= 0 || this.y + 10 >= c.height) this.vy *= -1;
+            class Spike {
+                constructor(x, y) {
+                    this.x = x;
+                    this.y = y;
                 }
             }
             var player = new Player();
-            var enemy = new Enemy();
-            var ball = new Ball();
+            var spikes = [];
+            var gy = 500;
+            for(let i = 0; i < 100; i++) spikes.push(new Spike(i * 500, c.height - 20));
             var score = 0;
             var delta = 0;
             const ctx = c.getContext("2d");
             var runtime = null;
             function game() {
-                ball.upd();
-                player.upd();
-                enemy.upd();
+                if(delta % 3 == 0) player.upd();
                 ctx.clearRect(0, 0, c.width, c.height);
+                ctx.fillStyle = "yellow";
+                ctx.beginPath();
+                ctx.rect(100, player.y, 20, 20);
+                ctx.fill();
+                spikes.forEach(s => {
+                    s.x--;
+                    const spikeW = 15;
+                    const spikeH = 20;
+                    const spikeX = s.x;
+                    const spikeY = s.y;
+                    const playerX = 100;
+                    const playerY = player.y;
+                    const playerW = 20;
+                    const playerH = 20;
+                    // AABB collision
+                    const collide = playerX < spikeX + spikeW &&
+                                playerX + playerW > spikeX &&
+                                playerY < spikeY + spikeH &&
+                                playerY + playerH > spikeY;
+                    if(collide) {
+                        gameEnd(runtime, score, "geo-hs");
+                        return;
+                    }
+                });
                 ctx.fillStyle = "white";
                 ctx.beginPath();
-                ctx.rect(100, player.y, 20, 100);
-                ctx.rect(700, enemy.y, 20, 100);
-                ctx.rect(ball.x, ball.y, 10, 10);
+                spikes.forEach(s => ctx.rect(s.x, s.y, 15, 20));
                 ctx.fill();
-                if(ball.x <= 120 && ball.x + 10 >= 100 && ball.y >= player.y && ball.y <= player.y + 100) {
-                    ball.vx *= -1.05;
-                    ball.vy *= 1.05;
-                    ball.x = 120;
-                }
-                if(ball.x + 10 >= 700 && ball.x <= 720 && ball.y >= enemy.y && ball.y <= enemy.y + 100) {
-                    ball.vx *= -1.05;
-                    ball.vy *= 1.05;
-                    ball.x = 690;
-                }
-                if(ball.x <= 0) {
-                    gameEnd(runtime, score, "pong-hs");
-                } else if(ball.x >= c.width) {
-                    score++;
-                    enemy.spd += 0.5;
-                    ball = new Ball();
-                }
                 delta++;
             }
             function setup() {
-                runtime = setInterval(game, 10);
+                runtime = setInterval(game, 5);
                 document.addEventListener("keydown", (e) => {
                     const k = e.key;
-                    if(k == "ArrowUp" || k == "w") player.spd = -player.mspd;
-                    if(k == "ArrowDown" || k == "s") player.spd = player.mspd;
-                });
-                document.addEventListener("keyup", (e) => {
-                    const k = e.key;
-                    if(["ArrowUp", "ArrowDown", "w", "s"].includes(k)) player.spd = 0;
+                    if([" ", "w", "ArrowUp"].includes(k) && player.y >= c.height - 25) player.gspd = -10;
                 });
             }
             setup();
