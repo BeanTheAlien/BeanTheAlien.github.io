@@ -6,9 +6,7 @@ games:
 around us (among us)
 btd6
 geometric jump (geo dash)
-snake
 2048
-pong
 breakout
 pvz
 angry birds
@@ -223,108 +221,6 @@ const games = [
         }
     },
     {
-        "filename": "pong",
-        "name": "Pong",
-        "exec": (popup) => {
-            const d1 = document.createElement("div");
-            const d2 = document.createElement("div");
-            d1.className = "score1";
-            d2.className = "score2";
-            const c = document.createElement("canvas");
-            c.style.border = "2px solid black";
-            c.width = 800;
-            c.height = 600;
-            d2.appendChild(c);
-            popup.appendChild(d2);
-            class Player {
-                constructor() {
-                    this.y = 300;
-                    this.spd = 0;
-                    this.mspd = 5;
-                }
-                upd() {
-                    this.y += this.spd;
-                    if(this.y < 0) this.y = 0;
-                    if(this.y + 100 > c.height) this.y = c.height - 100;
-                }
-            }
-            class Enemy {
-                constructor() {
-                    this.spd = 1;
-                    this.y = 300;
-                }
-                upd() {
-                    if(ball.y < this.y + 50) this.y -= this.spd;
-                    else if(ball.y > this.y + 50) this.y += this.spd;
-                    if(this.y < 0) this.y = 0;
-                    if(this.y + 100 > c.height) this.y = c.height - 100;
-                }
-            }
-            class Ball {
-                constructor() {
-                    this.x = 400;
-                    this.y = 300;
-                    this.vx = 3;
-                    this.vy = 2;
-                }
-                upd() {
-                    this.x += this.vx;
-                    this.y += this.vy;
-                    if(this.y <= 0 || this.y + 10 >= c.height) this.vy *= -1;
-                }
-            }
-            var player = new Player();
-            var enemy = new Enemy();
-            var ball = new Ball();
-            var score = 0;
-            var delta = 0;
-            const ctx = c.getContext("2d");
-            var runtime = null;
-            function game() {
-                ball.upd();
-                player.upd();
-                enemy.upd();
-                ctx.clearRect(0, 0, c.width, c.height);
-                ctx.fillStyle = "white";
-                ctx.beginPath();
-                ctx.rect(100, player.y, 20, 100);
-                ctx.rect(700, enemy.y, 20, 100);
-                ctx.rect(ball.x, ball.y, 10, 10);
-                ctx.fill();
-                if(ball.x <= 120 && ball.x + 10 >= 100 && ball.y >= player.y && ball.y <= player.y + 100) {
-                    ball.vx *= -1.05;
-                    ball.vy *= 1.05;
-                    ball.x = 120;
-                }
-                if(ball.x + 10 >= 700 && ball.x <= 720 && ball.y >= enemy.y && ball.y <= enemy.y + 100) {
-                    ball.vx *= -1.05;
-                    ball.vy *= 1.05;
-                    ball.x = 690;
-                }
-                if(ball.x <= 0) gameEnd(runtime, score, "pong-hs");
-                else if(ball.x >= c.width) {
-                    score++;
-                    enemy.spd += 0.5;
-                    ball = new Ball();
-                }
-                delta++;
-            }
-            function setup() {
-                runtime = setInterval(game, 10);
-                document.addEventListener("keydown", (e) => {
-                    const k = e.key;
-                    if(k == "ArrowUp" || k == "w") player.spd = -player.mspd;
-                    if(k == "ArrowDown" || k == "s") player.spd = player.mspd;
-                });
-                document.addEventListener("keyup", (e) => {
-                    const k = e.key;
-                    if(["ArrowUp", "ArrowDown", "w", "s"].includes(k)) player.spd = 0;
-                });
-            }
-            setup();
-        }
-    },
-    {
         "filename": "snake",
         "name": "Snake",
         "exec": (popup) => {
@@ -398,6 +294,212 @@ const games = [
             }
             setup();
         }
+    },
+    {
+        "filename": "pong",
+        "name": "Pong",
+        "exec": (popup) => {
+            const d1 = document.createElement("div");
+            const d2 = document.createElement("div");
+            d1.className = "score1";
+            d2.className = "score2";
+            const c = document.createElement("canvas");
+            c.style.border = "2px solid black";
+            c.style.backgroundColor = "black";
+            c.width = 800;
+            c.height = 600;
+            d2.appendChild(c);
+            popup.appendChild(d2);
+            class Player {
+                constructor() {
+                    this.y = 300;
+                    this.spd = 0;
+                    this.mspd = 5;
+                }
+                upd() {
+                    this.y += this.spd;
+                    if(this.y < 0) this.y = 0;
+                    if(this.y + 100 > c.height) this.y = c.height - 100;
+                }
+            }
+            class Enemy {
+                constructor() {
+                    this.spd = 1;
+                    this.y = 300;
+                }
+                upd() {
+                    if(ball.y < this.y + 50) this.y -= this.spd;
+                    else if(ball.y > this.y + 50) this.y += this.spd;
+                    if(this.y < 0) this.y = 0;
+                    if(this.y + 100 > c.height) this.y = c.height - 100;
+                }
+            }
+            class Ball {
+                constructor() {
+                    this.x = 400;
+                    this.y = 300;
+                    this.vx = 3;
+                    this.vy = 2;
+                }
+                upd() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    if(this.y <= 0 || this.y + 10 >= c.height) this.vy *= -1;
+                }
+            }
+            var player = new Player();
+            var enemy = new Enemy();
+            var ball = new Ball();
+            var score = 0;
+            var delta = 0;
+            const ctx = c.getContext("2d");
+            var runtime = null;
+            function game() {
+                ball.upd();
+                player.upd();
+                enemy.upd();
+                ctx.clearRect(0, 0, c.width, c.height);
+                ctx.fillStyle = "white";
+                ctx.beginPath();
+                ctx.rect(100, player.y, 20, 100);
+                ctx.rect(700, enemy.y, 20, 100);
+                ctx.rect(ball.x, ball.y, 10, 10);
+                ctx.fill();
+                if(ball.x <= 120 && ball.x + 10 >= 100 && ball.y >= player.y && ball.y <= player.y + 100) {
+                    ball.vx *= -1.05;
+                    ball.vy *= 1.05;
+                    ball.x = 120;
+                }
+                if(ball.x + 10 >= 700 && ball.x <= 720 && ball.y >= enemy.y && ball.y <= enemy.y + 100) {
+                    ball.vx *= -1.05;
+                    ball.vy *= 1.05;
+                    ball.x = 690;
+                }
+                if(ball.x <= 0) {
+                    gameEnd(runtime, score, "pong-hs");
+                } else if(ball.x >= c.width) {
+                    score++;
+                    enemy.spd += 0.5;
+                    ball = new Ball();
+                }
+                delta++;
+            }
+            function setup() {
+                runtime = setInterval(game, 10);
+                document.addEventListener("keydown", (e) => {
+                    const k = e.key;
+                    if(k == "ArrowUp" || k == "w") player.spd = -player.mspd;
+                    if(k == "ArrowDown" || k == "s") player.spd = player.mspd;
+                });
+                document.addEventListener("keyup", (e) => {
+                    const k = e.key;
+                    if(["ArrowUp", "ArrowDown", "w", "s"].includes(k)) player.spd = 0;
+                });
+            }
+            setup();
+        }
+    },
+    {
+        "filename": "geometricjump",
+        "name": "Geometric Jump",
+        "exec": (popup) => {
+            const d1 = document.createElement("div");
+            const d2 = document.createElement("div");
+            d1.className = "score1";
+            d2.className = "score2";
+            const c = document.createElement("canvas");
+            c.style.border = "2px solid black";
+            c.width = 800;
+            c.height = 600;
+            d2.appendChild(c);
+            popup.appendChild(d2);
+            class Player {
+                constructor() {
+                    this.y = 0;
+                    this.grav = 0.5;
+                    this.gspd = 0;
+                }
+                upd() {
+                    this.gspd += this.grav;
+                    this.y += this.gspd;
+                }
+            }
+            class Enemy {
+                constructor() {
+                    this.spd = 1;
+                    this.y = 300;
+                }
+                upd() {
+                    if(ball.y < this.y + 50) this.y -= this.spd;
+                    else if(ball.y > this.y + 50) this.y += this.spd;
+                    if(this.y < 0) this.y = 0;
+                    if(this.y + 100 > c.height) this.y = c.height - 100;
+                }
+            }
+            class Ball {
+                constructor() {
+                    this.x = 400;
+                    this.y = 300;
+                    this.vx = 3;
+                    this.vy = 2;
+                }
+                upd() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    if(this.y <= 0 || this.y + 10 >= c.height) this.vy *= -1;
+                }
+            }
+            var player = new Player();
+            var enemy = new Enemy();
+            var ball = new Ball();
+            var score = 0;
+            var delta = 0;
+            const ctx = c.getContext("2d");
+            var runtime = null;
+            function game() {
+                ball.upd();
+                player.upd();
+                enemy.upd();
+                ctx.clearRect(0, 0, c.width, c.height);
+                ctx.fillStyle = "white";
+                ctx.beginPath();
+                ctx.rect(100, player.y, 20, 100);
+                ctx.rect(700, enemy.y, 20, 100);
+                ctx.rect(ball.x, ball.y, 10, 10);
+                ctx.fill();
+                if(ball.x <= 120 && ball.x + 10 >= 100 && ball.y >= player.y && ball.y <= player.y + 100) {
+                    ball.vx *= -1.05;
+                    ball.vy *= 1.05;
+                    ball.x = 120;
+                }
+                if(ball.x + 10 >= 700 && ball.x <= 720 && ball.y >= enemy.y && ball.y <= enemy.y + 100) {
+                    ball.vx *= -1.05;
+                    ball.vy *= 1.05;
+                    ball.x = 690;
+                }
+                if(ball.x <= 0) {
+                    gameEnd(runtime, score, "pong-hs");
+                } else if(ball.x >= c.width) {
+                    score++;
+                    enemy.spd += 0.5;
+                    ball = new Ball();
+                }
+                delta++;
+            }
+            function setup() {
+                runtime = setInterval(game, 10);
+                document.addEventListener("keydown", (e) => {
+                    const k = e.key;
+                    if(k == "ArrowUp" || k == "w") player.spd = -player.mspd;
+                    if(k == "ArrowDown" || k == "s") player.spd = player.mspd;
+                });
+                document.addEventListener("keyup", (e) => {
+                    const k = e.key;
+                    if(["ArrowUp", "ArrowDown", "w", "s"].includes(k)) player.spd = 0;
+                });
+            }
+            setup();
+        }
     }
 ];
 
@@ -443,7 +545,7 @@ function gameEnd(runtime, score, hsname) {
         else if(30 <= i && i <= 60) display.style.color = "#C0C0C0";
         else if(60 <= i && i <= 90) display.style.color = "#FFD700";
         else if(90 <= i && i <= 120) display.style.color = "#9D00FF";
-        else if(120 <= i && <= 150) display.style.color = "#FF0000";
+        else if(120 <= i && i <= 150) display.style.color = "#FF0000";
         else display.style.color = "#4EE2EC";
         display.style.fontSize = `clamp(10px, ${5 + i}px, 100px)`;
         if(i >= score) {
