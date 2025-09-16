@@ -185,7 +185,11 @@ const games = [
                     this.dead = false;
                 }
                 upd() {
-                    //
+                    const cmates = lobby.filter(l => l.role == "crewmate");
+                    const clCmate = [...cmates].sort((a, b) => dist(this.x, this.y, a.x, a.y) - dist(this.x, this.y, b.x, b.y))[0];
+                    const clTask = [...this.tasks].sort((a, b) => dist(this.x, this.y, a.x, a.y) - dist(this.x, this.y, b.x, b.y))[0];
+                    if(clMate <= clTask && this.killtimer == 0) {} // will path to them & kill them
+                    else {} // path to task & pretend to do
                 }
             }
             var lobby = [];
@@ -199,11 +203,12 @@ const games = [
                 if(imps < impcount) if(chance(50)) lobby.push(new Imposter({"colour":"red", "x":0, "y":0, "name":"Imposer"})); else lobby.push(new Crewmate({"colour":"green", "x":0, "y":0, "name":"Crowmate"}));
                 else lobby.push(new Crewmate({"colour":"green", "x":0, "y":0, "name":"Crowmate"}));
             }
+            const player = lobby[0];;
             function game() {
-                if(keys["w"]) lobby[0].y++;
-                if(keys["a"]) lobby[0].x--;
-                if(keys["s"]) lobby[0].y--;
-                if(keys["d"]) lobby[0].x++;
+                if(keys["w"]) player.y++;
+                if(keys["a"]) player.x--;
+                if(keys["s"]) player.y--;
+                if(keys["d"]) player.x++;
                 lobby.forEach(l => {
                     l.upd();
                     ctx.fillStyle = l.colour;
