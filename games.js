@@ -520,6 +520,86 @@ const games = [
             }
             setup();
         }
+    },
+    {
+        "filename": "pvz",
+        "name": "Plants vs Zombies",
+        "exec": (popup) => {
+            const d1 = document.createElement("div");
+            const d2 = document.createElement("div");
+            d1.className = "score1";
+            d2.className = "score2";
+            const c = document.createElement("canvas");
+            c.style.border = "2px solid black";
+            c.style.backgroundColor = "black";
+            const tileSize = 5;
+            const cols = 10;
+            const rows = 5;
+            c.width = cols * tileSize;
+            c.height = rows * tileSize;
+            /*
+            const tileSize = 5;
+            const cols = 50; // 1000/10
+            const rows = 50; // 1000/10
+            c.width = cols * tileSize;
+            c.height = rows * tileSize;
+            */
+            d2.appendChild(c);
+            popup.appendChild(d2);
+            function drawRect(x, y, colour) {
+                ctx.fillStyle = colour;
+                ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+            }
+            function drawImg(x, y, w, h, path) {
+                const img = new Image();
+                img.src = path;
+                img.onload = () => ctx.drawImage(x, y, w, h);
+            }
+            class Data {
+                constructor(img, action) {
+                    this.img = img;
+                    this.action = action;
+                }
+            }
+            class Plant {
+                constructor(x, y) {}
+                upd() {}
+            }
+            class Zombie {
+                constructor(x, y) {}
+                upd() {}
+            }
+            var plants = [];
+            var zombies = [];
+            var score = 0;
+            var delta = 0;
+            const ctx = c.getContext("2d");
+            var runtime = null;
+            function game() {
+                plants.forEach(p => p.upd());
+                zombies.forEach(z => z.upd());
+                ctx.clearRect(0, 0, c.width, c.height);
+                for(let i = 0; i < c.width; i++) {
+                    for(let x = 0; x < c.height; x++) {
+                        drawRect(i, x, i % 2 == 0 ? "darkgreen" : "lightgreen");
+                    }
+                }
+                delta++;
+            }
+            function setup() {
+                runtime = setInterval(game, 10);
+                document.addEventListener("keydown", (e) => {
+                    const k = e.key;
+                    if(k == "ArrowUp" || k == "w") player.spd = -player.mspd;
+                    if(k == "ArrowDown" || k == "s") player.spd = player.mspd;
+                });
+                document.addEventListener("keyup", (e) => {
+                    const k = e.key;
+                    if(["ArrowUp", "ArrowDown", "w", "s"].includes(k)) player.spd = 0;
+                });
+            }
+            setup();
+        }
     }
 ];
 
