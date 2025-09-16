@@ -459,6 +459,12 @@ const games = [
             var player = new Player();
             var spikes = [];
             var pforms = [];
+            for(let i = 0; i < 1000; i++) {
+                if(chance(5)) {
+                    if(chance(50)) spikes.push(new Spike(i + 500, random(0, c.height)));
+                    else pforms.push(new Platform(i + 500, random(0, c.height, random(1, 101), random(1, 101))));
+                }
+            }
             var gy = 500;
             var score = 0;
             var delta = 0;
@@ -480,6 +486,7 @@ const games = [
                         gameEnd(runtime, score, "geo-hs");
                         return;
                     }
+                    if(s.x + 15 < 0) spikes.splice(spikes.indexOf(s), 1);
                 });
                 pforms.forEach(p => {
                     p.x--;
@@ -487,6 +494,7 @@ const games = [
                         player.y = p.y - player.h; // stand on top
                         player.gspd = 0;
                     }
+                    if(p.x + 15 < 0) pforms.splice(pforms.indexOf(p), 1);
                 });
                 ctx.fillStyle = "#3194b4ff";
                 ctx.beginPath();
