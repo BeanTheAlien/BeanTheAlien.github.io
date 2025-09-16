@@ -1,7 +1,7 @@
 # BeanTheAlien.github.io
 i am a blueberry
 
-# Version 0.0.6
+# Version 0.0.7
 
 # Changelog
 ### 0.0.1
@@ -21,3 +21,7 @@ i am a blueberry
 - Minor bug fix to clamp bird
 ### 0.0.6
 - Addes snake
+### 0.0.7
+- Added Pong
+- Fixed Pong
+- Started Geomtry Dash development
