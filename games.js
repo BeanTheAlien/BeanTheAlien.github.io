@@ -548,19 +548,34 @@ const games = [
                 img.src = path;
                 img.onload = () => ctx.drawImage(x, y, w, h);
             }
-            class Data {
-                constructor(img, action) {
+            class Plant {
+                constructor(x, y, hp, img, act, actdl) {
+                    this.x = x;
+                    this.y = y;
+                    this.hp = hp;
                     this.img = img;
-                    this.action = action;
+                    this.act = act;
+                    this.actdl = actdl;
+                    this.timer = actdl;
+                }
+                upd() {
+                    this.timer--;
+                    if(this.timer <= 0) {
+                        this.act();
+                        this.timer = this.actdl;
+                    }
                 }
             }
-            class Plant {
-                constructor(x, y) {}
-                upd() {}
-            }
             class Zombie {
-                constructor(x, y) {}
-                upd() {}
+                constructor(x, y, hp, img) {
+                    this.x = x;
+                    this.y = y;
+                    this.hp = hp;
+                    this.img = img;
+                }
+                upd() {
+                    this.x--;
+                }
             }
             var plants = [];
             var zombies = [];
@@ -586,6 +601,8 @@ const games = [
                         ctx.fillRect(col * tileSize, row * tileSize, tileSize, tileSize);
                     }
                 }
+                plants.forEach(p => p.upd());
+                zombies.forEach(z => z.upd());
                 delta++;
             }
             function setup() {
