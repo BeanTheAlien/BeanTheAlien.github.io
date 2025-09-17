@@ -15,6 +15,7 @@ buttonResources.textContent = "Resources";
 topbarContainer.appendChild(buttonHome);
 topbarContainer.appendChild(buttonGames);
 topbarContainer.appendChild(buttonProjects);
+topbarContainer.appendChild(buttonResources);
 document.body.appendChild(topbarContainer);
 buttonHome.addEventListener("click", () => window.location.href = "index.html");
 buttonGames.addEventListener("click", () => window.location.href = "games.html");
