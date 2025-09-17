@@ -532,7 +532,7 @@ const games = [
             const c = document.createElement("canvas");
             c.style.border = "2px solid black";
             c.style.backgroundColor = "black";
-            const tileSize = 10;
+            const tileSize = 50;
             const cols = 10;
             const rows = 5;
             c.width = cols * tileSize;
@@ -541,7 +541,7 @@ const games = [
             popup.appendChild(d2);
             const menu = document.createElement("div");
             d2.appendChild(menu);
-            menu.style.backgroundColor = "light-brown";
+            menu.style.backgroundColor = "#e2900ad2";
             function drawRect(x, y, colour) {
                 ctx.fillStyle = colour;
                 ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
@@ -549,33 +549,17 @@ const games = [
             function drawImg(x, y, w, h, path) {
                 const img = new Image();
                 img.src = path;
-                img.onload = () => ctx.drawImage(x, y, w, h);
-            }
-            class PDW {
-                constructor(hp, img, act, actdl) {
-                    this.hp = hp;
-                    this.img = img;
-                    this.act = act;
-                    this.actdl = actdl;
-                    this.timer = this.actdl;
-                }
-            }
-            class ZDW {
-                constructor(hp, dmg, img) {
-                    this.hp = hp;
-                    this.dmg = dmg;
-                    this.img = img;
-                }
+                img.onload = () => ctx.drawImage(img, x, y, w, h);
             }
             class Plant {
-                constructor(x, y, dt) {
-                    this.x = x;
-                    this.y = y;
-                    this.hp = dt.hp;
-                    this.img = dt.img;
-                    this.act = dt.act;
-                    this.actdl = dt.actdl;
-                    this.timer = dt.timer;
+                constructor(x, y, hp, act, actdl, img) {
+                    this.x = x * tileSize;
+                    this.y = y * tileSize;
+                    this.hp = hp;
+                    this.act = act;
+                    this.actdl = actdl * 200;
+                    this.timer = this.actdl;
+                    this.img = img;
                 }
                 upd() {
                     this.timer--;
@@ -584,25 +568,24 @@ const games = [
                         this.timer = this.actdl;
                     }
                 }
+                hurt(d) {
+                    this.hp -= d;
+                    if(this.hp <= 0) plants.splice(plants.indexOf(this), 1);
+                }
+            }
+            class Peashooter extends Plant {
+                constructor(x, y) {
+                    super(x, y, 3, () => world.push(new Pea(this.x, this.y)), 1, "https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcT02qjx8I12R1aouaJvkbIRzvCucMJ3DqWCCzZFTPb4rcyKBXPdD9PTKQNv2JfXr8LF_b6wNLOvKByQPSKAGvwLDQ");
+                }
             }
             class Zombie {
-                constructor(x, y, dt) {
-                    this.x = x;
-                    this.y = y;
-                    this.hp = dt.hp;
-                    this.dmg = dt.dmg;
-                    this.img = dt.img;
-                }
-                upd() {
-                    this.x--;
-                }
-            }
-            class Pea {
-                constructor(x, y) {
-                    this.x = x;
-                    this.y = y;
-                    this.img = "missingtexture.png";
-                    this.spd = 1;
+                constructor(x, y, spd, hp, dmg, img) {
+                    this.x = x * tileSize;
+                    this.y = y * tileSize;
+                    this.hp = hp;
+                    this.dmg = dmg;
+                    this.img = img;
+                    this.spd = spd * 5;
                     this.timer = this.spd;
                 }
                 upd() {
@@ -611,23 +594,40 @@ const games = [
                         this.x--;
                         this.timer = this.spd;
                     }
-                    zombies.forEach(z => {
-                        if(this.x == z.x && this.y == z.y) {
-                            world.splice(world.indexOf(this), 1);
-                            z.hp--;
-                            if(z.hp <= 0) zombies.splice(zombies.indexOf(z), 1);
-                        }
-                    });
+                }
+                hurt(d) {
+                    this.hp -= d;
+                    if(this.hp <= 0) zombies.splice(zombies.indexOf(this), 1);
                 }
             }
-            const wrappers = {
-                "plants": {
-                    "peashooter": new PDW(5, "missingtexture.png", () => { world.push(new Pea(1, 1)); }, 1)
-                },
-                "zombies": {
-                    "zombie": new ZDW(3, 1, "missingtexture.png")
+            class Zomb extends Zombie {
+                constructor(x, y) {
+                    super(x, y, 1, 3, 1, "https://static.wikia.nocookie.net/villains/images/8/8c/Zombie1plant.png/revision/latest?cb=20240801183626");
                 }
-            };
+            }
+            class Pea {
+                constructor(x, y) {
+                    this.x = x;
+                    this.y = y;
+                    this.img = "https://images.steamusercontent.com/ugc/972119341016831838/5182552889AF62A2AE66B8C79CD41D1FF66B03AD/?imw=1024&imh=1023&ima=fit&impolicy=Letterbox&imcolor=%23000000&letterbox=true";
+                    this.spd = 1;
+                    this.timer = this.spd;
+                }
+                upd() {
+                    this.timer--;
+                    if(this.timer <= 0) {
+                        this.x++;
+                        this.timer = this.spd;
+                    }
+                    zombies.forEach(z => {
+                        if(Math.abs(this.x - z.x) <= 0.1 && Math.abs(this.y - z.y) <= 0.1) {
+                            world.splice(world.indexOf(this), 1);
+                            z.hurt(1);
+                        }
+                    });
+                    if(this.x > c.width) world.splice(world.indexOf(this), 1);
+                }
+            }
             var plants = [];
             var zombies = [];
             var world = [];
@@ -635,7 +635,8 @@ const games = [
             var delta = 0;
             const ctx = c.getContext("2d");
             var runtime = null;
-            plants.push(new Plant(1, 1, wrappers.plants.peashooter));
+            plants.push(new Peashooter(1, 1));
+            for(let i = 0; i < 10; i++) zombies.push(new Zomb(i + 8, 1));
             function game() {
                 plants.forEach(p => p.upd());
                 zombies.forEach(z => z.upd());
@@ -655,9 +656,9 @@ const games = [
                         ctx.fillRect(col * tileSize, row * tileSize, tileSize, tileSize);
                     }
                 }
-                plants.forEach(p => drawImg(p.x, p.y, p.img));
-                zombies.forEach(z => drawImg(z.x, z.y, z.img));
-                world.forEach(w => drawImg(w.x, w.y, w.img));
+                plants.forEach(p => drawImg(p.x, p.y, tileSize / 2, tileSize / 2, p.img));
+                zombies.forEach(z => drawImg(z.x, z.y, tileSize / 2, tileSize / 2, z.img));
+                world.forEach(w => drawImg(w.x, w.y, tileSize / 2, tileSize / 2, w.img));
                 delta++;
             }
             function setup() {
