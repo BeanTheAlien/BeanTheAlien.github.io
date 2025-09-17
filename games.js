@@ -597,13 +597,22 @@ const games = [
                     this.x--;
                 }
             }
+            class Pea {
+                constructor(x, y) {
+                    this.x = x;
+                    this.y = y;
+                    this.spd = 1;
+                }
+                upd() { this.x--; }
+            }
             const wrappers = {
                 "plants": {
-                    "peashooter": new PDW("Peashooter", "missingtexture.png", () => {}, 1)
+                    "peashooter": new PDW("Peashooter", "missingtexture.png", () => { world.push(new Pea(this.x, this.y)); }, 1)
                 }
             };
             var plants = [];
             var zombies = [];
+            var world = [];
             var score = 0;
             var delta = 0;
             const ctx = c.getContext("2d");
@@ -611,6 +620,7 @@ const games = [
             function game() {
                 plants.forEach(p => p.upd());
                 zombies.forEach(z => z.upd());
+                world.forEach(w => w.upd());
                 ctx.clearRect(0, 0, c.width, c.height);
                 // Loop through rows and columns to draw the checkerboard
                 for(let row = 0; row < c.height / tileSize; row++) {
