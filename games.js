@@ -611,6 +611,13 @@ const games = [
                         this.x--;
                         this.timer = this.spd;
                     }
+                    zombies.forEach(z => {
+                        if(this.x == z.x && this.y == z.y) {
+                            world.splice(world.indexOf(this), 1);
+                            z.hp--;
+                            if(z.hp <= 0) zombies.splice(zombies.indexOf(z), 1);
+                        }
+                    });
                 }
             }
             const wrappers = {
