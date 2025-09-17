@@ -622,7 +622,7 @@ const games = [
             }
             const wrappers = {
                 "plants": {
-                    "peashooter": new PDW(5, "missingtexture.png", () => { world.push(new Pea(this.x, this.y)); }, 1)
+                    "peashooter": new PDW(5, "missingtexture.png", () => { world.push(new Pea(1, 1)); }, 1)
                 },
                 "zombies": {
                     "zombie": new ZDW(3, 1, "missingtexture.png")
@@ -635,6 +635,7 @@ const games = [
             var delta = 0;
             const ctx = c.getContext("2d");
             var runtime = null;
+            plants.push(new Plant(1, 1, wrappers.plants.peashooter));
             function game() {
                 plants.forEach(p => p.upd());
                 zombies.forEach(z => z.upd());
