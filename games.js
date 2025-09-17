@@ -601,9 +601,17 @@ const games = [
                 constructor(x, y) {
                     this.x = x;
                     this.y = y;
+                    this.img = "missingtexture.png";
                     this.spd = 1;
+                    this.timer = this.spd;
                 }
-                upd() { this.x--; }
+                upd() {
+                    this.timer--;
+                    if(this.timer <= 0) {
+                        this.x--;
+                        this.timer = this.spd;
+                    }
+                }
             }
             const wrappers = {
                 "plants": {
@@ -638,6 +646,7 @@ const games = [
                 }
                 plants.forEach(p => drawImg(p.x, p.y, p.img));
                 zombies.forEach(z => drawImg(z.x, z.y, z.img));
+                world.forEach(w => drawImg(w.x, w.y, w.img));
                 delta++;
             }
             function setup() {
