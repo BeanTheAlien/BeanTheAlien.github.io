@@ -539,6 +539,9 @@ const games = [
             c.height = rows * tileSize;
             d2.appendChild(c);
             popup.appendChild(d2);
+            const menu = document.createElement("div");
+            d2.appendChild(menu);
+            menu.style.backgroundColor = "light-brown";
             function drawRect(x, y, colour) {
                 ctx.fillStyle = colour;
                 ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
@@ -594,7 +597,11 @@ const games = [
                     this.x--;
                 }
             }
-            const wrappers = {};
+            const wrappers = {
+                "plants": {
+                    "peashooter": new PDW("Peashooter", "missingtexture.png", () => {}, 1)
+                }
+            };
             var plants = [];
             var zombies = [];
             var score = 0;
