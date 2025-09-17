@@ -548,15 +548,31 @@ const games = [
                 img.src = path;
                 img.onload = () => ctx.drawImage(x, y, w, h);
             }
-            class Plant {
-                constructor(x, y, hp, img, act, actdl) {
-                    this.x = x;
-                    this.y = y;
+            class PDW {
+                constructor(hp, img, act, actdl) {
                     this.hp = hp;
                     this.img = img;
                     this.act = act;
                     this.actdl = actdl;
-                    this.timer = actdl;
+                    this.timer = this.actdl;
+                }
+            }
+            class ZDW {
+                constructor(hp, dmg, img) {
+                    this.hp = hp;
+                    this.dmg = dmg;
+                    this.img = img;
+                }
+            }
+            class Plant {
+                constructor(x, y, dt) {
+                    this.x = x;
+                    this.y = y;
+                    this.hp = dt.hp;
+                    this.img = dt.img;
+                    this.act = dt.act;
+                    this.actdl = dt.actdl;
+                    this.timer = dt.timer;
                 }
                 upd() {
                     this.timer--;
@@ -567,16 +583,18 @@ const games = [
                 }
             }
             class Zombie {
-                constructor(x, y, hp, img) {
+                constructor(x, y, dt) {
                     this.x = x;
                     this.y = y;
-                    this.hp = hp;
-                    this.img = img;
+                    this.hp = dt.hp;
+                    this.dmg = dt.dmg;
+                    this.img = dt.img;
                 }
                 upd() {
                     this.x--;
                 }
             }
+            const wrappers = {};
             var plants = [];
             var zombies = [];
             var score = 0;
@@ -601,8 +619,8 @@ const games = [
                         ctx.fillRect(col * tileSize, row * tileSize, tileSize, tileSize);
                     }
                 }
-                plants.forEach(p => p.upd());
-                zombies.forEach(z => z.upd());
+                plants.forEach(p => drawImg(p.x, p.y, p.img));
+                zombies.forEach(z => drawImg(z.x, z.y, z.img));
                 delta++;
             }
             function setup() {
