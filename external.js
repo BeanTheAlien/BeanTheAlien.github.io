@@ -4,4 +4,4 @@ const pages = {
 };
 try {
   window.open(pages[querys.get("id"), "_blank");
-} catch(e) { console.error("An error occured: " + e); }
+} catch(e) { alert(e); console.error("An error occured: " + e); }
