@@ -692,6 +692,14 @@ function launch(exec, fname) {
     // btn.appendChild(a);
     // document.body.appendChild(btn);
     // TODO: fix CSS/JS so <div><button> instead of static pos of button
+
+    /*
+    TODO:
+    download => open small menu
+    menu 0 => download (raw) (script without utils)
+    menu 1 => download (utils) (script with utils)
+    menu 2 => download (full) (zip of launcher + script + utils)
+    */
     exec(popup);
 }
 
