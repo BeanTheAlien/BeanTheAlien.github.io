@@ -622,7 +622,10 @@ const games = [
             }
             const wrappers = {
                 "plants": {
-                    "peashooter": new PDW("Peashooter", "missingtexture.png", () => { world.push(new Pea(this.x, this.y)); }, 1)
+                    "peashooter": new PDW(5, "missingtexture.png", () => { world.push(new Pea(this.x, this.y)); }, 1)
+                },
+                "zombies": {
+                    "zombie": new ZDW(3, 1 "missingtexture.png")
                 }
             };
             var plants = [];
