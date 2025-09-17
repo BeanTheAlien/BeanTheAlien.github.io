@@ -532,18 +532,11 @@ const games = [
             const c = document.createElement("canvas");
             c.style.border = "2px solid black";
             c.style.backgroundColor = "black";
-            const tileSize = 5;
+            const tileSize = 10;
             const cols = 10;
             const rows = 5;
             c.width = cols * tileSize;
             c.height = rows * tileSize;
-            /*
-            const tileSize = 5;
-            const cols = 50; // 1000/10
-            const rows = 50; // 1000/10
-            c.width = cols * tileSize;
-            c.height = rows * tileSize;
-            */
             d2.appendChild(c);
             popup.appendChild(d2);
             function drawRect(x, y, colour) {
@@ -579,24 +572,24 @@ const games = [
                 plants.forEach(p => p.upd());
                 zombies.forEach(z => z.upd());
                 ctx.clearRect(0, 0, c.width, c.height);
-                for(let i = 0; i < c.width; i++) {
-                    for(let x = 0; x < c.height; x++) {
-                        drawRect(i, x, i % 2 == 0 ? "darkgreen" : "lightgreen");
+                // Loop through rows and columns to draw the checkerboard
+                for(let row = 0; row < c.height / tileSize; row++) {
+                    for(let col = 0; col < c.width / tileSize; col++) {
+                        // Determine the color based on the sum of row and column indices
+                        // If (row + col) is even, use color1; otherwise, use color2
+                        if((row + col) % 2 == 0) {
+                            ctx.fillStyle = "#32d600ff";
+                        } else {
+                            ctx.fillStyle = "#229100ff";
+                        }
+                        // Draw the rectangle (square)
+                        ctx.fillRect(col * tileSize, row * tileSize, tileSize, tileSize);
                     }
                 }
                 delta++;
             }
             function setup() {
                 runtime = setInterval(game, 10);
-                document.addEventListener("keydown", (e) => {
-                    const k = e.key;
-                    if(k == "ArrowUp" || k == "w") player.spd = -player.mspd;
-                    if(k == "ArrowDown" || k == "s") player.spd = player.mspd;
-                });
-                document.addEventListener("keyup", (e) => {
-                    const k = e.key;
-                    if(["ArrowUp", "ArrowDown", "w", "s"].includes(k)) player.spd = 0;
-                });
             }
             setup();
         }
