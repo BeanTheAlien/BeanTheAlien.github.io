@@ -531,7 +531,6 @@ const games = [
             d2.className = "score2";
             const c = document.createElement("canvas");
             c.style.border = "2px solid black";
-            c.style.backgroundColor = "black";
             const tileSize = 50;
             const cols = 10;
             const rows = 5;
@@ -688,6 +687,112 @@ const games = [
                 plants.forEach(p => drawImg(p.x, p.y, tileSize / 2, tileSize / 2, p.img));
                 zombies.forEach(z => drawImg(z.x, z.y, tileSize / 2, tileSize / 2, z.img));
                 world.forEach(w => drawImg(w.x, w.y, tileSize / 2, tileSize / 2, w.img));
+                delta++;
+            }
+            function setup() {
+                runtime = setInterval(game, 10);
+            }
+            setup();
+        }
+    },
+    {
+        "filename": "angrybirds",
+        "name": "Angry Birds",
+        "exec": (popup) => {
+            const d1 = document.createElement("div");
+            const d2 = document.createElement("div");
+            d1.className = "score1";
+            d2.className = "score2";
+            const c = document.createElement("canvas");
+            c.style.border = "2px solid black";
+            c.width = 1000;
+            c.height = 500;
+            d2.appendChild(c);
+            popup.appendChild(d2);
+            function drawRect(x, y, colour) {
+                ctx.fillStyle = colour;
+                ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+            }
+            function drawImg(x, y, w, h, path) {
+                const img = new Image();
+                img.src = path;
+                img.onload = () => ctx.drawImage(img, x, y, w, h);
+            }
+            class Bird {
+                constructor(x, y, dmg, stats, act, actlm) {
+                    this.x = x;
+                    this.y = y;
+                    this.dmg = dmg;
+                    this.stats = stats;
+                    this.act = act;
+                    this.actlm = actlm;
+                    this.grav = 0.05;
+                    this.gspd = 0;
+                }
+                upd() {
+                    this.gspd += this.grav;
+                    this.y += this.gspd;
+                }
+            }
+            class Pig {
+                constructor(x, y, hp) {
+                    this.x = x;
+                    this.y = y;
+                    this.hp = hp;
+                    this.grav = 0.05;
+                    this.gspd = 0;
+                }
+                upd() {
+                    this.gspd += this.grav;
+                    this.y += this.gspd;
+                }
+            }
+            class Block {
+                constructor(x, y, hp, type) {
+                    this.x = x;
+                    this.y = y;
+                    this.hp = hp;
+                    this.type = type;
+                }
+            }
+            class Piggy extends Pig {
+                constructor(x, y) {
+                    super(x, y, 1);
+                }
+            }
+            class Red extends Bird {
+                constructor(x, y) {
+                    super(x, y, 1, ["glass", "wood", "stone"], () => {}, 0);
+                }
+            }
+            class Wood extends Block {
+                constructor(x, y) {
+                    super(x, y, 2, "wood");
+                }
+            }
+            class Level {
+                constructor(lvlbirds, lvlpigs, lvlblocks) {
+                    this.lvlbirds = lvlbirds;
+                    this.lvlpigs = lvlpigs;
+                    this.lvlblocks = lvlblocks;
+                }
+            }
+            const levels = [
+                new Level([new Red(3, 1), new Red(2, 1), new Red(1, 1)], [new Piggy(5, 10)], [new Wood(5, 10)])
+            ];
+            var bird = null;
+            var birds = [];
+            var pigs = [];
+            var world = [];
+            var score = 0;
+            var delta = 0;
+            const ctx = c.getContext("2d");
+            var runtime = null;
+            function game() {
+                bird.upd();
+                pigs.forEach(z => z.upd());
+                world.forEach(w => w.upd());
+                ctx.clearRect(0, 0, c.width, c.height);
                 delta++;
             }
             function setup() {
