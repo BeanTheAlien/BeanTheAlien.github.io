@@ -555,14 +555,14 @@ const games = [
             }
             function plant() {
                 return new Promise((resolve) => {
-                    c.addEventListener("click", canvasClick);
                     const canvasClick = (e) => {
                         c.removeEventListener("click", canvasClick);
                         const rect = c.getBoundingClientRect();
-                        const x = c.clientX - rect.left;
-                        const y = c.clientY - rect.top;
+                        const x = Math.floor((e.clientX - rect.left) / tileSize);
+                        const y = Math.floor((e.clientY - rect.top) / tileSize);
                         resolve({ x, y });
-                    }
+                    };
+                    c.addEventListener("click", canvasClick);
                 });
             }
             class Plant {
@@ -649,11 +649,13 @@ const games = [
             [["Peashooter", 100, Peashooter]].forEach(p => {
                 const b = document.createElement("button");
                 b.innerHTML = `${p[0]}<br>${p[1]}☀️`;
+                b.className = "pbtn";
                 b.addEventListener("click", async () => {
                     if(sun < p[1]) return;
                     sun -= p[1];
+                    //b.style.backgroundColor = "#0bd6c5ff";
                     const { x, y } = await plant();
-                    plants.push(new p[2](x, y));
+                    plants.push(new (p[2])(x, y));
                 });
                 b.style.width = "100px";
                 b.style.height = "50px";
@@ -663,8 +665,7 @@ const games = [
             var delta = 0;
             const ctx = c.getContext("2d");
             var runtime = null;
-            plants.push(new Peashooter(1, 1));
-            for(let i = 0; i < 10; i++) zombies.push(new Zomb(i + 8, 1));
+            zombies.push(new Zomb(8, 1));
             function game() {
                 plants.forEach(p => p.upd());
                 zombies.forEach(z => z.upd());
