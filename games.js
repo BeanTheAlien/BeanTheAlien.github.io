@@ -542,6 +542,7 @@ const games = [
             const menu = document.createElement("div");
             d2.appendChild(menu);
             menu.style.backgroundColor = "#e2900ad2";
+            // [["Peashooter", 100]]
             function drawRect(x, y, colour) {
                 ctx.fillStyle = colour;
                 ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
@@ -551,6 +552,9 @@ const games = [
                 img.src = path;
                 img.onload = () => ctx.drawImage(img, x, y, w, h);
             }
+            // function plant() {
+            //     return new Promise((resolve) => {});
+            // }
             class Plant {
                 constructor(x, y, hp, act, actdl, img) {
                     this.x = x * tileSize;
@@ -631,6 +635,7 @@ const games = [
             var plants = [];
             var zombies = [];
             var world = [];
+            var sun = 200;
             var score = 0;
             var delta = 0;
             const ctx = c.getContext("2d");
