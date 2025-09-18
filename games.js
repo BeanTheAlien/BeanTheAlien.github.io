@@ -780,10 +780,12 @@ const games = [
             const levels = [
                 new Level([new Red(3, 1), new Red(2, 1), new Red(1, 1)], [new Piggy(5, 10)], [new Wood(5, 10)])
             ];
+            const lvl = levels[0]; // repl with choosing menu ltr
             var bird = null;
-            var birds = [];
-            var pigs = [];
-            var world = [];
+            var birds = lvl.lvlbirds;
+            var pigs = lvl.lvlpigs;
+            var world = [...lvl.lvlblocks];
+            bird = birds[0];
             var score = 0;
             var delta = 0;
             const ctx = c.getContext("2d");
