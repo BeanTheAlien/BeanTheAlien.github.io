@@ -1,7 +1,7 @@
 # BeanTheAlien.github.io
 i am a blueberry
 
-# Version 0.0.7
+# Version 0.0.8
 
 # Changelog
 ### 0.0.1
@@ -25,3 +25,5 @@ i am a blueberry
 - Added Pong
 - Fixed Pong
 - Started Geomtry Dash development
+### 0.0.8
+- Started PvZ development
