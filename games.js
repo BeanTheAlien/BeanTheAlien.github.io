@@ -542,6 +542,8 @@ const games = [
             const menu = document.createElement("div");
             popup.appendChild(menu);
             menu.style.backgroundColor = "#e2900ad2";
+            menu.style.width = "100px";
+            menu.style.height = "500px";
             function drawRect(x, y, colour) {
                 ctx.fillStyle = colour;
                 ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
