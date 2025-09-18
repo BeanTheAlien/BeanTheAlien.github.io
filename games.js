@@ -540,9 +540,8 @@ const games = [
             d2.appendChild(c);
             popup.appendChild(d2);
             const menu = document.createElement("div");
-            d2.appendChild(menu);
+            popup.appendChild(menu);
             menu.style.backgroundColor = "#e2900ad2";
-            // [["Peashooter", 100]]
             function drawRect(x, y, colour) {
                 ctx.fillStyle = colour;
                 ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
@@ -552,9 +551,18 @@ const games = [
                 img.src = path;
                 img.onload = () => ctx.drawImage(img, x, y, w, h);
             }
-            // function plant() {
-            //     return new Promise((resolve) => {});
-            // }
+            function plant() {
+                return new Promise((resolve) => {
+                    c.addEventListener("click", canvasClick);
+                    const canvasClick = (e) => {
+                        c.removeEventListener("click", canvasClick);
+                        const rect = c.getBoundingClientRect();
+                        const x = c.clientX - rect.left;
+                        const y = c.clientY - rect.top;
+                        resolve({ x, y });
+                    }
+                });
+            }
             class Plant {
                 constructor(x, y, hp, act, actdl, img) {
                     this.x = x * tileSize;
@@ -636,6 +644,16 @@ const games = [
             var zombies = [];
             var world = [];
             var sun = 200;
+            [["Peashooter", 100, Peashooter]].forEach(p => {
+                const b = document.createElement("button");
+                b.innerHTML = `${p[0]}<br>${p[1]}☀️`;
+                b.addEventListener("click", async () => {
+                    if(sun < p[1]) return;
+                    sun -= p[1];
+                    const { x, y } = await plant();
+                    plants.push(new p[2](x, y));
+                });
+            });
             var score = 0;
             var delta = 0;
             const ctx = c.getContext("2d");
