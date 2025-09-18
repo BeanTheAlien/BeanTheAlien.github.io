@@ -542,7 +542,7 @@ const games = [
             const menu = document.createElement("div");
             popup.appendChild(menu);
             menu.style.backgroundColor = "#e2900ad2";
-            menu.style.width = "100px";
+            menu.style.width = "200px";
             menu.style.height = "500px";
             function drawRect(x, y, colour) {
                 ctx.fillStyle = colour;
@@ -655,6 +655,9 @@ const games = [
                     const { x, y } = await plant();
                     plants.push(new p[2](x, y));
                 });
+                b.style.width = "100px";
+                b.style.height = "50px";
+                menu.appendChild(b);
             });
             var score = 0;
             var delta = 0;
