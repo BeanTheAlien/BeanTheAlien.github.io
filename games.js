@@ -55,7 +55,7 @@ const games = [
             class Player {
                 constructor() {
                     this.height = Math.round(c.height / 2);
-                    this.grav = 0.05;
+                    this.grav = 0.07;
                     this.gspd = 0;
                     this.x = 15;
                     this.y = 30;
