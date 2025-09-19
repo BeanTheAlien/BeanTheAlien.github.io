@@ -876,7 +876,7 @@ function launch(exec, fname) {
     menu 1 => download (utils) (script with utils)
     menu 2 => download (full) (zip of launcher + script + utils)
     */
-    exec(popup);
+   exec(popup);
 }
 
 function gameEnd(runtime, score, hsname) {
@@ -889,6 +889,15 @@ function gameEnd(runtime, score, hsname) {
     const hs = parseInt(localStorage.getItem(hsname) ?? 0);
     const trophy = setInterval(() => {
         display.textContent = i;
+        /*
+        ranges:
+        0 - 30 = bronze
+        30 - 60 = silver
+        60 - 90 = gold
+        90 - 120 = purple
+        120 - 150 = legend
+        150+ = diamond
+        */
         if(0 <= i && i <= 30) display.style.color = "#CD7F32";
         else if(30 <= i && i <= 60) display.style.color = "#C0C0C0";
         else if(60 <= i && i <= 90) display.style.color = "#FFD700";
