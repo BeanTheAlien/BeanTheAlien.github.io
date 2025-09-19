@@ -802,6 +802,42 @@ const games = [
             }
             setup();
         }
+    },
+    {
+        "filename": "jpgdatingsim",
+        "name": "JPG Dating Sim",
+        "exec": (popup) => {
+            const d1 = document.createElement("div");
+            const d2 = document.createElement("div");
+            d1.className = "score1";
+            d2.className = "score2";
+            popup.appendChild(d2);
+            /*
+            intro - basic scene (text, driving to restaurant?)
+                - could have interactive elements
+                - driving minigame
+                - bg will change a lot
+                - w does not show up yet (maybe pfp for contact?)
+            driving - driving minigame (see intro)
+                - dodge cars and dont die or break the law
+                - no w still
+            restraunt - main game scene (ordering food, talking, general activities)
+                - have an actual timer to time how long its been
+                - certain events trigger at certain times
+            order apt/drinks - minor scene (select items from menu)
+                - will show up later (no hardcoded scene bgs)
+            order food - another basic scene (select items)
+                - also shows up later (see other order)
+            order dsrt - anther basic scene (see other ordering scenes)
+            pay the bill - impacts her opinion?
+                - depending on already exsiting stats (from waiting around)
+                - impacts stats
+                - pay: good person (1?)
+                - split: fine (0?)
+                - no pay: bad person (-1?)
+            leave - depending on stats if she comes with you or not
+            */
+        }
     }
 ];
 
