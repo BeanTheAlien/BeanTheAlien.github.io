@@ -836,6 +836,8 @@ const games = [
                 - split: fine (0?)
                 - no pay: bad person (-1?)
             leave - depending on stats if she comes with you or not
+            home - wth/wthout?
+            scenes can branch from when you get home ig
             */
         }
     }
