@@ -55,7 +55,7 @@ const games = [
             class Player {
                 constructor() {
                     this.height = Math.round(c.height / 2);
-                    this.grav = 0.055;
+                    this.grav = 0.0527;
                     this.gspd = 0;
                     this.x = 15;
                     this.y = 30;
@@ -138,7 +138,7 @@ const games = [
             function setup() {
                 runtime = setInterval(game, 5);
                 document.addEventListener("keydown", (e) => {
-                    if(["w", "ArrowUp"].includes(e.key)) player.gspd = -3;
+                    if(["w", "ArrowUp"].includes(e.key)) player.gspd = -3.17;
                 });
             }
             setup();
