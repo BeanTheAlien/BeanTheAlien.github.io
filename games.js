@@ -840,6 +840,112 @@ const games = [
             scenes can branch from when you get home ig
             */
         }
+    },
+    {
+        "filename": "dungeon",
+        "name": "Dungeon",
+        "exec": (popup) => {
+            const d1 = document.createElement("div");
+            const d2 = document.createElement("div");
+            d1.className = "score1";
+            d2.className = "score2";
+            const c = document.createElement("canvas");
+            c.style.border = "2px solid black";
+            const tileSize = 10;
+            c.width = 100 * tileSize;
+            c.height = 100 * tileSize;
+            d2.appendChild(c);
+            popup.appendChild(d2);
+            class Player {
+                constructor() {
+                    this.h = 10;
+                    this.w = 10;
+                    this.x = 0;
+                    this.y = 0;
+                }
+                upd() {
+                    if(this.x < 0) this.x = 0;
+                    else if(this.x + 15 > c.width) this.x = c.width - 15;
+                    if(this.y < 0) this.y = 0;
+                    else if(this.y + 15 > c.height) this.y = c.height - 15;
+                }
+            }
+            class Enemy {
+                constructor(x, y, atk) {
+                    this.x = x;
+                    this.y = y;
+                    this.atk = atk;
+                }
+                upd() {
+                    this.atk();
+                }
+            }
+
+            var player = new Player();
+            var pipes = [];
+            var delta = 0;
+            var deltasr = 500;
+            var gap = 150;
+            var score = 0;
+            const ctx = c.getContext("2d");
+
+            var runtime = null;
+
+            function game() {
+                if((delta % 2) == 0) player.upd();
+                if((delta % deltasr) == 0) {
+                    let topHeight = Math.floor(Math.random() * (c.height - gap - 50));
+                    let bottomYt = topHeight + gap;
+                    pipes.push(new Pipe(c.width, 0, topHeight));
+                    pipes.push(new Pipe(c.width, bottomYt, c.height));
+                }
+                if((delta % 4000) == 0) { // 20000 ms => 5 ms upd => 4000 ticks
+                    deltasr -= 25;
+                    if(deltasr < 100) deltasr = 100;
+                }
+                ctx.clearRect(0, 0, c.width, c.height);
+                ctx.fillStyle = "green";
+                ctx.beginPath();
+                pipes.forEach(pipe => {
+                    const pipeW = player.w;
+                    const pipeH = pipe.pb - pipe.pt;
+                    const pipeX = pipe.x;
+                    const pipeY = pipe.pt;
+                    const birdX = player.x;
+                    const birdY = player.y;
+                    const birdW = player.w;
+                    const birdH = player.h;
+                    // AABB collision
+                    const collide = birdX < pipeX + pipeW &&
+                                birdX + birdW > pipeX &&
+                                birdY < pipeY + pipeH &&
+                                birdY + birdH > pipeY;
+                    if(collide) {
+                        gameEnd(runtime, score, "flappybird-hs");
+                    }
+                    const height = pipe.pb - pipe.pt;
+                    ctx.rect(pipe.x, pipe.pt, 50, height);
+                    pipe.x--;
+                    if(pipe.x + 50 < 0) {
+                        pipes.splice(pipes.indexOf(pipe), 1);
+                        score++;
+                    }
+                });
+                ctx.fill();
+                ctx.fillStyle = "yellow";
+                ctx.beginPath();
+                ctx.rect(player.x, player.y, player.w, player.h);
+                ctx.fill();
+                delta++;
+            }
+            function setup() {
+                runtime = setInterval(game, 5);
+                document.addEventListener("keydown", (e) => {
+                    if(["w", "ArrowUp"].includes(e.key)) player.gspd = -3.17;
+                });
+            }
+            setup();
+        }
     }
 ];
 
