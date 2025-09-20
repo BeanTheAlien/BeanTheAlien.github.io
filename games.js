@@ -906,14 +906,16 @@ const games = [
                 }
             }
             class Enemy {
-                constructor(x, y, atk) {
+                constructor(x, y, move, atk) {
                     this.x = x;
                     this.y = y;
                     this.w = tileSize;
                     this.h = tileSize;
+                    this.move = move;
                     this.atk = atk;
                 }
                 upd() {
+                    this.move();
                     this.atk();
                 }
             }
@@ -939,6 +941,7 @@ const games = [
             var player = new Player();
             var enemies = [];
             var bullets = [];
+            var stage = 1;
             var keys = {};
             var delta = 0;
             var score = 0;
@@ -965,6 +968,10 @@ const games = [
                 ctx.fill();
                 delta++;
             }
+            function shop() {}
+            function makeStage() {
+                for(let i = 0; i < stage; i++) enemies.push(new Enemy(5, 5, () => {}, () => {}));
+            }
             function setup() {
                 runtime = setInterval(game, 5);
                 document.addEventListener("keydown", (e) => keys[e.key] = true);
@@ -976,6 +983,8 @@ const games = [
             game levels + shop
             stage
             base off of the C++ one
+            make enemy templates (extend Enemy)
+            make makeStage actually work based on stage
             */
         }
     }
