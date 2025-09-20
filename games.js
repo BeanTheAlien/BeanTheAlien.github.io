@@ -964,6 +964,12 @@ const games = [
                 document.addEventListener("keyup", (e) => keys[e.key] = false);
             }
             setup();
+            //TODO
+            /*
+            game levels + shop
+            stage
+            base off of the C++ one
+            */
         }
     }
 ];
