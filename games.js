@@ -852,8 +852,8 @@ const games = [
             const c = document.createElement("canvas");
             c.style.border = "2px solid black";
             const tileSize = 10;
-            c.width = 100 * tileSize;
-            c.height = 100 * tileSize;
+            c.width = 50 * tileSize;
+            c.height = 50 * tileSize;
             d2.appendChild(c);
             popup.appendChild(d2);
             class Player {
@@ -865,8 +865,12 @@ const games = [
                     this.mag = 8;
                     this.ammo = this.mag;
                     this.dir = "x";
+                    this.cd = 100;
+                    this.timer = this.cd;
                 }
                 upd() {
+                    this.timer--;
+                    if(this.timer <= 0) this.timer = 0;
                     if(this.x < 0) this.x = 0;
                     else if(this.x + 15 > c.width) this.x = c.width - 15;
                     if(this.y < 0) this.y = 0;
@@ -887,9 +891,11 @@ const games = [
                         this.x++;
                         this.dir = "x";
                     }
-                }
-                shoot() {
-                    bullets.push(new Bullet(this.x, this.y, this.dir));
+                    if(keys["e"] && this.ammo > 0 && this.timer <= 0) {
+                        bullets.push(new Bullet(this.x, this.y, this.dir));
+                        this.timer = this.cd;
+                        this.ammo--; // need reload sys at some point (r?)
+                    }
                 }
             }
             class Enemy {
@@ -913,7 +919,7 @@ const games = [
                     this.dir = dir;
                 }
                 upd() {
-                    switch(dir) {
+                    switch(this.dir) {
                         case "x": this.x++; break;
                         case "-x": this.x--; break;
                         case "y": this.y++; break;
@@ -937,6 +943,7 @@ const games = [
                 player.upd();
                 enemies.forEach(e => e.upd());
                 bullets.forEach(b => b.upd());
+                ctx.clearRect(0, 0, c.width, c.height);
                 ctx.fillStyle = "green";
                 ctx.beginPath();
                 ctx.rect(player.x, player.y, player.w, player.h);
@@ -945,9 +952,10 @@ const games = [
                 ctx.beginPath();
                 enemies.forEach(e => ctx.rect(e.x, e.y, player.w, player.h));
                 ctx.fill();
-                c.fillStyle = "yellow";
+                ctx.fillStyle = "yellow";
                 ctx.beginPath();
                 bullets.forEach(b => ctx.rect(b.x, b.y, b.w, b.h));
+                ctx.fill();
                 delta++;
             }
             function setup() {
