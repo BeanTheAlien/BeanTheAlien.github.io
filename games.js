@@ -866,11 +866,14 @@ const games = [
                     this.ammo = this.mag;
                     this.dir = "x";
                     this.cd = 100;
-                    this.timer = this.cd;
+                    this.scd = this.cd;
+                    this.rcd = this.cd;
                 }
                 upd() {
-                    this.timer--;
-                    if(this.timer <= 0) this.timer = 0;
+                    this.scd--;
+                    this.rcd--;
+                    if(this.scd <= 0) this.scd = 0;
+                    if(this.rcd <= 0) this.rcd = 0;
                     if(this.x < 0) this.x = 0;
                     else if(this.x + 15 > c.width) this.x = c.width - 15;
                     if(this.y < 0) this.y = 0;
@@ -891,10 +894,14 @@ const games = [
                         this.x++;
                         this.dir = "x";
                     }
-                    if(keys["e"] && this.ammo > 0 && this.timer <= 0) {
+                    if(keys["e"] && !keys["r"] && this.ammo > 0 && this.scd <= 0) {
                         bullets.push(new Bullet(this.x, this.y, this.dir));
-                        this.timer = this.cd;
-                        this.ammo--; // need reload sys at some point (r?)
+                        this.scd = this.cd;
+                        this.ammo--;
+                    }
+                    if(keys["r"] && !keys["e"] && this.ammo < this.mag && this.rcd <= 0) {
+                        this.ammo++;
+                        this.rcd = this.cd;
                     }
                 }
             }
