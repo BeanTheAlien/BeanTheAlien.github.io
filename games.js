@@ -921,7 +921,7 @@ const games = [
                 }
             }
             class Enemy {
-                constructor(x, y, w, h, hp, hurt, die, move, atk) {
+                constructor(x, y, w, h, hp, hurt, die, move, atk, check, cd) {
                     this.x = x;
                     this.y = y;
                     this.w = w;
@@ -931,10 +931,17 @@ const games = [
                     this.die = die;
                     this.move = move;
                     this.atk = atk;
+                    this.check = check;
+                    this.cd = cd / 0.005;
+                    this.timer = this.cd;
                 }
                 upd() {
+                    this.timer--;
                     this.move();
-                    this.atk();
+                    if(this.check() && this.timer <= 0) {
+                        this.atk();
+                        this.timer = this.cd;
+                    }
                 }
             }
             class Basic extends Enemy {
@@ -945,6 +952,7 @@ const games = [
                     }, () => {
                         enemies.splice(enemies.indexOf(this), 1);
                         player.tokens++;
+                        score++;
                     }, () => {
                         if(delta % 2 != 0) return;
                         if(player.x < this.x) this.x--;
@@ -952,8 +960,32 @@ const games = [
                         if(player.y < this.y) this.y--;
                         else if(player.y > this.y) this.y++;
                     }, () => {
-                        if(isColliding(this, player)) player.hurt(1);
-                    });
+                        player.hurt(1);
+                    }, () => {
+                        return isColliding(this, player);
+                    }, 1);
+                }
+            }
+            class Runny extends Enemy {
+                constructor(x, y) {
+                    super(x, y, tileSize, tileSize, 1, (d) => {
+                        this.hp -= d;
+                        if(this.hp <= 0) this.die();
+                    }, () => {
+                        enemies.splice(enemies.indexOf(this), 1);
+                        player.tokens++;
+                        score++;
+                    }, () => {
+                        if(delta % 2 != 0) return;
+                        if(player.x < this.x) this.x--;
+                        else if(player.x > this.x) this.x++;
+                        if(player.y < this.y) this.y--;
+                        else if(player.y > this.y) this.y++;
+                    }, () => {
+                        player.hurt(1);
+                    }, () => {
+                        return isColliding(this, player);
+                    }, 0.5);
                 }
             }
             class Bullet {
@@ -990,10 +1022,19 @@ const games = [
                     this.effect = effect;
                 }
                 purchase() {
+                    if(player.tokens < this.cost) return;
                     player.tokens -= this.cost;
                     this.effect();
                 }
             }
+            class Level {
+                constructor(name, comp, bg) {
+                    this.name = name;
+                    this.comp = comp;
+                    this.bg = bg;
+                }
+            }
+
             function sqrCheck(initiator, target, radius) {
                 return initiator.x - radius <= target.x && initiator.x + radius >= target.x && initiator.y - radius <= target.y && initiator.y + radius >= target.y
             }
