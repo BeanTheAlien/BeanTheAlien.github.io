@@ -877,6 +877,7 @@ const games = [
                     this.scd = this.cd;
                     this.rcd = this.cd;
                     this.hp = 5;
+                    this.tokens = 0;
                 }
                 upd() {
                     this.scd--;
@@ -903,6 +904,7 @@ const games = [
                         this.x++;
                         this.dir = "x";
                     }
+                    if(inshop) return;
                     if(keys["e"] && !keys["r"] && this.ammo > 0 && this.scd <= 0) {
                         bullets.push(new Bullet(this.x, this.y, this.dir));
                         this.scd = this.cd;
@@ -942,6 +944,7 @@ const games = [
                         if(this.hp <= 0) this.die();
                     }, () => {
                         enemies.splice(enemies.indexOf(this), 1);
+                        player.tokens++;
                     }, () => {
                         if(delta % 2 != 0) return;
                         if(player.x < this.x) this.x--;
@@ -975,6 +978,22 @@ const games = [
                     }
                 }
             }
+            class Upgrade {
+                constructor(x, y, name, desc, cost, effect) {
+                    this.x = x;
+                    this.y = y;
+                    this.w = tileSize * 3;
+                    this.h = tileSize * 3;
+                    this.name = name;
+                    this.desc = desc;
+                    this.cost = cost;
+                    this.effect = effect;
+                }
+                purchase() {
+                    player.tokens -= this.cost;
+                    this.effect();
+                }
+            }
             function sqrCheck(initiator, target, radius) {
                 return initiator.x - radius <= target.x && initiator.x + radius >= target.x && initiator.y - radius <= target.y && initiator.y + radius >= target.y
             }
@@ -983,6 +1002,7 @@ const games = [
             var enemies = [];
             var bullets = [];
             var stage = 0;
+            var inshop = false;
             var keys = {};
             var delta = 0;
             var score = 0;
@@ -1014,7 +1034,9 @@ const games = [
                     makeStage();
                 }
             }
-            function shop() {}
+            function shop() {
+                inshop = true;
+            }
             function makeStage() {
                 for(let i = 0; i < stage; i++) enemies.push(new Basic(50, 30));
             }
