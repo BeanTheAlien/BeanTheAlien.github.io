@@ -868,6 +868,7 @@ const games = [
                     this.cd = 100;
                     this.scd = this.cd;
                     this.rcd = this.cd;
+                    this.hp = 5;
                 }
                 upd() {
                     this.scd--;
@@ -904,19 +905,43 @@ const games = [
                         this.rcd = this.cd;
                     }
                 }
+                hurt(d) {
+                    this.hp -= d;
+                    if(this.hp <= 0) gameEnd(runtime, score, "dungeon-hs");
+                }
             }
             class Enemy {
-                constructor(x, y, move, atk) {
+                constructor(x, y, hp, hurt, die, move, atk) {
                     this.x = x;
                     this.y = y;
                     this.w = tileSize;
                     this.h = tileSize;
+                    this.hp = hp;
+                    this.hurt = hurt;
+                    this.die = die;
                     this.move = move;
                     this.atk = atk;
                 }
                 upd() {
                     this.move();
                     this.atk();
+                }
+            }
+            class Basic extends Enemy {
+                constructor(x, y) {
+                    super(x, y, 3, (d) => {
+                        this.hp -= d;
+                        if(this.hp <= 0) this.die();
+                    }, () => {
+                        enemies.splice(enemies.indexOf(this), 1);
+                    }, () => {
+                        if(player.x < this.x) this.x--;
+                        else if(player.x > this.x) this.x++;
+                        if(this.y < this.y) this.y--;
+                        else if(player.y > this.y) this.y++;
+                    }, () => {
+                        if(sqrCheck(this, player, 1)) player.hurt(1);
+                    });
                 }
             }
             class Bullet {
@@ -935,13 +960,17 @@ const games = [
                         case "-y": this.y--; break;
                     }
                     if(this.x < 0 || this.x + 15 > c.width || this.y < 0 || this.y + 15 > c.height) bullets.splice(bullets.indexOf(this), 1);
+                    if(enemies.some(e => e.x == this.x && e.y == this.y)) enemies.find(e => e.x == this.x && e.y == this.y).hurt(1);
                 }
+            }
+            function sqrCheck(initiator, target, radius) {
+                return initiator.x - radius <= target.x && initiator.x + radius >= target.x && initiator.y - radius <= target.y && initiator.y + radius >= target.y
             }
 
             var player = new Player();
             var enemies = [];
             var bullets = [];
-            var stage = 1;
+            var stage = 0;
             var keys = {};
             var delta = 0;
             var score = 0;
@@ -950,27 +979,32 @@ const games = [
             var runtime = null;
 
             function game() {
-                player.upd();
-                enemies.forEach(e => e.upd());
-                bullets.forEach(b => b.upd());
-                ctx.clearRect(0, 0, c.width, c.height);
-                ctx.fillStyle = "green";
-                ctx.beginPath();
-                ctx.rect(player.x, player.y, player.w, player.h);
-                ctx.fill();
-                ctx.fillStyle = "red";
-                ctx.beginPath();
-                enemies.forEach(e => ctx.rect(e.x, e.y, player.w, player.h));
-                ctx.fill();
-                ctx.fillStyle = "yellow";
-                ctx.beginPath();
-                bullets.forEach(b => ctx.rect(b.x, b.y, b.w, b.h));
-                ctx.fill();
-                delta++;
+                if(enemies.length > 0) {
+                    player.upd();
+                    enemies.forEach(e => e.upd());
+                    bullets.forEach(b => b.upd());
+                    ctx.clearRect(0, 0, c.width, c.height);
+                    ctx.fillStyle = "green";
+                    ctx.beginPath();
+                    ctx.rect(player.x, player.y, player.w, player.h);
+                    ctx.fill();
+                    ctx.fillStyle = "red";
+                    ctx.beginPath();
+                    enemies.forEach(e => ctx.rect(e.x, e.y, player.w, player.h));
+                    ctx.fill();
+                    ctx.fillStyle = "yellow";
+                    ctx.beginPath();
+                    bullets.forEach(b => ctx.rect(b.x, b.y, b.w, b.h));
+                    ctx.fill();
+                    delta++;
+                } else {
+                    stage++;
+                    makeStage();
+                }
             }
             function shop() {}
             function makeStage() {
-                for(let i = 0; i < stage; i++) enemies.push(new Enemy(5, 5, () => {}, () => {}));
+                for(let i = 0; i < stage; i++) enemies.push(new Basic(50, 30));
             }
             function setup() {
                 runtime = setInterval(game, 5);
