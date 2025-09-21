@@ -856,6 +856,14 @@ const games = [
             c.height = 50 * tileSize;
             d2.appendChild(c);
             popup.appendChild(d2);
+            function isColliding(a, b) {
+                return (
+                    a.x < b.x + b.w &&
+                    a.x + a.w > b.x &&
+                    a.y < b.y + b.h &&
+                    a.y + a.h > b.y
+                );
+            }
             class Player {
                 constructor() {
                     this.x = 0;
@@ -911,11 +919,11 @@ const games = [
                 }
             }
             class Enemy {
-                constructor(x, y, hp, hurt, die, move, atk) {
+                constructor(x, y, w, h, hp, hurt, die, move, atk) {
                     this.x = x;
                     this.y = y;
-                    this.w = tileSize;
-                    this.h = tileSize;
+                    this.w = w;
+                    this.h = h;
                     this.hp = hp;
                     this.hurt = hurt;
                     this.die = die;
@@ -929,18 +937,19 @@ const games = [
             }
             class Basic extends Enemy {
                 constructor(x, y) {
-                    super(x, y, 3, (d) => {
+                    super(x, y, tileSize, tileSize, 3, (d) => {
                         this.hp -= d;
                         if(this.hp <= 0) this.die();
                     }, () => {
                         enemies.splice(enemies.indexOf(this), 1);
                     }, () => {
+                        if(delta % 2 != 0) return;
                         if(player.x < this.x) this.x--;
                         else if(player.x > this.x) this.x++;
-                        if(this.y < this.y) this.y--;
+                        if(player.y < this.y) this.y--;
                         else if(player.y > this.y) this.y++;
                     }, () => {
-                        if(sqrCheck(this, player, 1)) player.hurt(1);
+                        if(isColliding(this, player)) player.hurt(1);
                     });
                 }
             }
@@ -960,7 +969,10 @@ const games = [
                         case "-y": this.y--; break;
                     }
                     if(this.x < 0 || this.x + 15 > c.width || this.y < 0 || this.y + 15 > c.height) bullets.splice(bullets.indexOf(this), 1);
-                    if(enemies.some(e => e.x == this.x && e.y == this.y)) enemies.find(e => e.x == this.x && e.y == this.y).hurt(1);
+                    if(enemies.some(e => isColliding(this, e))) {
+                        enemies.find(e => isColliding(this, e)).hurt(1);
+                        bullets.splice(bullets.indexOf(this), 1);
+                    }
                 }
             }
             function sqrCheck(initiator, target, radius) {
