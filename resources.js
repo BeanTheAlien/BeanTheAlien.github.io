@@ -19,7 +19,7 @@ window.addEventListener("load", () => {
 });
 
 const resourcelist = document.createElement("div");
-Object.assign(resource.style, {
+Object.assign(resourcelist.style, {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
@@ -44,7 +44,7 @@ const resources = [
             c.height = 600;
             d2.appendChild(c);
             popup.appendChild(d2);
-            ctx = c.getContext("2d");
+            const ctx = c.getContext("2d");
             class Item {
                 constructor(s) {
                     this.name = s.name;
@@ -67,15 +67,16 @@ const resources = [
             class EFlag extends Item {}
             var world = [];
             // world.forEach(w => w.render());
+        }
     }
 ];
 
-games.forEach(g => {
+resources.forEach(r => {
     const b = document.createElement("button");
-    b.textContent = g.name;
-    b.addEventListener("click", () => launch(g.exec, g.filename));
-    b.id = g.filename;
-    gamelist.appendChild(b);
+    b.textContent = r.name;
+    b.addEventListener("click", () => launch(r.exec, r.filename));
+    b.id = r.filename;
+    resourcelist.appendChild(b);
 });
 
 document.body.appendChild(gamelist);
