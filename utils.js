@@ -9,11 +9,11 @@ export function random(a = null, b = null) {
         if(a > b) {
             min = Math.ceil(b);
             max = Math.floor(a);
-            return Math.floor(Math.random() * (max - min + 1)) + min;
+            return Math.floor(Math.random() * (max - min)) + min;
         } else if(a < b) {
             min = Math.ceil(a);
             max = Math.floor(b);
-            return Math.floor(Math.random() * (max - min + 1)) + min;
+            return Math.floor(Math.random() * (max - min)) + min;
         } else {
             return Math.floor(Math.random() * a);
         }
@@ -625,6 +625,13 @@ export class mouse {
             document.addEventListener("mousemove", getPos);
         })
     }
+    static track(target) {
+        document.addEventListener("mousemove", (e) => {
+            const x = e.clientX;
+            const y = e.clientY;
+            target = { x, y };
+        });
+    }
 }
 
 export function remDupes(start = 0, end = this.length) {
@@ -787,7 +794,7 @@ String.prototype.toHex = toHex;
 export function gstFormat() {
     let result = this;
     const repls = [
-        { "base": "string", "code": "s", "props": { "maxlen": { "type": "int", "exec": (args)  => { return args[0].substring(0, args[1]); } } } },
+        { "base": "string", "code": "s", "props": { "len": { "type": "int", "exec": (args)  => { return args[0].substring(0, args[1]); } } } },
         { "base": "num", "code": "n", "props": { "round": { "type": "int", "exec": (args) => { return args[0].toFixed(args[1]); } } } }
     ];
     result = result.replace(/\s*/, "");
@@ -854,6 +861,21 @@ Element.prototype.styleize = styleize;
 export function makeEl(id) {
     return document.createElement(id);
 }
+
+// export function getConsoleCont() {
+//     //
+// }
+
+/*
+console.stdlog = console.log.bind(console);
+console.logs = [];
+console.log = function(){
+    console.logs.push(Array.from(arguments));
+    console.stdlog.apply(console, arguments);
+}
+
+rep for err, warn, usw
+*/
 
 // export class Point {
 //     constructor(x, y) {

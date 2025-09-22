@@ -1064,7 +1064,10 @@ const games = [
             var runtime = null;
 
             function game() {
-                if(!lvls[stage]) gameEnd(runtime, score, "dungeon-hs");
+                if(!lvls[stage]) {
+                    gameEnd(runtime, score, "dungeon-hs");
+                    return;
+                }
                 if(inshop) {
                     drawShop();
                     return;
@@ -1098,54 +1101,90 @@ const games = [
             }
             function shop() {
                 inshop = true;
-                d2.appendChild(overlay);
-                for(let i = 0; i < 3; i++) {
+                if(!overlay.parentNode) d2.appendChild(overlay);
+                shopItems = [];
+                while(shopItems.length < 3) {
                     const upg = upgs[random(0, upgs.length)];
                     if(!shopItems.includes(upg)) shopItems.push(upg);
                 }
+                Object.assign(overlay.style, {
+                    position: "absolute",
+                    left: "10px",
+                    top: "10px",
+                    padding: "10px",
+                    background: "rgba(0, 0, 0, 0.85)",
+                    color: "white",
+                    zIndex: 9999
+                });
+                overlay.innerHTML = ""; // clear previous content safely
+                // create item cards properly (put text inside the clickable div)
                 shopItems.forEach(s => {
                     const div = document.createElement("div");
                     div.id = `upg-${s.name}`;
-                    div.addEventListener("click", shopPurchase);
+                    div.className = "shop-item";
+                    div.style.cursor = "pointer";
+                    div.style.border = "1px solid rgba(255,255,255,0.1)";
+                    div.style.padding = "6px";
+                    div.style.marginBottom = "6px";
+
                     const h3 = document.createElement("h3");
                     h3.textContent = s.name;
-                    const div2 = document.createElement("div");
-                    div2.className = "space";
                     const p = document.createElement("p");
                     p.textContent = s.desc;
-                    const div3 = document.createElement("div");
-                    div3.className = "space";
+                    p.style.margin = "4px 0";
                     const p2 = document.createElement("p");
-                    p2.textContent = s.cost;
-                    [div, h3, div2, p, div3, p2].forEach(e => overlay.appendChild(e));
+                    p2.textContent = `Cost: ${s.cost}`;
+                    p2.style.fontWeight = "bold";
+
+                    // build structure and then add listener to the container
+                    div.appendChild(h3);
+                    div.appendChild(p);
+                    div.appendChild(p2);
+                    div.addEventListener("click", shopPurchase);
+                    overlay.appendChild(div);
                 });
+                // make exit button without innerHTML (so we don't kill listeners)
                 const button = document.createElement("button");
-                overlay.innerHTML += `<button id="exit-shop" style="background-color: red; color: white;">Exit</button>`;
-                document.getElementById("exit-shop").addEventListener("click", exitShop);
+                button.id = "exit-shop";
+                button.textContent = "Exit";
+                button.style.backgroundColor = "red";
+                button.style.color = "white";
+                button.style.padding = "6px 10px";
+                button.addEventListener("click", exitShop);
+                overlay.appendChild(button);
             }
             function drawShop() {
                 ctx.clearRect(0, 0, c.width, c.height);
                 ctx.fillStyle = "#160057ff";
                 ctx.beginPath();
                 ctx.rect(0, 0, c.width, c.height);
+                ctx.fill();
             }
             function shopPurchase(e) {
-                const id = e.target.id;
-                const name = id.split("upg-")[1];
+                const el = e.currentTarget;
+                const id = el.id;
+                const name = id.replace("upg-", "");
                 const item = shopItems.find(s => name == s.name);
                 item.purchase();
+                el.style.opacity = "0.5";
+                el.disabled = true;
             }
             function exitShop() {
                 overlay.innerHTML = "";
-                d2.removeChild(overlay);
+                if(overlay.parentNode == d2) d2.removeChild(overlay);
                 inshop = false;
                 stage++;
                 makeStage();
             }
             function makeStage() {
                 const l = lvls[stage];
+                if(!lvls[stage]) {
+                    gameEnd(runtime, score, "dungeon-hs");
+                    return;
+                }
                 for(let i = 0; i < l.comp.length; i++) enemies.push(l.comp[i]);
             }
+            makeStage();
             function setup() {
                 runtime = setInterval(game, 5);
                 document.addEventListener("keydown", (e) => keys[e.key] = true);
