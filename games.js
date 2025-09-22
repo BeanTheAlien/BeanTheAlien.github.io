@@ -1043,7 +1043,8 @@ const games = [
             var enemies = [];
             var bullets = [];
             const lvls = [
-                new Level("Dungeon 1", [new Basic(5, 10)], "#1b2052ff")
+                new Level("Dungeon 1", [new Basic(5, 10)], "#1b2052ff"),
+                new Level("Dungeon 2"), [new Basic(5, 10), new Basic(10, 10), "#1b2052ff"]
             ];
             const upgs = [
                 new Upgrade("Health", "Increases health.", 1, () => player.maxhp += 1),
