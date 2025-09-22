@@ -1,7 +1,7 @@
 # BeanTheAlien.github.io
 i am a blueberry
 
-# Version 0.0.8.1
+# Version 0.0.8
 
 # Changelog
 ### 0.0.1
@@ -27,5 +27,3 @@ i am a blueberry
 - Started Geomtry Dash development
 ### 0.0.8
 - Started PvZ development
-### 0.0.8.1
-- Changed flappy bird gravity strength 0.5 => 0.55 (fixing issue issue <a href="https://github.com/BeanTheAlien/BeanTheAlien.github.io/issues/14">#14</a>)
