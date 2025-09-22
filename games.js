@@ -1103,10 +1103,23 @@ const games = [
                     const upg = upgs[random(0, upgs.length)];
                     if(!shopItems.includes(upg)) shopItems.push(upg);
                 }
-                overlay.innerHTML = shopItems.map(s => {
-                    return `<div id="upg-${s.name}"><h3>${s.name}</h3><div class="space"></div><p>${s.desc}</p><div class="space"></div><p>${s.cost}</p></div>`;
-                }).join('');
-                shopItems.forEach(s => document.getElementById(`upg-${s.name}`).addEventListener("click", shopPurchase));
+                shopItems.forEach(s => {
+                    const div = document.createElement("div");
+                    div.id = `upg-${s.name}`;
+                    div.addEventListener("click", shopPurchase);
+                    const h3 = document.createElement("h3");
+                    h3.textContent = s.name;
+                    const div2 = document.createElement("div");
+                    div2.className = "space";
+                    const p = document.createElement("p");
+                    p.textContent = s.desc;
+                    const div3 = document.createElement("div");
+                    div3.className = "space";
+                    const p2 = document.createElement("p");
+                    p2.textContent = s.cost;
+                    [div, h3, div2, p, div3, p2].forEach(e => overlay.appendChild(e));
+                });
+                const button = document.createElement("button");
                 overlay.innerHTML += `<button id="exit-shop" style="background-color: red; color: white;">Exit</button>`;
                 document.getElementById("exit-shop").addEventListener("click", exitShop);
             }
