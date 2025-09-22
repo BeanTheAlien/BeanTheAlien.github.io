@@ -1,4 +1,3 @@
-import { createContext } from 'react';
 import '/utils.js';
 import { random, chance, getEl, wait, isTrue, isFalse, safeEval, RandomNums, ClickRegion, copyToClipboard, dist, mouse, lsGet, lsSet, quadratic, getQuerys, isFactorable, makeEl } from '/utils.js';
 
@@ -1044,7 +1043,7 @@ const games = [
             var bullets = [];
             const lvls = [
                 new Level("Dungeon 1", [new Basic(5, 10)], "#1b2052ff"),
-                new Level("Dungeon 2"), [new Basic(5, 10), new Basic(10, 10), "#1b2052ff"]
+                new Level("Dungeon 2", [new Basic(5, 10), new Basic(10, 10)], "#1b2052ff")
             ];
             const upgs = [
                 new Upgrade("Health", "Increases health.", 1, () => player.maxhp += 1),
