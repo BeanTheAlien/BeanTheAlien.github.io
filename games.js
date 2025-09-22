@@ -904,7 +904,6 @@ const games = [
                         this.x++;
                         this.dir = "x";
                     }
-                    if(inshop) return;
                     if(keys["e"] && !keys["r"] && this.ammo > 0 && this.scd <= 0) {
                         bullets.push(new Bullet(this.x, this.y, this.dir));
                         this.scd = this.cd;
@@ -1108,6 +1107,20 @@ const games = [
                     ctx.fillText(m.name, x, c.height / 2);
                 }
                 ctx.fill();
+                ctx.fillStyle = "red";
+                ctx.beginPath();
+                ctx.rect(c.width / 2, c.height - 20, 30, 20);
+                ctx.fill();
+                ctx.fillStyle = "white";
+                ctx.fillText("Exit", c.width / 2, c.height - 20);
+                c.addEventListener("click", shopPurchase);
+                // maybe just add a game controls bar to simplify the process
+                // or overlay upgrades instead of guessing
+
+                // overlaying upgs... this is too hard otherwise
+            }
+            function shopPurchase(e) {
+                //
             }
             function makeStage() {
                 const l = lvls[stage - 1];
