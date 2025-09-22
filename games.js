@@ -856,6 +856,7 @@ const games = [
             c.height = 50 * tileSize;
             d2.appendChild(c);
             popup.appendChild(d2);
+            const overlay = document.createElement("div");
             function isColliding(a, b) {
                 return (
                     a.x < b.x + b.w &&
@@ -1089,11 +1090,12 @@ const games = [
             }
             function shop() {
                 inshop = true;
-                let u = [];
+                d2.appendChild(overlay);
                 for(let i = 0; i < 3; i++) {
                     const upg = upgs[random(0, upgs.length)];
-                    if(!u.includes(upg)) u.push(upg);
+                    if(!shopItems.includes(upg)) shopItems.push(upg);
                 }
+                overlay.innerHTML = u.map();
             }
             function drawShop() {
                 ctx.beginPath();
