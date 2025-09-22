@@ -1064,6 +1064,7 @@ const games = [
             var runtime = null;
 
             function game() {
+                if(!lvls[stage]) gameEnd(runtime, score, "dungeon-hs");
                 if(inshop) {
                     drawShop();
                     return;
@@ -1104,7 +1105,7 @@ const games = [
                 }
                 overlay.innerHTML = shopItems.map(s => {
                     return `<div id="upg-${s.name}"><h3>${s.name}</h3><div class="space"></div><p>${s.desc}</p><div class="space"></div><p>${s.cost}</p></div>`;
-                });
+                }).join('');
                 shopItems.forEach(s => document.getElementById(`upg-${s.name}`).addEventListener("click", shopPurchase));
                 overlay.innerHTML += `<button id="exit-shop" style="background-color: red; color: white;">Exit</button>`;
                 document.getElementById("exit-shop").addEventListener("click", exitShop);
