@@ -1011,11 +1011,9 @@ const games = [
                 }
             }
             class Upgrade {
-                constructor(x, y, name, desc, cost, effect) {
-                    this.x = x;
-                    this.y = y;
+                constructor(name, desc, cost, effect) {
                     this.w = tileSize * 3;
-                    this.h = tileSize * 3;
+                    this.h = tileSize * 5;
                     this.name = name;
                     this.desc = desc;
                     this.cost = cost;
@@ -1042,6 +1040,11 @@ const games = [
             var player = new Player();
             var enemies = [];
             var bullets = [];
+            const lvls = [
+                new Level("Dungeon 1", [new Basic(5, 10)], "#1b2052ff")
+            ];
+            const upgs = [];
+            var shopItems = [];
             var stage = 0;
             var inshop = false;
             var keys = {};
@@ -1052,11 +1055,20 @@ const games = [
             var runtime = null;
 
             function game() {
+                if(inshop) {
+                    drawShop();
+                    return;
+                }
                 if(enemies.length > 0) {
                     player.upd();
                     enemies.forEach(e => e.upd());
                     bullets.forEach(b => b.upd());
                     ctx.clearRect(0, 0, c.width, c.height);
+                    const l = lvls[stage - 1];
+                    ctx.fillStyle = l.bg;
+                    ctx.beginPath();
+                    ctx.rect(0, 0, c.width, c.height);
+                    ctx.fill();
                     ctx.fillStyle = "green";
                     ctx.beginPath();
                     ctx.rect(player.x, player.y, player.w, player.h);
@@ -1072,14 +1084,34 @@ const games = [
                     delta++;
                 } else {
                     stage++;
-                    makeStage();
+                    shop();
+                    //makeStage();
                 }
             }
             function shop() {
                 inshop = true;
+                let u = [];
+                for(let i = 0; i < 3; i++) {
+                    const upg = upgs[random(0, upgs.length)];
+                    if(!u.includes(upg)) u.push(upg);
+                }
+            }
+            function drawShop() {
+                ctx.beginPath();
+                for(let i = 0; i < shopItems.length; i++) {
+                    ctx.fillStyle = "#1355acff";
+                    let x = Math.round(c.width / 3);
+                    let m = shopItems[i];
+                    ctx.rect(x * i, c.height / 2, m.w, m.h);
+                    ctx.font = "30px Verdana";
+                    ctx.fillStyle = "#ffffffff";
+                    ctx.fillText(m.name, x, c.height / 2);
+                }
+                ctx.fill();
             }
             function makeStage() {
-                for(let i = 0; i < stage; i++) enemies.push(new Basic(50, 30));
+                const l = lvls[stage - 1];
+                for(let i = 0; i < l.comp.length; i++) enemies.push(l.comp[i]);
             }
             function setup() {
                 runtime = setInterval(game, 5);
