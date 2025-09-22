@@ -79,7 +79,7 @@ resources.forEach(r => {
     resourcelist.appendChild(b);
 });
 
-document.body.appendChild(gamelist);
+document.body.appendChild(resourcelist);
 
 function launch(exec, fname) {
     disableGL();
