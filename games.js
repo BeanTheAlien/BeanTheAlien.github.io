@@ -1,3 +1,4 @@
+import { createContext } from 'react';
 import '/utils.js';
 import { random, chance, getEl, wait, isTrue, isFalse, safeEval, RandomNums, ClickRegion, copyToClipboard, dist, mouse, lsGet, lsSet, quadratic, getQuerys, isFactorable, makeEl } from '/utils.js';
 
@@ -877,6 +878,7 @@ const games = [
                     this.cd = 100;
                     this.scd = this.cd;
                     this.rcd = this.cd;
+                    this.maxhp = 5;
                     this.hp = 5;
                     this.tokens = 0;
                 }
@@ -1043,7 +1045,14 @@ const games = [
             const lvls = [
                 new Level("Dungeon 1", [new Basic(5, 10)], "#1b2052ff")
             ];
-            const upgs = [];
+            const upgs = [
+                new Upgrade("Health", "Increases health.", 1, () => player.maxhp += 1),
+                new Upgrade("Bandage", "Heal some health.", 1, () => {
+                    player.hp += 1;
+                    if(player.hp > player.maxhp) player.hp = player.maxhp;
+                }),
+                new Upgrade("Weapon Mastery", "Fires and reloads your gun faster.", 5, () => player.cd -= 1)
+            ];
             var shopItems = [];
             var stage = 0;
             var inshop = false;
@@ -1064,7 +1073,7 @@ const games = [
                     enemies.forEach(e => e.upd());
                     bullets.forEach(b => b.upd());
                     ctx.clearRect(0, 0, c.width, c.height);
-                    const l = lvls[stage - 1];
+                    const l = lvls[stage];
                     ctx.fillStyle = l.bg;
                     ctx.beginPath();
                     ctx.rect(0, 0, c.width, c.height);
@@ -1083,9 +1092,7 @@ const games = [
                     ctx.fill();
                     delta++;
                 } else {
-                    stage++;
                     shop();
-                    //makeStage();
                 }
             }
             function shop() {
@@ -1095,37 +1102,34 @@ const games = [
                     const upg = upgs[random(0, upgs.length)];
                     if(!shopItems.includes(upg)) shopItems.push(upg);
                 }
-                overlay.innerHTML = u.map();
+                overlay.innerHTML = shopItems.map(s => {
+                    return `<div id="upg-${s.name}"><h3>${s.name}</h3><div class="space"></div><p>${s.desc}</p><div class="space"></div><p>${s.cost}</p></div>`;
+                });
+                shopItems.forEach(s => document.getElementById(`upg-${s.name}`).addEventListener("click", shopPurchase));
+                overlay.innerHTML += `<button id="exit-shop" style="background-color: red; color: white;">Exit</button>`;
+                document.getElementById("exit-shop").addEventListener("click", exitShop);
             }
             function drawShop() {
+                ctx.clearRect(0, 0, c.width, c.height);
+                ctx.fillStyle = "#160057ff";
                 ctx.beginPath();
-                for(let i = 0; i < shopItems.length; i++) {
-                    ctx.fillStyle = "#1355acff";
-                    let x = Math.round(c.width / 3);
-                    let m = shopItems[i];
-                    ctx.rect(x * i, c.height / 2, m.w, m.h);
-                    ctx.font = "30px Verdana";
-                    ctx.fillStyle = "#ffffffff";
-                    ctx.fillText(m.name, x, c.height / 2);
-                }
-                ctx.fill();
-                ctx.fillStyle = "red";
-                ctx.beginPath();
-                ctx.rect(c.width / 2, c.height - 20, 30, 20);
-                ctx.fill();
-                ctx.fillStyle = "white";
-                ctx.fillText("Exit", c.width / 2, c.height - 20);
-                c.addEventListener("click", shopPurchase);
-                // maybe just add a game controls bar to simplify the process
-                // or overlay upgrades instead of guessing
-
-                // overlaying upgs... this is too hard otherwise
+                ctx.rect(0, 0, c.width, c.height);
             }
             function shopPurchase(e) {
-                //
+                const id = e.target.id;
+                const name = id.split("upg-")[1];
+                const item = shopItems.find(s => name == s.name);
+                item.purchase();
+            }
+            function exitShop() {
+                overlay.innerHTML = "";
+                d2.removeChild(overlay);
+                inshop = false;
+                stage++;
+                makeStage();
             }
             function makeStage() {
-                const l = lvls[stage - 1];
+                const l = lvls[stage];
                 for(let i = 0; i < l.comp.length; i++) enemies.push(l.comp[i]);
             }
             function setup() {
