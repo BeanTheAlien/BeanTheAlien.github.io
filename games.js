@@ -1321,9 +1321,10 @@ function launch(exec, fname) {
     // a.href = url;
     // a.download = fname + ".js";
     // btn.appendChild(a);
-    // document.body.appendChild(btn);
+    // popup.appendChild(btn);
+    // btn.style.position = "relative";
     // TODO: fix CSS/JS so <div><button> instead of static pos of button
-
+    // probbaly need to have exec(popup, btn) to append to d2 instead of popup
     /*
     TODO:
     download => open small menu
