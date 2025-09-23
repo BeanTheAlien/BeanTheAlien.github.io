@@ -1044,15 +1044,14 @@ const games = [
                         player.tokens++;
                         score++;
                     }, () => {
-                        if(delta % 5 == 0) {
+                        if(delta % 150 == 0) {
                             this.x = random(0, c.width);
                             this.y = random(0, c.height);
-                            if(chance(80)) {
-                                if(player.x < this.x) this.x--;
-                                else if(player.x > this.x) this.x++;
-                                if(player.y < this.y) this.y--;
-                                else if(player.y > this.y) this.y++;
-                            }
+                        } else if(chance(80) && delta % 2 == 0) {
+                            if(player.x < this.x) this.x--;
+                            else if(player.x > this.x) this.x++;
+                            if(player.y < this.y) this.y--;
+                            else if(player.y > this.y) this.y++;
                         }
                     }, () => {
                         player.hurt(1);
@@ -1127,7 +1126,9 @@ const games = [
                     player.hp += 1;
                     if(player.hp > player.maxhp) player.hp = player.maxhp;
                 }),
-                new Upgrade("Weapon Mastery", "Fires and reloads your gun faster.", 5, () => player.cd -= 1)
+                new Upgrade("Weapon Mastery", "Fires and reloads your gun faster.", 5, () => player.cd -= 1),
+                new Upgrade("Damage", "Deal more damage.", 2, () => player.dmg++),
+                new Upgrade("Mag Size", "Increase the size of your magazine.", 10,() => player.mag++)
             ];
             var shopItems = [];
             var stage = 0;
