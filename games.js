@@ -977,11 +977,10 @@ const games = [
                         player.tokens++;
                         score++;
                     }, () => {
-                        if(delta % 2 != 0) return;
-                        if(player.x < this.x) this.x--;
-                        else if(player.x > this.x) this.x++;
-                        if(player.y < this.y) this.y--;
-                        else if(player.y > this.y) this.y++;
+                        if(player.x < this.x) this.x -= 0.85;
+                        else if(player.x > this.x) this.x += 0.85;
+                        if(player.y < this.y) this.y -= 0.85;
+                        else if(player.y > this.y) this.y += 0.85;
                     }, () => {
                         player.hurt(1);
                     }, () => {
@@ -1042,8 +1041,9 @@ const games = [
             var enemies = [];
             var bullets = [];
             const lvls = [
-                new Level("Dungeon 1", [new Basic(5, 10)], "#1b2052ff"),
-                new Level("Dungeon 2", [new Basic(5, 10), new Basic(10, 10)], "#1b2052ff")
+                new Level("Dungeon 1", [new Basic(50, 10)], "#1b2052ff"),
+                new Level("Dungeon 2", [new Basic(50, 10), new Basic(70, 30)], "#1b2052ff"),
+                new Level("Dungeon 3", [new Runny(200, 200)], "#1b2052ff")
             ];
             const upgs = [
                 new Upgrade("Health", "Increases health.", 1, () => player.maxhp += 1),
@@ -1182,6 +1182,8 @@ const games = [
                     gameEnd(runtime, score, "dungeon-hs");
                     return;
                 }
+                player.x = 0;
+                player.y = 0;
                 for(let i = 0; i < l.comp.length; i++) enemies.push(l.comp[i]);
             }
             makeStage();
