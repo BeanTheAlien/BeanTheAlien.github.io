@@ -55,7 +55,7 @@ const games = [
             class Player {
                 constructor() {
                     this.height = Math.round(c.height / 2);
-                    this.grav = 0.0527;
+                    this.grav = 0.053;
                     this.gspd = 0;
                     this.x = 15;
                     this.y = 30;
@@ -1041,7 +1041,6 @@ const games = [
                     this.effect = effect;
                 }
                 purchase() {
-                    if(player.tokens < this.cost) return;
                     player.tokens -= this.cost;
                     this.effect();
                 }
@@ -1187,6 +1186,7 @@ const games = [
                 const id = el.id;
                 const name = id.replace("upg-", "");
                 const item = shopItems.find(s => name == s.name);
+                if(player.tokens < item.cost) return;
                 item.purchase();
                 el.style.opacity = "0.5";
                 el.disabled = true;
