@@ -857,6 +857,9 @@ const games = [
             d2.appendChild(c);
             popup.appendChild(d2);
             const overlay = document.createElement("div");
+            const stats = document.createElement("div");
+            stats.style.position = "relative";
+            d2.appendChild(stats);
             function isColliding(a, b) {
                 return (
                     a.x < b.x + b.w &&
@@ -919,6 +922,9 @@ const games = [
                 hurt(d) {
                     this.hp -= d;
                     if(this.hp <= 0) gameEnd(runtime, score, "dungeon-hs");
+                }
+                stats() {
+                    return `HP: ${this.hp}\nMax HP: ${this.maxhp}\nCooldown: ${this.cd}\nAmmo: ${this.ammo}\nMag: ${this.mag}`;
                 }
             }
             class Enemy {
@@ -1089,6 +1095,7 @@ const games = [
                     gameEnd(runtime, score, "dungeon-hs");
                     return;
                 }
+                stats.textContent = player.stats();
                 if(inshop) {
                     drawShop();
                     return;
@@ -1139,6 +1146,7 @@ const games = [
                 });
                 overlay.innerHTML = ""; // clear previous content safely
                 // create item cards properly (put text inside the clickable div)
+                let i = 0;
                 shopItems.forEach(s => {
                     const div = document.createElement("div");
                     div.id = `upg-${s.name}`;
@@ -1147,15 +1155,19 @@ const games = [
                     div.style.border = "1px solid rgba(255,255,255,0.1)";
                     div.style.padding = "6px";
                     div.style.marginBottom = "6px";
+                    //div.dataset.price = s.cost;
 
                     const h3 = document.createElement("h3");
                     h3.textContent = s.name;
+                    //h3.id = `h3-${i}`;
                     const p = document.createElement("p");
                     p.textContent = s.desc;
                     p.style.margin = "4px 0";
+                    //p.id = `p-${i}`;
                     const p2 = document.createElement("p");
                     p2.textContent = `Cost: ${s.cost}`;
                     p2.style.fontWeight = "bold";
+                    //p2.id = `p2-${i}`;
                     [h3, p, p2].forEach(e => e.style.color = player.tokens >= s.cost ? "white" : "red");
 
                     // build structure and then add listener to the container
@@ -1191,6 +1203,14 @@ const games = [
                 item.purchase();
                 el.style.opacity = "0.5";
                 el.disabled = true;
+                // for(let i = 0; i < 3; i++) {
+                //     const els = ["h3", "p", "p2"].map(id => document.getElementById(`${id}-${i}`));
+                //     if(el.dataset.price > player.tokens) {
+                //         els.forEach(z => {
+                //             if(z) z.style.color = "red"
+                //         });
+                //     }
+                // }
             }
             function exitShop() {
                 overlay.innerHTML = "";
