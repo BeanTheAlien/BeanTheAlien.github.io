@@ -13,6 +13,10 @@ angry birds
 fruit ninja
 tag
 fnaf
+battleship
+space game
+Phasmophobia
+maze
 */
 
 window.addEventListener("error", (e) => alert(`msg: ${e.message}, ln: ${e.lineno}`));
@@ -1296,6 +1300,20 @@ const games = [
             make enemy templates (extend Enemy)
             make makeStage actually work based on stage
             */
+        }
+    },
+    {
+        "filename": "ghosthunting",
+        "name": "Ghost Hunting",
+        "exec": (popup) => {
+            const d1 = document.createElement("div");
+            const d2 = document.createElement("div");
+            d1.className = "score1";
+            d2.className = "score2";
+            popup.appendChild(d2);
+            class Player {}
+            class Ghost {}
+            class CursedObject {}
         }
     }
 ];
