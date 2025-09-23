@@ -988,6 +988,27 @@ const games = [
                     }, 0.5);
                 }
             }
+            class Brute extends Enemy {
+                constructor(x, y) {
+                    super(x, y, tileSize * 2, tileSize * 3, 10, (d) => {
+                        this.hp -= d;
+                        if(this.hp <= 0) this.die();
+                    }, () => {
+                        enemies.splice(enemies.indexOf(this), 1);
+                        player.tokens++;
+                        score++;
+                    }, () => {
+                        if(player.x < this.x) this.x -= 0.5;
+                        else if(player.x > this.x) this.x += 0.5;
+                        if(player.y < this.y) this.y -= 0.5;
+                        else if(player.y > this.y) this.y += 0.5;
+                    }, () => {
+                        player.hurt(5);
+                    }, () => {
+                        return isColliding(this, player);
+                    }, 5);
+                }
+            }
             class Bullet {
                 constructor(x, y, dir) {
                     this.x = x;
@@ -1043,7 +1064,8 @@ const games = [
             const lvls = [
                 new Level("Dungeon 1", [new Basic(50, 10)], "#1b2052ff"),
                 new Level("Dungeon 2", [new Basic(50, 10), new Basic(70, 30)], "#1b2052ff"),
-                new Level("Dungeon 3", [new Runny(200, 200)], "#1b2052ff")
+                new Level("Dungeon 3", [new Runny(200, 200)], "#1b2052ff"),
+                new Level("Dungeon 4", [new Brute(50, 50)], "#1b2052ff")
             ];
             const upgs = [
                 new Upgrade("Health", "Increases health.", 1, () => player.maxhp += 1),
@@ -1088,7 +1110,7 @@ const games = [
                     ctx.fill();
                     ctx.fillStyle = "red";
                     ctx.beginPath();
-                    enemies.forEach(e => ctx.rect(e.x, e.y, player.w, player.h));
+                    enemies.forEach(e => ctx.rect(e.x, e.y, e.w, e.h));
                     ctx.fill();
                     ctx.fillStyle = "yellow";
                     ctx.beginPath();
