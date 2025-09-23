@@ -882,6 +882,7 @@ const games = [
                     this.rcd = this.cd;
                     this.maxhp = 5;
                     this.hp = 5;
+                    this.dmg = 1;
                     this.tokens = 0;
                 }
                 upd() {
@@ -910,7 +911,7 @@ const games = [
                         this.dir = "x";
                     }
                     if(keys["e"] && !keys["r"] && this.ammo > 0 && this.scd <= 0) {
-                        bullets.push(new Bullet(this.x, this.y, this.dir));
+                        bullets.push(new Bullet(this.x, this.y, this.dir, this.dmg));
                         this.scd = this.cd;
                         this.ammo--;
                     }
@@ -924,7 +925,7 @@ const games = [
                     if(this.hp <= 0) gameEnd(runtime, score, "dungeon-hs");
                 }
                 stats() {
-                    return `HP: ${this.hp}\nMax HP: ${this.maxhp}\nCooldown: ${this.cd}\nAmmo: ${this.ammo}\nMag: ${this.mag}`;
+                    return `HP: ${this.hp}\nMax HP: ${this.maxhp}\nCooldown: ${this.cd}\nAmmo: ${this.ammo}\nMag: ${this.mag}\nDamage: ${this.dmg}\nTokens: ${this.tokens}`;
                 }
             }
             class Enemy {
@@ -961,11 +962,12 @@ const games = [
                         player.tokens++;
                         score++;
                     }, () => {
-                        if(delta % 2 != 0) return;
-                        if(player.x < this.x) this.x--;
-                        else if(player.x > this.x) this.x++;
-                        if(player.y < this.y) this.y--;
-                        else if(player.y > this.y) this.y++;
+                        if(delta % 2 == 0) {
+                            if(player.x < this.x) this.x--;
+                            else if(player.x > this.x) this.x++;
+                            if(player.y < this.y) this.y--;
+                            else if(player.y > this.y) this.y++;
+                        }
                     }, () => {
                         player.hurt(1);
                     }, () => {
@@ -1015,13 +1017,58 @@ const games = [
                     }, 5);
                 }
             }
+            class Boss extends Enemy {
+                constructor(x, y) {
+                    super(x, y, tileSize * 5, tileSize * 5, 20, (d) => {
+                        this.hp -= d;
+                        if(this.hp <= 0) this.die();
+                    }, () => {
+                        enemies.splice(enemies.indexOf(this), 1);
+                        player.tokens++;
+                        score++;
+                    }, () => {
+                    }, () => {
+                        player.hurt(5);
+                    }, () => {
+                        return isColliding(this, player);
+                    }, 5);
+                }
+            }
+            class Tele extends Enemy {
+                constructor(x, y) {
+                    super(x, y, tileSize, tileSize, 1, (d) => {
+                        this.hp -= d;
+                        if(this.hp <= 0) this.die();
+                    }, () => {
+                        enemies.splice(enemies.indexOf(this), 1);
+                        player.tokens++;
+                        score++;
+                    }, () => {
+                        if(delta % 5 == 0) {
+                            this.x = random(0, c.width);
+                            this.y = random(0, c.height);
+                            if(chance(80)) {
+                                if(player.x < this.x) this.x--;
+                                else if(player.x > this.x) this.x++;
+                                if(player.y < this.y) this.y--;
+                                else if(player.y > this.y) this.y++;
+                            }
+                        }
+                    }, () => {
+                        player.hurt(1);
+                    }, () => {
+                        return isColliding(this, player);
+                    }, 2);
+                }
+            }
             class Bullet {
-                constructor(x, y, dir) {
+                constructor(x, y, dir, dmg) {
                     this.x = x;
                     this.y = y;
                     this.w = tileSize;
                     this.h = tileSize;
                     this.dir = dir;
+                    this.dmg = dmg;
                 }
                 upd() {
                     switch(this.dir) {
@@ -1030,9 +1077,9 @@ const games = [
                         case "y": this.y++; break;
                         case "-y": this.y--; break;
                     }
-                    if(this.x < 0 || this.x + 15 > c.width || this.y < 0 || this.y + 15 > c.height) bullets.splice(bullets.indexOf(this), 1);
+                    if(this.x < 0 || this.x + this.w > c.width || this.y < 0 || this.y + this.h > c.height) bullets.splice(bullets.indexOf(this), 1);
                     if(enemies.some(e => isColliding(this, e))) {
-                        enemies.find(e => isColliding(this, e)).hurt(1);
+                        enemies.find(e => isColliding(this, e)).hurt(this.dmg);
                         bullets.splice(bullets.indexOf(this), 1);
                     }
                 }
@@ -1070,7 +1117,9 @@ const games = [
                 new Level("Dungeon 1", [new Basic(50, 10)], "#1b2052ff"),
                 new Level("Dungeon 2", [new Basic(50, 10), new Basic(70, 30)], "#1b2052ff"),
                 new Level("Dungeon 3", [new Runny(200, 200)], "#1b2052ff"),
-                new Level("Dungeon 4", [new Brute(50, 50)], "#1b2052ff")
+                new Level("Dungeon 4", [new Brute(50, 50)], "#1b2052ff"),
+                new Level("Dungeon 5", [new Boss(50, 50)], "#5b0000ff"),
+                new Level("Dungeon 6", [new Tele(70, 70)], "#1b2052ff")
             ];
             const upgs = [
                 new Upgrade("Health", "Increases health.", 1, () => player.maxhp += 1),
