@@ -1,7 +1,7 @@
 # BeanTheAlien.github.io
 i am a blueberry
 
-# Version 0.0.8
+# Version 0.0.9
 
 # Changelog
 ### 0.0.1
@@ -27,3 +27,7 @@ i am a blueberry
 - Started Geomtry Dash development
 ### 0.0.8
 - Started PvZ development
+### 0.0.9
+- Finally finished the preview for Dungeon Game
+- Added some unique classes for Dungeon Game
+- Fixed a bunch of Dungeon Game errors
