@@ -1142,7 +1142,7 @@ const games = [
                 shopItems.forEach(s => {
                     const div = document.createElement("div");
                     div.id = `upg-${s.name}`;
-                    div.className = "shop-item";
+                    //div.className = "shop-item";
                     div.style.cursor = "pointer";
                     div.style.border = "1px solid rgba(255,255,255,0.1)";
                     div.style.padding = "6px";
@@ -1156,6 +1156,7 @@ const games = [
                     const p2 = document.createElement("p");
                     p2.textContent = `Cost: ${s.cost}`;
                     p2.style.fontWeight = "bold";
+                    [h3, p, p2].forEach(e => e.style.color = player.tokens >= s.cost ? "white" : "red");
 
                     // build structure and then add listener to the container
                     div.appendChild(h3);
