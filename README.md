@@ -1,7 +1,7 @@
 # BeanTheAlien.github.io
 i am a blueberry
 
-# Version 0.0.9
+# Version 0.0.10
 
 # Changelog
 ### 0.0.1
@@ -31,3 +31,5 @@ i am a blueberry
 - Finally finished the preview for Dungeon Game
 - Added some unique classes for Dungeon Game
 - Fixed a bunch of Dungeon Game errors
+### 0.0.10
+- Pushed some new content for Dungeon
