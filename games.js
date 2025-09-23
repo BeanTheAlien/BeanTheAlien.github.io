@@ -1118,7 +1118,9 @@ const games = [
                 new Level("Dungeon 3", [new Runny(200, 200)], "#1b2052ff"),
                 new Level("Dungeon 4", [new Brute(50, 50)], "#1b2052ff"),
                 new Level("Dungeon 5", [new Boss(50, 50)], "#5b0000ff"),
-                new Level("Dungeon 6", [new Tele(70, 70)], "#1b2052ff")
+                new Level("Dungeon 6", [new Tele(70, 70)], "#1b2052ff"),
+                new Level("Dungeon 7", [new Tele(70, 70), new Tele(70, 70), new Tele(70, 70), new Tele(70, 70), new Tele(70, 70)], "#1b2052ff"),
+                new Level("Dungeon 8", [new Brute(50, 50), new Brute(100, 100), new Basic(70, 80)], "#1b2052ff")
             ];
             const upgs = [
                 new Upgrade("Health", "Increases health.", 1, () => player.maxhp += 1),
