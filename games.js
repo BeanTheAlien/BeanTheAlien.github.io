@@ -1308,6 +1308,32 @@ const games = [
             make makeStage actually work based on stage
             */
         }
+    },
+    {
+        "filename": "spacegame",
+        "name": "Space Game",
+        "exec": (popup) => {
+            const d1 = document.createElement("div");
+            const d2 = document.createElement("div");
+            d1.className = "score1";
+            d2.className = "score2";
+            popup.appendChild(d2);
+            class Ship {
+                constructor() {
+                    this.x = 0;
+                    this.y = 0;
+                    this.fuel = 100;
+                    this.altitude = 0;
+                    this.crew = [];
+                    this.integrity = 100;
+                }
+            }
+            class Planet {}
+            class Star {}
+            class Meteor {}
+            class Mineral {}
+            var ship = new Ship();
+        }
     }
 ];
 
