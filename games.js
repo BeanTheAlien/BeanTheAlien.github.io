@@ -17,6 +17,7 @@ battleship
 space game
 Phasmophobia
 maze
+blackjack
 */
 
 window.addEventListener("error", (e) => alert(`msg: ${e.message}, ln: ${e.lineno}`));
