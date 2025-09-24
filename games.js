@@ -59,7 +59,7 @@ const games = [
             class Player {
                 constructor() {
                     this.height = Math.round(c.height / 2);
-                    this.grav = 0.053;
+                    this.grav = 0.07;
                     this.gspd = 0;
                     this.x = 15;
                     this.y = 30;
@@ -1031,6 +1031,12 @@ const games = [
                         player.tokens++;
                         score++;
                     }, () => {
+                        if(delta % 2 == 0) {
+                            if(player.x < this.x) this.x--;
+                            else if(player.x > this.x) this.x++;
+                            if(player.y < this.y) this.y--;
+                            else if(player.y > this.y) this.y++;
+                        }
                     }, () => {
                         player.hurt(5);
                     }, () => {
@@ -1300,20 +1306,6 @@ const games = [
             make enemy templates (extend Enemy)
             make makeStage actually work based on stage
             */
-        }
-    },
-    {
-        "filename": "ghosthunting",
-        "name": "Ghost Hunting",
-        "exec": (popup) => {
-            const d1 = document.createElement("div");
-            const d2 = document.createElement("div");
-            d1.className = "score1";
-            d2.className = "score2";
-            popup.appendChild(d2);
-            class Player {}
-            class Ghost {}
-            class CursedObject {}
         }
     }
 ];
