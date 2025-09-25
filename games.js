@@ -350,6 +350,8 @@ const games = [
                     this.y = 300;
                     this.vx = 3;
                     this.vy = 2;
+                    this.vx *= chance(50) ? -1 : 1;
+                    this.vy *= chance(50) ? -1 : 1;
                 }
                 upd() {
                     this.x += this.vx;
@@ -1327,12 +1329,23 @@ const games = [
                     this.crew = [];
                     this.integrity = 100;
                 }
+                upd() {
+                    //
+                }
             }
             class Planet {}
             class Star {}
             class Meteor {}
             class Mineral {}
-            var ship = new Ship();
+            const ship = new Ship();
+            function game() {
+                ship.upd();
+            }
+            function setup() {
+                runtime = setInterval(game, 5);
+                document.addEventListener("keydown", (e) => keys[e.key] = true);
+                document.addEventListener("keyup", (e) => keys[e.key] = false);
+            }
         }
     }
 ];
