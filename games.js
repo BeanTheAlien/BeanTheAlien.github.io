@@ -1393,7 +1393,7 @@ const games = [
                 } },
                 { "text": `<p>Where would you like to go?</p><div id="opts"></div>`, "run": () => {
                     const opts = document.getElementById("opts");
-                    [["Stay In Room", 3]].map(i => {
+                    [["Stay In Room", 3], ["Go Downstairs", 4]].map(i => {
                         const b = document.createElement("button");
                         b.textContent = i[0];
                         return [b, i[1]]
@@ -1405,13 +1405,28 @@ const games = [
                 { "text": `<p>You decided to stay in your room and went back to bed.</p>`, "run": async () => {
                     await wait(2000);
                     end("Bedtime", "Well, that is one way to avoid problems.");
+                } },
+                { "text": `<p id="t">You decided you were going to go downstairs.</p><div id="w"></div>`, "run": async () => {
+                    const t = document.getElementById("t");
+                    await wait(2000);
+                    t.textContent = "Before you head downstairs, you have a selection of weapons avalible.";
+                    const w = document.getElementById("w");
+                    ["Shotgun", "Knife", "Fists"].forEach(i => {
+                        const b = document.createElement("button");
+                        b.textContent = i;
+                        b.addEventListener("click", () => game(5, i));
+                        w.appendChild(b);   
+                    });
+                } },
+                { "text": `<p id="w"></p>`, "run": async (weap) => {
+                    const w = document.getElementById("w");
                 } }
             ];
-            function game(i) {
+            function game(i, ...args) {
                 if(!cyoa[i]) return;
                 const item = cyoa[i];
                 menu.innerHTML = item.text;
-                item.run();
+                item.run(...args);
             }
             function setup() {
                 menu.innerHTML = `<h1>Choose Your Own Adventure</h1><div class="space"></div><button id="start">Start</button>`;
