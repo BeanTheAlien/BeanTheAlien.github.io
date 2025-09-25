@@ -1438,7 +1438,11 @@ const games = [
                         document.getElementById("o").appendChild(i[0]);
                     });
                 } },
-                { "text": `<p id="r"></p>`, "run": async (weap) => {} }
+                { "text": `<p id="l"></p>`, "run": async (weap) => {
+                    const l = document.getElementById("l");
+                    l.textContent = "A strange figure is standing in the living room...";
+                    await wait(2000);
+                } }
             ];
             function game(i, ...args) {
                 if(!cyoa[i]) return;
