@@ -1420,6 +1420,23 @@ const games = [
                 } },
                 { "text": `<p id="w"></p>`, "run": async (weap) => {
                     const w = document.getElementById("w");
+                    w.textContent = `You chose ${weap}.`;
+                    await wait(2000);
+                    w.textContent = "You have gone downstairs.";
+                    await wait(2000);
+                    w.textContent = "You do not see anything.";
+                    await wait(2000);
+                    game(6, weap);
+                } },
+                { "text": `<p>Where to go next?</p><div id="o"></div>`, "run": async (weap) => {
+                    [["Living Room", 7], ["Kitchen", 8]].map(i => {
+                        const b = document.createElement("button");
+                        b.textContent = i[0];
+                        return [b, i[1]]
+                    }).forEach(i => {
+                        i[0].addEventListener("click", () => game(i[1], weap));
+                        document.getElementById("o").appendChild(i[0]);
+                    });
                 } }
             ];
             function game(i, ...args) {
