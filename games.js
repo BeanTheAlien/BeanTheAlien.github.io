@@ -1437,7 +1437,8 @@ const games = [
                         i[0].addEventListener("click", () => game(i[1], weap));
                         document.getElementById("o").appendChild(i[0]);
                     });
-                } }
+                } },
+                { "text": `<p id="r"></p>`, "run": async (weap) => {} }
             ];
             function game(i, ...args) {
                 if(!cyoa[i]) return;
