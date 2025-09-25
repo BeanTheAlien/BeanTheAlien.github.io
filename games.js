@@ -1347,6 +1347,81 @@ const games = [
                 document.addEventListener("keyup", (e) => keys[e.key] = false);
             }
         }
+    },
+    {
+        "filename": "chooseyourownadventure",
+        "name": "Choose Your Own Adventure",
+        "exec": (popup) => {
+            const menu = document.createElement("div");
+            Object.assign(menu.style, {
+                width: "100%",
+                height: "100%",
+                backgroundColor: "black",
+                color: "white",
+                position: "absolute",
+                top: 0,
+                left: 0,
+                zIndex: 9999,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexDirection: "column"
+            });
+            document.body.appendChild(menu);
+            function end(t, d) {
+                menu.innerHTML = `<h1>Ending: ${t}</h1><div class="space"></div><p>${d}</p>`;
+            }
+            const cyoa = [
+                { "text": `<p id="display"></p>`, "run": async () => {
+                    const el = document.getElementById("display");
+                    const text = "23:31, 02.07.20XX".split("");
+                    const len = text.length;
+                    for(let i = 0; i < len; i++) {
+                        el.textContent += text[i];
+                        await wait(60);
+                    }
+                    await wait(2500);
+                    for(let i = 0; i <= len; i++) {
+                        el.textContent = el.textContent.substring(0, len - i);
+                        await wait(60);
+                    }
+                    game(1);
+                } },
+                { "text": `<p>You heard a noise downstairs.</p>`, "run": async () => {
+                    await wait(2000);
+                    game(2);
+                } },
+                { "text": `<p>Where would you like to go?</p><div id="opts"></div>`, "run": () => {
+                    const opts = document.getElementById("opts");
+                    [["Stay In Room", 3]].map(i => {
+                        const b = document.createElement("button");
+                        b.textContent = i[0];
+                        return [b, i[1]]
+                    }).forEach(i => {
+                        i[0].addEventListener("click", () => game(i[1]));
+                        opts.appendChild(i[0]);
+                    });
+                } },
+                { "text": `<p>You decided to stay in your room and went back to bed.</p>`, "run": async () => {
+                    await wait(2000);
+                    end("Bedtime", "Well, that is one way to avoid problems.");
+                } }
+            ];
+            function game(i) {
+                if(!cyoa[i]) return;
+                const item = cyoa[i];
+                menu.innerHTML = item.text;
+                item.run();
+            }
+            function setup() {
+                menu.innerHTML = `<h1>Choose Your Own Adventure</h1><div class="space"></div><button id="start">Start</button>`;
+                document.getElementById("start").addEventListener("click", () => {
+                    menu.innerHTML = "";
+                    game(0);
+                });
+            }
+            setup();
+        }
     }
 ];
 
@@ -1365,7 +1440,7 @@ function launch(exec, fname) {
     const blob = new Blob([exec], { type: "text/javascript" });
     const url = URL.createObjectURL(blob);
     const popup = document.createElement("div");
-    popup.className = "overlay";
+    popup.className = "overlay"; // class does not exist (ADD TO CSS)
     document.body.appendChild(popup);
     // const btn = document.createElement("button");
     // const a = document.createElement("a");
