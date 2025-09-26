@@ -1463,10 +1463,11 @@ const games = [
                     }[weap];
                     await wait(2000);
                     l.textContent = {
-                        "Shotgun": "The bullet appears to do nothing to the monster.",
+                        "Shotgun": "The bullets appears to do nothing to the monster.",
                         "Knife": "As the knife sinks, it does nothing.",
                         "Fists": "The monster turned to face you. That was the beginning of the end."
                     }[weap];
+                    await wait(2000);
                     end("Bad Decision Making", "What's rule number one of fighting otherworldy beings?");
                 } },
                 { "text": `<p id="l"></p><div id="o"></div>`, "run": async () => {
@@ -1478,12 +1479,12 @@ const games = [
                     l.textContent = "It is unclear if the monster can understand you.";
                     await wait(2000);
                     l.textContent = "What to say?";
-                    [["Attack", 8], ["Speak", 9], ["Flee", 10]].map(i => {
+                    [["Greeting", 12], ["What are you?", 13], ["Why are you here?", 14], ["How old are you?", 15], ["What is your name?", 16]].map(i => {
                         const b = document.createElement("button");
                         b.textContent = i[0];
                         return [b, i[1]]
                     }).forEach(i => {
-                        i[0].addEventListener("click", () => game(i[1], weap));
+                        i[0].addEventListener("click", () => game(i[1]));
                         document.getElementById("o").appendChild(i[0]);
                     });
                 } },
@@ -1494,9 +1495,61 @@ const games = [
                     l.textContent = "It is hard to say whether you are safe from the monster.";
                     await wait(2000);
                     l.textContent = "But you are safe in this moment.";
+                    await wait(2000);
                     end("Agility", "You can run. You can also hide.");
                 } },
+                { "text": `<p id="l"></p>`, "run": async () => {
+                    const l = document.getElementById("l");
+                    l.textContent = "You say hello to the monster.";
+                    await wait(2000);
+                    l.textContent = "The monster does not respond.";
+                    await wait(2000);
+                    l.textContent = "But you are safe in this moment.";
+                    await wait(2000);
+                    end("Agility", "You can run. You can also hide.");
+                } },
+                { "text": `<p id="l"></p>`, "run": async () => {
+                    const l = document.getElementById("l");
+                    l.textContent = "You run back upstairs.";
+                    await wait(2000);
+                    l.textContent = "It is hard to say whether you are safe from the monster.";
+                    await wait(2000);
+                    l.textContent = "But you are safe in this moment.";
+                    await wait(2000);
+                    end("Agility", "You can run. You can also hide.");
+                } },
+                { "text": `<p id="l"></p>`, "run": async () => {
+                    const l = document.getElementById("l");
+                    l.textContent = "You run back upstairs.";
+                    await wait(2000);
+                    l.textContent = "It is hard to say whether you are safe from the monster.";
+                    await wait(2000);
+                    l.textContent = "But you are safe in this moment.";
+                    await wait(2000);
+                    end("Agility", "You can run. You can also hide.");
+                } },
+                { "text": `<p id="l"></p>`, "run": async () => {
+                    const l = document.getElementById("l");
+                    l.textContent = "You run back upstairs.";
+                    await wait(2000);
+                    l.textContent = "It is hard to say whether you are safe from the monster.";
+                    await wait(2000);
+                    l.textContent = "But you are safe in this moment.";
+                    await wait(2000);
+                    end("Agility", "You can run. You can also hide.");
+                } },
+                { "text": `<p id="l"></p>`, "run": async () => {
+                    const l = document.getElementById("l");
+                    l.textContent = "You run back upstairs.";
+                    await wait(2000);
+                    l.textContent = "It is hard to say whether you are safe from the monster.";
+                    await wait(2000);
+                    l.textContent = "But you are safe in this moment.";
+                    await wait(2000);
+                    end("Agility", "You can run. You can also hide.");
+                } }
             ];
+            alert(cyoa.length);
             function game(i, ...args) {
                 if(!cyoa[i]) return;
                 const item = cyoa[i];
