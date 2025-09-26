@@ -1465,10 +1465,37 @@ const games = [
                     l.textContent = {
                         "Shotgun": "The bullet appears to do nothing to the monster.",
                         "Knife": "As the knife sinks, it does nothing.",
-                        "Fists": "The monster turned to face you. That was the start of the end."
+                        "Fists": "The monster turned to face you. That was the beginning of the end."
                     }[weap];
                     end("Bad Decision Making", "What's rule number one of fighting otherworldy beings?");
-                } }
+                } },
+                { "text": `<p id="l"></p><div id="o"></div>`, "run": async () => {
+                    const l = document.getElementById("l");
+                    l.textContent = "Your words alerted your presence to the monster.";
+                    await wait(2000);
+                    l.textContent = "The monster turned to look at you.";
+                    await wait(2000);
+                    l.textContent = "It is unclear if the monster can understand you.";
+                    await wait(2000);
+                    l.textContent = "What to say?";
+                    [["Attack", 8], ["Speak", 9], ["Flee", 10]].map(i => {
+                        const b = document.createElement("button");
+                        b.textContent = i[0];
+                        return [b, i[1]]
+                    }).forEach(i => {
+                        i[0].addEventListener("click", () => game(i[1], weap));
+                        document.getElementById("o").appendChild(i[0]);
+                    });
+                } },
+                { "text": `<p id="l"></p>`, "run": async () => {
+                    const l = document.getElementById("l");
+                    l.textContent = "You run back upstairs.";
+                    await wait(2000);
+                    l.textContent = "It is hard to say whether you are safe from the monster.";
+                    await wait(2000);
+                    l.textContent = "But you are safe in this moment.";
+                    end("Agility", "You can run. You can also hide.");
+                } },
             ];
             function game(i, ...args) {
                 if(!cyoa[i]) return;
