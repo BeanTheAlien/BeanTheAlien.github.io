@@ -1438,10 +1438,36 @@ const games = [
                         document.getElementById("o").appendChild(i[0]);
                     });
                 } },
-                { "text": `<p id="l"></p>`, "run": async (weap) => {
+                { "text": `<p id="l"></p><div id="o"></div>`, "run": async (weap) => {
                     const l = document.getElementById("l");
                     l.textContent = "A strange figure is standing in the living room...";
                     await wait(2000);
+                    l.textContent = "The figure does not see you.";
+                    await wait(2000);
+                    l.textContent = "What do you do next?";
+                    [["Attack", 8], ["Speak", 9], ["Flee", 10]].map(i => {
+                        const b = document.createElement("button");
+                        b.textContent = i[0];
+                        return [b, i[1]]
+                    }).forEach(i => {
+                        i[0].addEventListener("click", () => game(i[1], weap));
+                        document.getElementById("o").appendChild(i[0]);
+                    });
+                } },
+                { "text": `<p id="l"></p>`, "run": async (weap) => {
+                    const l = document.getElementById("l");
+                    l.textContent = {
+                        "Shotgun": "The shotgun rings out as you fire.",
+                        "Knife": "You sneak closer to the thing, knife ready.",
+                        "Fists": "You prepare to fight whatever this thing is."
+                    }[weap];
+                    await wait(2000);
+                    l.textContent = {
+                        "Shotgun": "The bullet appears to do nothing to the monster.",
+                        "Knife": "As the knife sinks, it does nothing.",
+                        "Fists": "The monster turned to face you. That was the start of the end."
+                    }[weap];
+                    end("Bad Decision Making", "What's rule number one of fighting otherworldy beings?");
                 } }
             ];
             function game(i, ...args) {
