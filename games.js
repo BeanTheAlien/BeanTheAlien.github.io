@@ -1498,55 +1498,85 @@ const games = [
                     await wait(2000);
                     end("Agility", "You can run. You can also hide.");
                 } },
-                { "text": `<p id="l"></p>`, "run": async () => {
+                { "text": `<p id="l"></p><div id="o"></div>`, "run": async () => {
                     const l = document.getElementById("l");
                     l.textContent = "You say hello to the monster.";
                     await wait(2000);
                     l.textContent = "The monster does not respond.";
                     await wait(2000);
-                    l.textContent = "But you are safe in this moment.";
-                    await wait(2000);
-                    end("Agility", "You can run. You can also hide.");
+                    l.textContent = "What to say?";
+                    [["Greeting", 12], ["What are you?", 13], ["Why are you here?", 14], ["How old are you?", 15], ["What is your name?", 16]].map(i => {
+                        const b = document.createElement("button");
+                        b.textContent = i[0];
+                        return [b, i[1]]
+                    }).forEach(i => {
+                        i[0].addEventListener("click", () => game(i[1]));
+                        document.getElementById("o").appendChild(i[0]);
+                    });
                 } },
-                { "text": `<p id="l"></p>`, "run": async () => {
+                { "text": `<p id="l"></p><div id="o"></div>`, "run": async () => {
                     const l = document.getElementById("l");
-                    l.textContent = "You run back upstairs.";
+                    l.textContent = "You ask the monster what it is.";
                     await wait(2000);
-                    l.textContent = "It is hard to say whether you are safe from the monster.";
+                    l.textContent = "The monster does not respond.";
                     await wait(2000);
-                    l.textContent = "But you are safe in this moment.";
-                    await wait(2000);
-                    end("Agility", "You can run. You can also hide.");
+                    l.textContent = "What to say?";
+                    [["Greeting", 12], ["What are you?", 13], ["Why are you here?", 14], ["How old are you?", 15], ["What is your name?", 16]].map(i => {
+                        const b = document.createElement("button");
+                        b.textContent = i[0];
+                        return [b, i[1]]
+                    }).forEach(i => {
+                        i[0].addEventListener("click", () => game(i[1]));
+                        document.getElementById("o").appendChild(i[0]);
+                    });
                 } },
-                { "text": `<p id="l"></p>`, "run": async () => {
+                { "text": `<p id="l"></p><div id="o"></div>`, "run": async () => {
                     const l = document.getElementById("l");
-                    l.textContent = "You run back upstairs.";
+                    l.textContent = "You ask the monster why it is here.";
                     await wait(2000);
-                    l.textContent = "It is hard to say whether you are safe from the monster.";
+                    l.textContent = "The monster appears to shrug.";
                     await wait(2000);
-                    l.textContent = "But you are safe in this moment.";
-                    await wait(2000);
-                    end("Agility", "You can run. You can also hide.");
+                    l.textContent = "What to say?";
+                    [["Greeting", 12], ["What are you?", 13], ["Why are you here?", 14], ["How old are you?", 15], ["What is your name?", 16]].map(i => {
+                        const b = document.createElement("button");
+                        b.textContent = i[0];
+                        return [b, i[1]]
+                    }).forEach(i => {
+                        i[0].addEventListener("click", () => game(i[1]));
+                        document.getElementById("o").appendChild(i[0]);
+                    });
                 } },
-                { "text": `<p id="l"></p>`, "run": async () => {
+                { "text": `<p id="l"></p><div id="o"></div>`, "run": async () => {
                     const l = document.getElementById("l");
-                    l.textContent = "You run back upstairs.";
+                    l.textContent = "You ask the monster how old it is.";
                     await wait(2000);
-                    l.textContent = "It is hard to say whether you are safe from the monster.";
+                    l.textContent = "The monster does not respond.";
                     await wait(2000);
-                    l.textContent = "But you are safe in this moment.";
-                    await wait(2000);
-                    end("Agility", "You can run. You can also hide.");
+                    l.textContent = "What to say?";
+                    [["Greeting", 12], ["What are you?", 13], ["Why are you here?", 14], ["How old are you?", 15], ["What is your name?", 16]].map(i => {
+                        const b = document.createElement("button");
+                        b.textContent = i[0];
+                        return [b, i[1]]
+                    }).forEach(i => {
+                        i[0].addEventListener("click", () => game(i[1]));
+                        document.getElementById("o").appendChild(i[0]);
+                    });
                 } },
-                { "text": `<p id="l"></p>`, "run": async () => {
+                { "text": `<p id="l"></p><div id="o"></div>`, "run": async () => {
                     const l = document.getElementById("l");
-                    l.textContent = "You run back upstairs.";
+                    l.textContent = "You ask the monster what it's name is.";
                     await wait(2000);
-                    l.textContent = "It is hard to say whether you are safe from the monster.";
+                    l.textContent = "The monster does not respond.";
                     await wait(2000);
-                    l.textContent = "But you are safe in this moment.";
-                    await wait(2000);
-                    end("Agility", "You can run. You can also hide.");
+                    l.textContent = "What to say?";
+                    [["Greeting", 12], ["What are you?", 13], ["Why are you here?", 14], ["How old are you?", 15], ["What is your name?", 16]].map(i => {
+                        const b = document.createElement("button");
+                        b.textContent = i[0];
+                        return [b, i[1]]
+                    }).forEach(i => {
+                        i[0].addEventListener("click", () => game(i[1]));
+                        document.getElementById("o").appendChild(i[0]);
+                    });
                 } }
             ];
             alert(cyoa.length);
