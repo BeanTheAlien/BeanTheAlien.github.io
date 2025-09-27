@@ -1515,7 +1515,7 @@ const games = [
                     l.textContent = "The monster does not respond.";
                     await wait(2000);
                     l.textContent = "What to say?";
-                    [["Greeting", 12], ["What are you?", 13], ["Why are you here?", 14], ["How old are you?", 15], ["What is your name?", 16]].map(i => {
+                    [["Greeting", 11], ["What are you?", 12], ["Why are you here?", 13], ["How old are you?", 14], ["What is your name?", 15]].map(i => {
                         const b = document.createElement("button");
                         b.textContent = i[0];
                         return [b, i[1]]
@@ -1531,7 +1531,7 @@ const games = [
                     l.textContent = "The monster does not respond.";
                     await wait(2000);
                     l.textContent = "What to say?";
-                    [["Greeting", 12], ["What are you?", 13], ["Why are you here?", 14], ["How old are you?", 15], ["What is your name?", 16]].map(i => {
+                    [["Greeting", 11], ["What are you?", 12], ["Why are you here?", 13], ["How old are you?", 14], ["What is your name?", 15]].map(i => {
                         const b = document.createElement("button");
                         b.textContent = i[0];
                         return [b, i[1]]
@@ -1547,7 +1547,7 @@ const games = [
                     l.textContent = "The monster appears to shrug.";
                     await wait(2000);
                     l.textContent = "What to say?";
-                    [["Greeting", 12], ["What are you?", 13], ["Why are you here?", 14], ["How old are you?", 15], ["What is your name?", 16]].map(i => {
+                    [["Greeting", 11], ["What are you?", 12], ["Why are you here?", 13], ["How old are you?", 14], ["What is your name?", 15]].map(i => {
                         const b = document.createElement("button");
                         b.textContent = i[0];
                         return [b, i[1]]
@@ -1563,7 +1563,7 @@ const games = [
                     l.textContent = "The monster does not respond.";
                     await wait(2000);
                     l.textContent = "What to say?";
-                    [["Greeting", 12], ["What are you?", 13], ["Why are you here?", 14], ["How old are you?", 15], ["What is your name?", 16]].map(i => {
+                    [["Greeting", 11], ["What are you?", 12], ["Why are you here?", 13], ["How old are you?", 14], ["What is your name?", 15]].map(i => {
                         const b = document.createElement("button");
                         b.textContent = i[0];
                         return [b, i[1]]
@@ -1579,7 +1579,7 @@ const games = [
                     l.textContent = "The monster does not respond.";
                     await wait(2000);
                     l.textContent = "What to say?";
-                    [["Greeting", 12], ["What are you?", 13], ["Why are you here?", 14], ["How old are you?", 15], ["What is your name?", 16]].map(i => {
+                    [["Greeting", 11], ["What are you?", 12], ["Why are you here?", 13], ["How old are you?", 14], ["What is your name?", 15]].map(i => {
                         const b = document.createElement("button");
                         b.textContent = i[0];
                         return [b, i[1]]
