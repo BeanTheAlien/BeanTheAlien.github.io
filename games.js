@@ -1381,6 +1381,19 @@ const games = [
             function end(t, d) {
                 menu.innerHTML = `<h1>Ending: ${t}</h1><div class="space"></div><p>${d}</p>`;
             }
+            function genBtns(btns, id, ...args) {
+                btns.map(i => {
+                    const b = document.createElement("button");
+                    b.textContent = i[0];
+                    return [b, i[1]]
+                }).forEach(i => {
+                    i[0].addEventListener("click", () => game(i[1], ...args));
+                    document.getElementById(id).appendChild(i[0]);
+                });
+            }
+            function lr_speech() {
+                genBtns([["Greeting", 11], ["What are you?", 12], ["Why are you here?", 13], ["How old are you?", 14], ["What is your name?", 15]], "o");
+            }
             const cyoa = [
                 { "text": `<p id="display"></p>`, "run": async () => {
                     const el = document.getElementById("display");
@@ -1403,14 +1416,7 @@ const games = [
                 } },
                 { "text": `<p>Where would you like to go?</p><div id="opts"></div>`, "run": () => {
                     const opts = document.getElementById("opts");
-                    [["Stay In Room", 3], ["Go Downstairs", 4]].map(i => {
-                        const b = document.createElement("button");
-                        b.textContent = i[0];
-                        return [b, i[1]]
-                    }).forEach(i => {
-                        i[0].addEventListener("click", () => game(i[1]));
-                        opts.appendChild(i[0]);
-                    });
+                    genBtns([["Stay In Room", 3], ["Go Downstairs", 4]], "opts");
                 } },
                 { "text": `<p>You decided to stay in your room and went back to bed.</p>`, "run": async () => {
                     await wait(2000);
@@ -1439,14 +1445,7 @@ const games = [
                     game(6, weap);
                 } },
                 { "text": `<p>Where to go next?</p><div id="o"></div>`, "run": async (weap) => {
-                    [["Living Room", 7], ["Kitchen", 8]].map(i => {
-                        const b = document.createElement("button");
-                        b.textContent = i[0];
-                        return [b, i[1]]
-                    }).forEach(i => {
-                        i[0].addEventListener("click", () => game(i[1], weap));
-                        document.getElementById("o").appendChild(i[0]);
-                    });
+                    genBtns([["Living Room", 7], ["Kitchen", 8]], "o");
                 } },
                 { "text": `<p id="l"></p><div id="o"></div>`, "run": async (weap) => {
                     const l = document.getElementById("l");
@@ -1455,14 +1454,7 @@ const games = [
                     l.textContent = "The figure does not see you.";
                     await wait(2000);
                     l.textContent = "What do you do next?";
-                    [["Attack", 8], ["Speak", 9], ["Flee", 10]].map(i => {
-                        const b = document.createElement("button");
-                        b.textContent = i[0];
-                        return [b, i[1]]
-                    }).forEach(i => {
-                        i[0].addEventListener("click", () => game(i[1], weap));
-                        document.getElementById("o").appendChild(i[0]);
-                    });
+                    genBtns([["Attack", 8], ["Speak", 9], ["Flee", 10]], "o");
                 } },
                 { "text": `<p id="l"></p>`, "run": async (weap) => {
                     const l = document.getElementById("l");
@@ -1489,14 +1481,7 @@ const games = [
                     l.textContent = "It is unclear if the monster can understand you.";
                     await wait(2000);
                     l.textContent = "What to say?";
-                    [["Greeting", 12], ["What are you?", 13], ["Why are you here?", 14], ["How old are you?", 15], ["What is your name?", 16]].map(i => {
-                        const b = document.createElement("button");
-                        b.textContent = i[0];
-                        return [b, i[1]]
-                    }).forEach(i => {
-                        i[0].addEventListener("click", () => game(i[1]));
-                        document.getElementById("o").appendChild(i[0]);
-                    });
+                    lr_speech();
                 } },
                 { "text": `<p id="l"></p>`, "run": async () => {
                     const l = document.getElementById("l");
@@ -1515,14 +1500,7 @@ const games = [
                     l.textContent = "The monster does not respond.";
                     await wait(2000);
                     l.textContent = "What to say?";
-                    [["Greeting", 11], ["What are you?", 12], ["Why are you here?", 13], ["How old are you?", 14], ["What is your name?", 15]].map(i => {
-                        const b = document.createElement("button");
-                        b.textContent = i[0];
-                        return [b, i[1]]
-                    }).forEach(i => {
-                        i[0].addEventListener("click", () => game(i[1]));
-                        document.getElementById("o").appendChild(i[0]);
-                    });
+                    lr_speech();
                 } },
                 { "text": `<p id="l"></p><div id="o"></div>`, "run": async () => {
                     const l = document.getElementById("l");
@@ -1531,14 +1509,7 @@ const games = [
                     l.textContent = "The monster does not respond.";
                     await wait(2000);
                     l.textContent = "What to say?";
-                    [["Greeting", 11], ["What are you?", 12], ["Why are you here?", 13], ["How old are you?", 14], ["What is your name?", 15]].map(i => {
-                        const b = document.createElement("button");
-                        b.textContent = i[0];
-                        return [b, i[1]]
-                    }).forEach(i => {
-                        i[0].addEventListener("click", () => game(i[1]));
-                        document.getElementById("o").appendChild(i[0]);
-                    });
+                    lr_speech();
                 } },
                 { "text": `<p id="l"></p><div id="o"></div>`, "run": async () => {
                     const l = document.getElementById("l");
@@ -1547,14 +1518,7 @@ const games = [
                     l.textContent = "The monster appears to shrug.";
                     await wait(2000);
                     l.textContent = "What to say?";
-                    [["Greeting", 11], ["What are you?", 12], ["Why are you here?", 13], ["How old are you?", 14], ["What is your name?", 15]].map(i => {
-                        const b = document.createElement("button");
-                        b.textContent = i[0];
-                        return [b, i[1]]
-                    }).forEach(i => {
-                        i[0].addEventListener("click", () => game(i[1]));
-                        document.getElementById("o").appendChild(i[0]);
-                    });
+                    lr_speech();
                 } },
                 { "text": `<p id="l"></p><div id="o"></div>`, "run": async () => {
                     const l = document.getElementById("l");
@@ -1563,14 +1527,7 @@ const games = [
                     l.textContent = "The monster does not respond.";
                     await wait(2000);
                     l.textContent = "What to say?";
-                    [["Greeting", 11], ["What are you?", 12], ["Why are you here?", 13], ["How old are you?", 14], ["What is your name?", 15]].map(i => {
-                        const b = document.createElement("button");
-                        b.textContent = i[0];
-                        return [b, i[1]]
-                    }).forEach(i => {
-                        i[0].addEventListener("click", () => game(i[1]));
-                        document.getElementById("o").appendChild(i[0]);
-                    });
+                    lr_speech();
                 } },
                 { "text": `<p id="l"></p><div id="o"></div>`, "run": async () => {
                     const l = document.getElementById("l");
@@ -1579,14 +1536,7 @@ const games = [
                     l.textContent = "The monster does not respond.";
                     await wait(2000);
                     l.textContent = "What to say?";
-                    [["Greeting", 11], ["What are you?", 12], ["Why are you here?", 13], ["How old are you?", 14], ["What is your name?", 15]].map(i => {
-                        const b = document.createElement("button");
-                        b.textContent = i[0];
-                        return [b, i[1]]
-                    }).forEach(i => {
-                        i[0].addEventListener("click", () => game(i[1]));
-                        document.getElementById("o").appendChild(i[0]);
-                    });
+                    lr_speech();
                 } }
             ];
             // alert(cyoa.length);
