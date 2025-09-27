@@ -147,7 +147,8 @@ const games = [
                 });
             }
             setup();
-        }
+        },
+        "hide": false
     },
     {
         "filename": "amongus",
@@ -228,7 +229,8 @@ const games = [
                 document.addEventListener("keyup", (e) => keys[e.key] = false);
             }
             setup();
-        }
+        },
+        "hide": true
     },
     {
         "filename": "snake",
@@ -303,7 +305,8 @@ const games = [
                 });
             }
             setup();
-        }
+        },
+        "hide": false
     },
     {
         "filename": "pong",
@@ -409,7 +412,8 @@ const games = [
                 });
             }
             setup();
-        }
+        },
+        "hide": false
     },
     {
         "filename": "geometricjump",
@@ -526,7 +530,8 @@ const games = [
                 });
             }
             setup();
-        }
+        },
+        "hide": true
     },
     {
         "filename": "pvz",
@@ -700,7 +705,8 @@ const games = [
                 runtime = setInterval(game, 10);
             }
             setup();
-        }
+        },
+        "hide": true
     },
     {
         "filename": "angrybirds",
@@ -808,7 +814,8 @@ const games = [
                 runtime = setInterval(game, 10);
             }
             setup();
-        }
+        },
+        "hide": true
     },
     {
         "filename": "jpgdatingsim",
@@ -846,7 +853,8 @@ const games = [
             home - wth/wthout?
             scenes can branch from when you get home ig
             */
-        }
+        },
+        "hide": true
     },
     {
         "filename": "dungeon",
@@ -1309,7 +1317,8 @@ const games = [
             make enemy templates (extend Enemy)
             make makeStage actually work based on stage
             */
-        }
+        },
+        "hide": false
     },
     {
         "filename": "spacegame",
@@ -1346,7 +1355,8 @@ const games = [
                 document.addEventListener("keydown", (e) => keys[e.key] = true);
                 document.addEventListener("keyup", (e) => keys[e.key] = false);
             }
-        }
+        },
+        "hide": true
     },
     {
         "filename": "chooseyourownadventure",
@@ -1594,11 +1604,13 @@ const games = [
                 });
             }
             setup();
-        }
+        },
+        "hide": false
     }
 ];
 
 games.forEach(g => {
+    if(g.hide) return;
     const b = document.createElement("button");
     b.textContent = g.name;
     b.addEventListener("click", () => launch(g.exec, g.filename));
