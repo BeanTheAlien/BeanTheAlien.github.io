@@ -1589,7 +1589,7 @@ const games = [
                     });
                 } }
             ];
-            alert(cyoa.length);
+            // alert(cyoa.length);
             function game(i, ...args) {
                 if(!cyoa[i]) return;
                 const item = cyoa[i];
@@ -1710,6 +1710,7 @@ function gameEnd(runtime, score, hsname) {
 
 function disableGL() {
     games.forEach(g => {
+        if(g.hide) return;
         const id = g.filename;
         const el = document.getElementById(id);
         el.style.opacity = "0";
@@ -1719,6 +1720,7 @@ function disableGL() {
 }
 function enableGL() {
     games.forEach(g => {
+        if(g.hide) return;
         const id = g.filename;
         const el = document.getElementById(id);
         el.style.opacity = "1";
