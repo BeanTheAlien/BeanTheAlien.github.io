@@ -1445,7 +1445,7 @@ const games = [
                     game(6, weap);
                 } },
                 { "text": `<p>Where to go next?</p><div id="o"></div>`, "run": async (weap) => {
-                    genBtns([["Living Room", 7], ["Kitchen", 8]], "o");
+                    genBtns([["Living Room", 7], ["Kitchen", 8]], "o", weap);
                 } },
                 { "text": `<p id="l"></p><div id="o"></div>`, "run": async (weap) => {
                     const l = document.getElementById("l");
@@ -1454,7 +1454,7 @@ const games = [
                     l.textContent = "The figure does not see you.";
                     await wait(2000);
                     l.textContent = "What do you do next?";
-                    genBtns([["Attack", 8], ["Speak", 9], ["Flee", 10]], "o");
+                    genBtns([["Attack", 8], ["Speak", 9], ["Flee", 10]], "o", weap);
                 } },
                 { "text": `<p id="l"></p>`, "run": async (weap) => {
                     const l = document.getElementById("l");
