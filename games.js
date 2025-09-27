@@ -31,6 +31,11 @@ window.addEventListener("load", () => {
         launch(item.exec, item.filename);
     }
 });
+// const d = document.createElement("dialog");
+// d.innerHTML = "<h1 style='color:black;'>hello</h1>";
+// document.body.appendChild(d);
+// d.showModal();
+// (async () => {await wait(3000);d.close();})();
 
 const gamelist = document.createElement("div");
 Object.assign(gamelist.style, {
@@ -1392,7 +1397,7 @@ const games = [
                 });
             }
             function lr_speech() {
-                genBtns([["Greeting", 11], ["What are you?", 12], ["Why are you here?", 13], ["How old are you?", 14], ["What is your name?", 15]], "o");
+                genBtns([["Greeting", 11], ["What are you?", 12], ["Why are you here?", 13], ["How old are you?", 14], ["What is your name?", 15], ["End", 16]], "o");
             }
             const cyoa = [
                 { "text": `<p id="display"></p>`, "run": async () => {
@@ -1445,7 +1450,7 @@ const games = [
                     game(6, weap);
                 } },
                 { "text": `<p>Where to go next?</p><div id="o"></div>`, "run": async (weap) => {
-                    genBtns([["Living Room", 7], ["Kitchen", 8]], "o", weap);
+                    genBtns([["Living Room", 7], ["Kitchen", 22]], "o", weap);
                 } },
                 { "text": `<p id="l"></p><div id="o"></div>`, "run": async (weap) => {
                     const l = document.getElementById("l");
@@ -1537,7 +1542,37 @@ const games = [
                     await wait(2000);
                     l.textContent = "What to say?";
                     lr_speech();
-                } }
+                } },
+                { "text": `<p id="l"></p><div id="o"></div>`, "run": async () => {
+                    const l = document.getElementById("l");
+                    l.textContent = "You decide to end your conversation with the monster.";
+                    await wait(2000);
+                    l.textContent = "You are very tired.";
+                    await wait(2000);
+                    l.textContent = "Sleep?";
+                    genBtns([["Yes", 17], ["No", 18]], "o");
+                } },
+                { "text": `<p id="l"></p>`, "run": async () => {
+                    const l = document.getElementById("l");
+                    l.textContent = "You head upstairs.";
+                    await wait(2000);
+                    l.textContent = "You go back to bed.";
+                    await wait(2000);
+                    end("Detective", "You solved the mystery - congrats.");
+                } },
+                { "text": `<p id="l"></p><div id="o"></div>`, "run": async () => {
+                    const l = document.getElementById("l");
+                    l.textContent = "Despite being tired, you decided to stay up.";
+                    await wait(2000);
+                    l.textContent = "Something was not right.";
+                    await wait(2000);
+                    l.textContent = "Where to investigate?";
+                    genBtns([["Basement", 19], ["Attic", 20], ["Outside", 21]], "o");
+                } },
+                { "text": `<p>PATH:INVESTIGATE=>BASEMENT</p>`, "run": () => {} },
+                { "text": `<p>PATH:INVESTIGATE=>ATTIC</p>`, "run": () => {} },
+                { "text": `<p>PATH:INVESTIGATE=>OUTSIDE</p>`, "run": () => {} },
+                { "text": `<p>RESERVED_PATH:KITCHEN</p>`, "run": () => {} }
             ];
             // alert(cyoa.length);
             function game(i, ...args) {
