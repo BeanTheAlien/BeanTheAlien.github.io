@@ -1569,10 +1569,19 @@ const games = [
                     l.textContent = "Where to investigate?";
                     genBtns([["Basement", 19], ["Attic", 20], ["Outside", 21]], "o");
                 } },
-                { "text": `<p>PATH:INVESTIGATE=>BASEMENT</p>`, "run": () => {} },
-                { "text": `<p>PATH:INVESTIGATE=>ATTIC</p>`, "run": () => {} },
-                { "text": `<p>PATH:INVESTIGATE=>OUTSIDE</p>`, "run": () => {} },
-                { "text": `<p>There appears to be nothing in your kitchen.</p>`, "run": async (weap) => {
+                { "text": `<p id="l"></p><div id="o"></div>`, "run": async () => {
+                    const l = document.getElementById("l");
+                    l.textContent = "It is very dark.";
+                    await wait(2000);
+                    l.textContent = "Grab your flashlight?";
+                } },
+                { "text": `<p id="l">PATH:INVESTIGATE=>ATTIC</p><div id="o"></div>`, "run": async () => {
+                    const l = document.getElementById("l");
+                } },
+                { "text": `<p id="l">PATH:INVESTIGATE=>OUTSIDE</p><div id="o"></div>`, "run": async () => {
+                    const l = document.getElementById("l");
+                } },
+                { "text": `<p id="l">There appears to be nothing in your kitchen.</p>`, "run": async (weap) => {
                     await wait(2000);
                     game(6, weap);
                 } }
