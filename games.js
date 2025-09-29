@@ -1668,11 +1668,35 @@ const games = [
                 } },
                 { "text": `<p id="l"></p><div id="o"></div>`, "run": async () => {
                     const l = document.getElementById("l");
-                    l.textContent = "PLACEHOLDER (continuelooking0)";
+                    l.textContent = "You decide it would be the best idea to continue looking.";
+                    await wait(2000);
+                    l.textContent = "Who knows what this thing could be doing as you wait?";
+                    await wait(2000);
+                    l.textContent = "You go back upstairs, ready to confront this monster.";
+                    await wait(2000);
+                    l.textContent = "The thing in your living room is gone.";
                 } },
                 { "text": `<p id="l"></p><div id="o"></div>`, "run": async () => {
                     const l = document.getElementById("l");
-                    l.textContent = "PLACEHOLDER (continuelooking1)";
+                    l.textContent = "You decide it would be a death sentence looking for this thing.";
+                    await wait(2000);
+                    l.textContent = "It's practically calling your name - a sign of bad things to come.";
+                    await wait(2000);
+                    l.textContent = "But for every second you stand around, the creature can only come closer.";
+                    await wait(2000);
+                    l.textContent = "You trace back your steps slowly and cautiosully.";
+                    await wait(2000);
+                    l.textContent = "You have no desire to disturb this beast's rest.";
+                    await wait(2000);
+                    l.textContent = "Suddenly, you trip and fall.";
+                    await wait(2000);
+                    l.textContent = "When you wake, you feel dizzy.";
+                    await wait(2000);
+                    l.textContent = "Blood pools around you.";
+                    await wait(2000);
+                    l.textContent = "The last thing you can think before you perish is that you should've stayed in bed.";
+                    await wait(2000);
+                    end("Tripped", "Do better next time.");
                 } }
             ];
             // alert(cyoa.length);
