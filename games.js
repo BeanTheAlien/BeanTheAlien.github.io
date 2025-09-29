@@ -1664,7 +1664,15 @@ const games = [
                     l.textContent = "It's a possibilty, given the thing in your living room.";
                     await wait(2000);
                     l.textContent = "Continue looking?";
-                    genBtns([["Yes", 0], ["No", 0]], "o");
+                    genBtns([["Yes", 30], ["No", 31]], "o");
+                } },
+                { "text": `<p id="l"></p><div id="o"></div>`, "run": async () => {
+                    const l = document.getElementById("l");
+                    l.textContent = "PLACEHOLDER (continuelooking0)";
+                } },
+                { "text": `<p id="l"></p><div id="o"></div>`, "run": async () => {
+                    const l = document.getElementById("l");
+                    l.textContent = "PLACEHOLDER (continuelooking1)";
                 } }
             ];
             // alert(cyoa.length);
