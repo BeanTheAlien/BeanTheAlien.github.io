@@ -1630,6 +1630,24 @@ const games = [
                 } },
                 { "text": `<p id="l"></p><div id="o"></div>`, "run": async () => {
                     const l = document.getElementById("l");
+                    l.textContent = "You shine the flashlight to your right.";
+                    await wait(2000);
+                    l.textContent = "There's nothing there.";
+                    await wait(2000);
+                    l.textContent = "Where to look?";
+                    genBtns([["To the left", 27], ["To the right", 28], ["In the closet", 29]], "o");
+                } },
+                { "text": `<p id="l"></p><div id="o"></div>`, "run": async () => {
+                    const l = document.getElementById("l");
+                    l.textContent = "You brace yourself, prepared to find something horrific in the closet.";
+                    await wait(2000);
+                    l.textContent = "You find nothing.";
+                    await wait(2000);
+                    l.textContent = "The feeling of being watched grows stronger.";
+                    await wait(2000);
+                    l.textContent = "It seems it wants you to try to find it.";
+                    await wait(2000);
+                    l.textContent = "Perhaps it's not downstairs...";
                 } }
             ];
             // alert(cyoa.length);
