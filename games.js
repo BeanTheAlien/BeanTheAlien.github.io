@@ -1675,6 +1675,10 @@ const games = [
                     l.textContent = "You go back upstairs, ready to confront this monster.";
                     await wait(2000);
                     l.textContent = "The thing in your living room is gone.";
+                    await wait(2000);
+                    l.textContent = "Where has the thing gone?";
+                    await wait(2000);
+                    l.textContent = "Doesn't matter. You have a mission to complete.";
                 } },
                 { "text": `<p id="l"></p><div id="o"></div>`, "run": async () => {
                     const l = document.getElementById("l");
