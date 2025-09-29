@@ -1572,7 +1572,10 @@ const games = [
                 { "text": `<p>PATH:INVESTIGATE=>BASEMENT</p>`, "run": () => {} },
                 { "text": `<p>PATH:INVESTIGATE=>ATTIC</p>`, "run": () => {} },
                 { "text": `<p>PATH:INVESTIGATE=>OUTSIDE</p>`, "run": () => {} },
-                { "text": `<p>RESERVED_PATH:KITCHEN</p>`, "run": () => {} }
+                { "text": `<p>There appears to be nothing in your kitchen.</p>`, "run": async (weap) => {
+                    await wait(2000);
+                    game(6, weap);
+                } }
             ];
             // alert(cyoa.length);
             function game(i, ...args) {
