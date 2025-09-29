@@ -1648,6 +1648,23 @@ const games = [
                     l.textContent = "It seems it wants you to try to find it.";
                     await wait(2000);
                     l.textContent = "Perhaps it's not downstairs...";
+                    await wait(2000);
+                    l.textContent = "After careful decision, you decide to go back upstairs.";
+                    await wait(2000);
+                    l.textContent = "You've committed to trying to find this thing.";
+                    await wait(2000);
+                    l.textContent = "Now, you just have to find it...";
+                    await wait(2000);
+                    l.textContent = "You pause.";
+                    await wait(2000);
+                    l.textContent = "What if the monster is tricking you?";
+                    await wait(2000);
+                    l.textContent = "What if it lurks for the right moment to strike?";
+                    await wait(2000);
+                    l.textContent = "It's a possibilty, given the thing in your living room.";
+                    await wait(2000);
+                    l.textContent = "Continue looking?";
+                    genBtns([["Yes", 0], ["No", 0]], "o");
                 } }
             ];
             // alert(cyoa.length);
