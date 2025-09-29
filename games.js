@@ -1574,6 +1574,7 @@ const games = [
                     l.textContent = "It is very dark.";
                     await wait(2000);
                     l.textContent = "Grab your flashlight?";
+                    genBtns([["Yes", 23], ["No", 24]], "o");
                 } },
                 { "text": `<p id="l">PATH:INVESTIGATE=>ATTIC</p><div id="o"></div>`, "run": async () => {
                     const l = document.getElementById("l");
@@ -1584,6 +1585,51 @@ const games = [
                 { "text": `<p id="l">There appears to be nothing in your kitchen.</p>`, "run": async (weap) => {
                     await wait(2000);
                     game(6, weap);
+                } },
+                { "text": `<p id="l"></p><div id="o"></div>`, "run": async () => {
+                    const l = document.getElementById("l");
+                    l.textContent = "As you walk down the creaking steps, you can't shake the feeling you're being watched.";
+                    await wait(2000);
+                    l.textContent = "The flashlight illuminated the path - even if just a little.";
+                    await wait(2000);
+                    l.textContent = "It felt like there was a demonic presence lurking nearby...";
+                    await wait(2000);
+                    l.textContent = "You have a sinking feeling that adventuring onward would be a death sentence.";
+                    await wait(2000);
+                    l.textContent = "Continue forward?";
+                    genBtns([["Yes", 25], ["No", 26]], "o");
+                } },
+                { "text": `<p id="l">PATH:INVESTIGATE=>BASEMENT:FL=FALSE</p><div id="o"></div>`, "run": async () => {
+                    const l = document.getElementById("l");
+                } },
+                { "text": `<p id="l"></p><div id="o"></div>`, "run": async () => {
+                    const l = document.getElementById("l");
+                    l.textContent = "Despite your gut feeling, you press forward.";
+                    await wait(2000);
+                    l.textContent = "The basement feels cold.";
+                    await wait(2000);
+                    l.textContent = "Where to look?";
+                    genBtns([["To the left", 27], ["To the right", 28], ["In the closet", 29]], "o");
+                } },
+                { "text": `<p id="l"></p><div id="o"></div>`, "run": async () => {
+                    const l = document.getElementById("l");
+                    l.textContent = "You decide to turn back.";
+                    await wait(2000);
+                    l.textContent = "It felt like the right move, at least...";
+                    await wait(2000);
+                    end("What Lurks Ahead", "Good choice. You don't want to know what happens to people who go down there...");
+                } },
+                { "text": `<p id="l"></p><div id="o"></div>`, "run": async () => {
+                    const l = document.getElementById("l");
+                    l.textContent = "You shine the flashlight to your left.";
+                    await wait(2000);
+                    l.textContent = "There's nothing there.";
+                    await wait(2000);
+                    l.textContent = "Where to look?";
+                    genBtns([["To the left", 27], ["To the right", 28], ["In the closet", 29]], "o");
+                } },
+                { "text": `<p id="l"></p><div id="o"></div>`, "run": async () => {
+                    const l = document.getElementById("l");
                 } }
             ];
             // alert(cyoa.length);
