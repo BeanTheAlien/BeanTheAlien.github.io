@@ -1,7 +1,7 @@
 # BeanTheAlien.github.io
 i am a blueberry
 
-# Version 0.0.11
+# Version 0.0.12
 
 # Changelog
 ### 0.0.1
@@ -35,3 +35,7 @@ i am a blueberry
 - Pushed some new content for Dungeon
 ### 0.0.11
 - Added choose your own adventure game
+### 0.0.12
+- Ported Three projects to its own seperate are
+- The Three projects dont work
+- I cant figure out how to get the Three projects to work
