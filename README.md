@@ -1,7 +1,7 @@
 # BeanTheAlien.github.io
 i am a blueberry
 
-# Version 0.0.10
+# Version 0.0.11
 
 # Changelog
 ### 0.0.1
