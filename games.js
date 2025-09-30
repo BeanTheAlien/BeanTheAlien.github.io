@@ -1723,6 +1723,21 @@ const games = [
     }
 ];
 
+/*
+    {
+        "filename": "FILE NAME",
+        "name": "NAME",
+        "exec": (popup) => {
+            const d1 = document.createElement("div");
+            const d2 = document.createElement("div");
+            d1.className = "score1";
+            d2.className = "score2";
+            popup.appendChild(d2);
+        },
+        "hide": false
+    }
+*/
+
 games.forEach(g => {
     if(g.hide) return;
     const b = document.createElement("button");
