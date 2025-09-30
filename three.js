@@ -36,8 +36,8 @@ function animate() {
     // cube3.rotation.x += 0.04;
     // cube3.rotation.y += 0.04;
     cubes.forEach(c => {
-        c.rotation.x += random(-0.05, 0.05);
-        c.rotation.y += random(-0.05, 0.05);
+        c.rotation.x += randomFloat(-0.05, 0.05);
+        c.rotation.y += randomFloat(-0.05, 0.05);
     });
     renderer.render(scene, camera);
 }
