@@ -33,3 +33,5 @@ i am a blueberry
 - Fixed a bunch of Dungeon Game errors
 ### 0.0.10
 - Pushed some new content for Dungeon
+### 0.0.11
+- Added choose your own adventure game
