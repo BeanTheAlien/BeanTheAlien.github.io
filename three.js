@@ -1,5 +1,5 @@
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js";
-import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/loaders/GLTFLoader.js";
+// import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/loaders/GLTFLoader.js";
 
 const width = window.innerWidth;
 const height = window.innerHeight;
@@ -9,20 +9,20 @@ const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(width, height);
 document.body.appendChild(renderer.domElement);
-const loader = new GLTFLoader();
-loader.load(
-    "./car/scene.gltf",
-    function(gltf) {
-        scene.add(gltf.scene);
-        // You can also access animations, cameras, etc. from gltf.animations, gltf.cameras
-    },
-    function(xhr) {
-        console.log((xhr.loaded / xhr.total * 100) + "% loaded");
-    },
-    function(err) {
-        console.error(err);
-    }
-);
+// const loader = new GLTFLoader();
+// loader.load(
+//     "./car/scene.gltf",
+//     function(gltf) {
+//         scene.add(gltf.scene);
+//         // You can also access animations, cameras, etc. from gltf.animations, gltf.cameras
+//     },
+//     function(xhr) {
+//         console.log((xhr.loaded / xhr.total * 100) + "% loaded");
+//     },
+//     function(err) {
+//         console.error(err);
+//     }
+// );
 
 const geometry = new THREE.BoxGeometry();
 const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
