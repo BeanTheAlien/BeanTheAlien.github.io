@@ -1,25 +1,7 @@
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js";
 
-function random(a = null, b = null) {
-    if(a == null && b == null) {
-        return Math.floor(Math.random() * 101);
-    } else if(a != null && b == null) {
-        return Math.floor(Math.random() * a);
-    } else if(a != null && b != null) {
-        let min;
-        let max;
-        if(a > b) {
-            min = Math.ceil(b);
-            max = Math.floor(a);
-            return Math.floor(Math.random() * (max - min)) + min;
-        } else if(a < b) {
-            min = Math.ceil(a);
-            max = Math.floor(b);
-            return Math.floor(Math.random() * (max - min)) + min;
-        } else {
-            return Math.floor(Math.random() * a);
-        }
-    }
+function randomFloat(min, max) {
+    return Math.random() * (max - min) + min;
 }
 
 const width = window.innerWidth;
