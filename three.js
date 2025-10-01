@@ -44,6 +44,10 @@ raycaster.firstHitOnly = true;
 raycaster.intersectObjects( [ mesh ] );
 */
 
+var keys = {};
+document.addEventListener("keydown", (e) => keys[e.key] = true);
+document.addEventListener("keyup", (e) => keys[e.key] = false);
+
 const width = window.innerWidth;
 const height = window.innerHeight;
 const scene = new THREE.Scene();
