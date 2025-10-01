@@ -1,8 +1,48 @@
-import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js";
+import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js"; 
+import { computeBoundsTree, disposeBoundsTree, computeBatchedBoundsTree, disposeBatchedBoundsTree, acceleratedRaycast } from "https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.9.1/+esm";
 
-function randomFloat(min, max) {
-    return Math.random() * (max - min) + min;
-}
+// add extension functions
+THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
+THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
+THREE.Mesh.prototype.raycast = acceleratedRaycast;
+THREE.BatchedMesh.prototype.computeBoundsTree = computeBatchedBoundsTree;
+THREE.BatchedMesh.prototype.disposeBoundsTree = disposeBatchedBoundsTree;
+THREE.BatchedMesh.prototype.raycast = acceleratedRaycast;
+/*
+import * as THREE from 'three';
+import {
+	computeBoundsTree, disposeBoundsTree,
+	computeBatchedBoundsTree, disposeBatchedBoundsTree, acceleratedRaycast,
+} from 'three-mesh-bvh';
+
+// Add the extension functions
+THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
+THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
+THREE.Mesh.prototype.raycast = acceleratedRaycast;
+
+THREE.BatchedMesh.prototype.computeBoundsTree = computeBatchedBoundsTree;
+THREE.BatchedMesh.prototype.disposeBoundsTree = disposeBatchedBoundsTree;
+THREE.BatchedMesh.prototype.raycast = acceleratedRaycast;
+
+// Generate geometry and associated BVH
+const geom = new THREE.TorusKnotGeometry( 10, 3, 400, 100 );
+const mesh = new THREE.Mesh( geom, material );
+geom.computeBoundsTree();
+
+// Or generate BatchedMesh and associated BVHs
+const batchedMesh = new THREE.BatchedMesh( ... );
+const geomId = batchedMesh.addGeometry( geom );
+const instId = batchedMesh.addGeometry( geom );
+
+// Generate bounds tree for sub geometry
+batchedMesh.computeBoundsTree( geomId );
+
+// Setting "firstHitOnly" to true means the Mesh.raycast function will use the
+// bvh "raycastFirst" function to return a result more quickly.
+const raycaster = new THREE.Raycaster();
+raycaster.firstHitOnly = true;
+raycaster.intersectObjects( [ mesh ] );
+*/
 
 const width = window.innerWidth;
 const height = window.innerHeight;
@@ -13,32 +53,18 @@ const renderer = new THREE.WebGLRenderer();
 renderer.setSize(width, height);
 document.body.appendChild(renderer.domElement);
 
-const geometry = new THREE.BoxGeometry();
+const geo = new THREE.BoxGeometry();
 const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-const cubes = [];
-for(let i = 0; i < 5; i++) cubes.push(new THREE.Mesh(geometry, material));
-// const cube = new THREE.Mesh(geometry, material);
-// const cube2 = new THREE.Mesh(geometry, material);
-// const cube3 = new THREE.Mesh(geometry, material);
-// scene.add(cube);
-// scene.add(cube2);
-// scene.add(cube3);
-cubes.forEach(c => scene.add(c));
+const cube = new THREE.Mesh(geo, material);
+geo.computeBoundsTree();
+scene.add(cube);
 
 camera.position.z = 5;
 
 function animate() {
     requestAnimationFrame(animate);
-    // cube.rotation.x += 0.03;
-    // cube.rotation.y += 0.03;
-    // cube2.rotation.x -= 0.07;
-    // cube2.rotation.y -= 0.07;
-    // cube3.rotation.x += 0.04;
-    // cube3.rotation.y += 0.04;
-    cubes.forEach(c => {
-        c.rotation.x += randomFloat(-0.05, 0.05);
-        c.rotation.y += randomFloat(-0.05, 0.05);
-    });
+    cube.rotation.x += 0.03;
+    cube.rotation.y += 0.03;
     renderer.render(scene, camera);
 }
 
