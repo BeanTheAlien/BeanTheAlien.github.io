@@ -117,7 +117,7 @@ function animate() {
     //cube.rotation.x += 0.03;
     //cube.rotation.y += 0.03;
     PlayerMove();
-    FollowMe();
+    // FollowMe();
     renderer.render(scene, camera);
 }
 
