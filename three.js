@@ -67,15 +67,19 @@ const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
 const cube = new THREE.Mesh(geo, material);
 geo.computeBoundsTree();
 scene.add(cube);
-camera.add(flashlight);
-flashlight.position.set(0, 0, 1); // Adjust as needed for desired flashlight placement
-flashlight.target = camera;
+//camera.add(flashlight);
+//flashlight.position.set(0, 0, 1); // Adjust as needed for desired flashlight placement
+//flashlight.target = camera;
 /*
     flashlight.castShadow = true;
     flashlight.shadow.mapSize.width = 1024;
     flashlight.shadow.mapSize.height = 1024;
     // ... other shadow settings
 */
+
+//TODO:
+//make flashlight float in front of player
+//add shadow settings
 
 var isJumping = false;
 var jumpHeight = 0.9;
