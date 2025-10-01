@@ -45,8 +45,11 @@ raycaster.intersectObjects( [ mesh ] );
 */
 
 var keys = {};
-document.addEventListener("keydown", (e) => keys[e.key] = true);
-document.addEventListener("keyup", (e) => keys[e.key] = false);
+window.addEventListener("keydown", (e) => keys[e.key] = true);
+window.addEventListener("keyup", (e) => keys[e.key] = false);
+window.addEventListener("keydown", (e) => {
+    if(e.key == " " && !isJumping) isJumping = true;
+});
 
 const width = window.innerWidth;
 const height = window.innerHeight;
@@ -62,13 +65,59 @@ const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
 const cube = new THREE.Mesh(geo, material);
 geo.computeBoundsTree();
 scene.add(cube);
+cube.add(camera);
+
+var isJumping = false;
+var jumpHeight = 0.9;
+var jumpSpd = 0.1;
+var jumpDir = 1;
+const startY = cube.position.y;
 
 camera.position.z = 5;
 
+function PlayerMove() {
+    const spd = 0.05;
+    const dir = new THREE.Vector3();
+    const axisR = new THREE.Vector3(1, 0, 0); // Local X-axis (right)
+    if(keys["w"] || keys["ArrowUp"]) {
+        cube.getWorldDirection(dir);
+        cube.position.add(dir.multiplyScalar(-spd));
+    }
+    if(keys["a"] || keys["ArrowLeft"]) {
+        cube.translateOnAxis(axisR, -spd);
+    }
+    if(keys["d"] || keys["ArrowRight"]) {
+        cube.translateOnAxis(axisR, spd);
+    }
+    if(keys["s"] || keys["ArrowDown"]) {
+        cube.getWorldDirection(dir);
+        cube.position.addScaledVector(dir, spd);
+    }
+    if(isJumping) {
+        cube.position.y += jumpSpd * jumpDir;
+        if(jumpDir == 1 && cube.position.y >= startY + jumpHeight) {
+            jumpDir = -1; // Start falling
+        } else if(jumpDir == -1 && cube.position.y <= startY) {
+            cube.position.y = startY; // Reset to ground
+            isJumping = false;
+            jumpDir = 1; // Reset for next jump
+        }
+    }
+}
+function FollowMe() {
+    // In your animation loop:
+    const targetPosition = cube.position;
+    const alpha = 0.1; // Speed of the follow
+    camera.position.lerp(targetPosition, alpha);
+    camera.lookAt(cube.position); // Keep the camera looking at the mesh
+}
+
 function animate() {
     requestAnimationFrame(animate);
-    cube.rotation.x += 0.03;
-    cube.rotation.y += 0.03;
+    //cube.rotation.x += 0.03;
+    //cube.rotation.y += 0.03;
+    PlayerMove();
+    FollowMe();
     renderer.render(scene, camera);
 }
 
