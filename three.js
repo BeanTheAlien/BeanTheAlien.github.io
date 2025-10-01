@@ -55,24 +55,33 @@ const width = window.innerWidth;
 const height = window.innerHeight;
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+const flashlight = new THREE.SpotLight(0xffffff, 4, 40, Math.PI / 6, 0.5, 2);
 
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(width, height);
 document.body.appendChild(renderer.domElement);
+document.addEventListener("click", () => renderer.domElement.requestPointerLock());
 
 const geo = new THREE.BoxGeometry();
 const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
 const cube = new THREE.Mesh(geo, material);
 geo.computeBoundsTree();
 scene.add(cube);
+camera.add(flashlight);
+flashlight.position.set(0, 0, 1); // Adjust as needed for desired flashlight placement
+flashlight.target = camera;
+/*
+    flashlight.castShadow = true;
+    flashlight.shadow.mapSize.width = 1024;
+    flashlight.shadow.mapSize.height = 1024;
+    // ... other shadow settings
+*/
 
 var isJumping = false;
 var jumpHeight = 0.9;
 var jumpSpd = 0.1;
 var jumpDir = 1;
 const startY = cube.position.y;
-
-camera.position.z = 5;
 
 function PlayerMove() {
     const spd = 0.05;
@@ -104,7 +113,6 @@ function PlayerMove() {
     }
 }
 function FollowMe() {
-    // In your animation loop:
     const targetPos = cube.position.clone();
     const alpha = 0.1; // Speed of the follow
     camera.position.lerp(targetPos, alpha);
@@ -113,11 +121,11 @@ function FollowMe() {
 
 function animate() {
     requestAnimationFrame(animate);
-    //cube.rotation.x += 0.03;
-    //cube.rotation.y += 0.03;
     PlayerMove();
     FollowMe();
     renderer.render(scene, camera);
 }
 
 animate();
+
+// SEE https://discourse.threejs.org/t/first-person-shooter-game/26986
