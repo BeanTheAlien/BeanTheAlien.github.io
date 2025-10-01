@@ -106,9 +106,9 @@ function PlayerMove() {
 }
 function FollowMe() {
     // In your animation loop:
-    const targetPosition = cube.position;
+    const targetPos = cube.position.clone();
     const alpha = 0.1; // Speed of the follow
-    camera.position.lerp(targetPosition, alpha);
+    camera.position.lerp(targetPos, alpha);
     camera.lookAt(cube.position); // Keep the camera looking at the mesh
 }
 
