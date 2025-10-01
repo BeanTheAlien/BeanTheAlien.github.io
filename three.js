@@ -65,7 +65,6 @@ const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
 const cube = new THREE.Mesh(geo, material);
 geo.computeBoundsTree();
 scene.add(cube);
-cube.add(camera);
 
 var isJumping = false;
 var jumpHeight = 0.9;
@@ -117,7 +116,7 @@ function animate() {
     //cube.rotation.x += 0.03;
     //cube.rotation.y += 0.03;
     PlayerMove();
-    // FollowMe();
+    FollowMe();
     renderer.render(scene, camera);
 }
 
