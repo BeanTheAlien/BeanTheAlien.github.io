@@ -79,33 +79,7 @@ cube.castShadow = true;
 cube.receiveShadow = true;
 geo.computeBoundsTree();
 scene.add(cube);
-//camera.add(flashlight);
-//flashlight.position.set(0, 0, 1); // Adjust as needed for desired flashlight placement
-//flashlight.target = camera;
-/*
-    flashlight.castShadow = true;
-    flashlight.shadow.mapSize.width = 1024;
-    flashlight.shadow.mapSize.height = 1024;
-    // ... other shadow settings
-*/
-// 1. Attach flashlight to the camera
-camera.add(flashlight); 
-// 2. Position it slightly in front of the camera
-flashlight.position.set(0, 0, -1); 
-// The flashlight will now point wherever the camera points.
-
-// Add a ground plane to receive shadows
-const planeGeo = new THREE.PlaneGeometry(50, 50);
-const planeMat = new THREE.MeshPhongMaterial({ color: 0xcccccc, side: THREE.DoubleSide });
-const plane = new THREE.Mesh(planeGeo, planeMat);
-plane.rotation.x = -Math.PI / 2; // Rotate to lie flat
-plane.position.y = -0.5; // Below the cube
-plane.receiveShadow = true;
-scene.add(plane);
-
-//TODO:
-//make flashlight float in front of player
-//add shadow settings
+cube.add(camera);
 
 var isJumping = false;
 var jumpHeight = 0.9;
@@ -150,13 +124,7 @@ function PlayerMove() {
 function animate() {
     requestAnimationFrame(animate);
     PlayerMove();
-    
-    // Update camera position to follow the cube's position (first-person)
-    camera.position.copy(cube.position);
-    camera.position.y += 0.5; // Adjust camera height
-    camera.position.z -= 
-
-    //controls.update();
+    // FollowMe();
     renderer.render(scene, camera);
 }
 
