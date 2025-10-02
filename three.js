@@ -51,24 +51,41 @@ window.addEventListener("keydown", (e) => {
 const width = window.innerWidth;
 const height = window.innerHeight;
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
 
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(width, height);
 document.body.appendChild(renderer.domElement);
 document.addEventListener("click", () => renderer.domElement.requestPointerLock());
 
-const geo = new THREE.BoxGeometry();
-const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-const cube = new THREE.Mesh(geo, material);
-geo.computeBoundsTree();
-scene.add(cube);
+// 1. Create the geometry for the floor
+// PlaneGeometry(width, height, widthSegments, heightSegments)
+const floorGeometry = new THREE.PlaneGeometry(100, 100); // A 100x100 unit plane
+
+// 2. Create the material for the floor
+// MeshBasicMaterial is a simple material, you can use others like MeshStandardMaterial for more advanced lighting
+const floorMaterial = new THREE.MeshBasicMaterial({ color: 0xcccccc, side: THREE.DoubleSide }); // Light gray color, visible from both sides
+
+// 3. Create the Mesh by combining the geometry and material
+const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+
+// 4. Position and rotate the floor
+// Rotate the plane so it lies flat on the XZ plane
+floor.rotation.x = -Math.PI / 2; // Rotate 90 degrees around the X-axis
+
+// You can also adjust its Y position if needed, e.g., to place it slightly below other objects
+floor.position.y = -0.5;
+
+floorGeometry.computeBoundsTree();
+
+// 5. Add the floor to the scene
+scene.add(floor);
 
 var isJumping = false;
 var jumpHeight = 0.9;
 var jumpSpd = 0.1;
 var jumpDir = 1;
-const startY = cube.position.y;
+const startY = camera.position.y;
 
 var yaw = 0; // left-right
 var pitch = 0; // up-down
