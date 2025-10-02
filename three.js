@@ -98,37 +98,37 @@ document.addEventListener("mousemove", (e) => {
 }, false);
 
 function updateControls(delta) {
-  // update camera rotation
-  camera.rotation.x = pitch;
-  camera.rotation.y = yaw;
+    // update camera rotation
+    camera.rotation.x = pitch;
+    camera.rotation.y = yaw;
 
-  // movement vectors
-  const forward = new THREE.Vector3();
-  camera.getWorldDirection(forward);
-  forward.y = 0; // lock to ground
-  forward.normalize();
+    // movement vectors
+    const forward = new THREE.Vector3();
+    camera.getWorldDirection(forward);
+    forward.y = 0; // lock to ground
+    forward.normalize();
 
-  const right = new THREE.Vector3();
-  right.crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
+    const right = new THREE.Vector3();
+    right.crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
 
-  const speed = 5 * delta;
+    const speed = 5 * delta;
 
-  if (keys["w"] || keys["ArrowUp"]) camera.position.addScaledVector(forward, speed);
-  if (keys["s"] || keys["ArrowDown"]) camera.position.addScaledVector(forward, -speed);
-  if (keys["a"] || keys["ArrowLeft"]) camera.position.addScaledVector(right, -speed);
-  if (keys["d"] || keys["ArrowRight"]) camera.position.addScaledVector(right, speed);
+    if(keys["w"] || keys["ArrowUp"]) camera.position.addScaledVector(forward, speed);
+    if(keys["s"] || keys["ArrowDown"]) camera.position.addScaledVector(forward, -speed);
+    if(keys["a"] || keys["ArrowLeft"]) camera.position.addScaledVector(right, -speed);
+    if(keys["d"] || keys["ArrowRight"]) camera.position.addScaledVector(right, speed);
 
-  // jumping (basic)
-  if (isJumping) {
-    camera.position.y += jumpSpd * jumpDir;
-    if (jumpDir === 1 && camera.position.y >= startY + jumpHeight) {
-      jumpDir = -1;
-    } else if (jumpDir === -1 && camera.position.y <= startY) {
-      camera.position.y = startY;
-      isJumping = false;
-      jumpDir = 1;
+    // jumping (basic)
+    if(isJumping) {
+        camera.position.y += jumpSpd * jumpDir;
+        if(jumpDir == 1 && camera.position.y >= startY + jumpHeight) {
+            jumpDir = -1;
+        } else if(jumpDir == -1 && camera.position.y <= startY) {
+            camera.position.y = startY;
+            isJumping = false;
+            jumpDir = 1;
+        }
     }
-  }
 }
 
 let lastTime = performance.now();
@@ -137,7 +137,6 @@ function animate() {
   const now = performance.now();
   const delta = (now - lastTime) / 1000;
   lastTime = now;
-
   updateControls(delta);
   renderer.render(scene, camera);
 }
