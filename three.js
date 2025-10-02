@@ -41,6 +41,20 @@ raycaster.firstHitOnly = true;
 raycaster.intersectObjects( [ mesh ] );
 */
 
+class Person {
+    constructor(x, y, z, mdl, behaviors) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.mdl = mdl;
+        this.behaviors = behaviors;
+        this.geometry = new THREE.BoxGeometry();
+        this.material = new THREE.MeshBasicMaterial({ color: 0x38F527 });
+        this.mesh = new THREE.Mesh(this.geometry, this.material);
+        this.mesh.position = new THREE.Vector3(this.x, this.y, this.z);
+    }
+}
+
 var keys = {};
 window.addEventListener("keydown", (e) => keys[e.key] = true);
 window.addEventListener("keyup", (e) => keys[e.key] = false);
