@@ -1,6 +1,5 @@
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js"; 
 import { computeBoundsTree, disposeBoundsTree, computeBatchedBoundsTree, disposeBatchedBoundsTree, acceleratedRaycast } from "https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.9.1/+esm";
-// import { PointerLockControls } from "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/controls/PointerLockControls.js";
 
 // add extension functions
 THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
@@ -53,33 +52,17 @@ const width = window.innerWidth;
 const height = window.innerHeight;
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-// Flashlight setup: Increased intensity, enable shadows
-const flashlight = new THREE.SpotLight(0xffffff, 10, 40, Math.PI / 6, 0.5, 2);
-flashlight.castShadow = true;
-flashlight.shadow.mapSize.width = 1024;
-flashlight.shadow.mapSize.height = 1024;
-flashlight.shadow.camera.near = 0.1;
-flashlight.shadow.camera.far = 40; 
-//const controls = new PointerLockControls(camera, document.body);
-//scene.add(controls.getObject());
 
-// Renderer setup: Enable shadow maps
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(width, height);
-renderer.shadowMap.enabled = true; // IMPORTANT: Enable shadow mapping
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
 document.addEventListener("click", () => renderer.domElement.requestPointerLock());
 
 const geo = new THREE.BoxGeometry();
 const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
 const cube = new THREE.Mesh(geo, material);
-// Make player cube cast and receive shadows
-cube.castShadow = true;
-cube.receiveShadow = true;
 geo.computeBoundsTree();
 scene.add(cube);
-cube.add(camera);
 
 var isJumping = false;
 var jumpHeight = 0.9;
@@ -117,16 +100,20 @@ function PlayerMove() {
     }
 }
 
-// REMOVE FollowMe function for first-person view.
-// If you implement a full first-person controller (e.g., using PointerLockControls),
-// the camera orientation will be handled there.
+function FollowMe() {
+    const targetPos = cube.position.clone();
+    const alpha = 0.1; // Speed of the follow
+    camera.position.lerp(targetPos, alpha);
+    camera.lookAt(cube.position); // Keep the camera looking at the mesh
+}
 
 function animate() {
     requestAnimationFrame(animate);
     PlayerMove();
-    // FollowMe();
+    FollowMe();
     renderer.render(scene, camera);
 }
 
 animate();
+
 // SEE https://discourse.threejs.org/t/first-person-shooter-game/26986
