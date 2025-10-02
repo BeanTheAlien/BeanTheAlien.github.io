@@ -80,77 +80,49 @@ document.addEventListener("mousemove", (e) => {
     pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch));
 }, false);
 
-function updateControls(delta) {}
+function updateControls(delta) {
+  // update camera rotation
+  camera.rotation.x = pitch;
+  camera.rotation.y = yaw;
 
-function PlayerMove() {
-    const spd = 0.05;
-    const dir = new THREE.Vector3();
-    const axisR = new THREE.Vector3(1, 0, 0); // Local X-axis (right)
-    if(keys["w"] || keys["ArrowUp"]) {
-        cube.getWorldDirection(dir);
-        cube.position.add(dir.multiplyScalar(-spd));
-    }
-    if(keys["a"] || keys["ArrowLeft"]) {
-        cube.translateOnAxis(axisR, -spd);
-    }
-    if(keys["d"] || keys["ArrowRight"]) {
-        cube.translateOnAxis(axisR, spd);
-    }
-    if(keys["s"] || keys["ArrowDown"]) {
-        cube.getWorldDirection(dir);
-        cube.position.addScaledVector(dir, spd);
-    }
-    if(isJumping) {
-        cube.position.y += jumpSpd * jumpDir;
-        if(jumpDir == 1 && cube.position.y >= startY + jumpHeight) {
-            jumpDir = -1; // Start falling
-        } else if(jumpDir == -1 && cube.position.y <= startY) {
-            cube.position.y = startY; // Reset to ground
-            isJumping = false;
-            jumpDir = 1; // Reset for next jump
-        }
-    }
-}
-function CameraMove(delta) {
-    // update camera rotation
-    camera.rotation.x = pitch;
-    camera.rotation.y = yaw;
+  // movement vectors
+  const forward = new THREE.Vector3();
+  camera.getWorldDirection(forward);
+  forward.y = 0; // lock to ground
+  forward.normalize();
 
-    // direction vector
-    const forward = new THREE.Vector3();
-    camera.getWorldDirection(forward);
-    forward.y = 0; // lock to ground plane
-    forward.normalize();
+  const right = new THREE.Vector3();
+  right.crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
 
-    const right = new THREE.Vector3();
-    right.crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
+  const speed = 5 * delta;
 
-    const speed = 5 * delta;
+  if (keys["w"] || keys["ArrowUp"]) camera.position.addScaledVector(forward, speed);
+  if (keys["s"] || keys["ArrowDown"]) camera.position.addScaledVector(forward, -speed);
+  if (keys["a"] || keys["ArrowLeft"]) camera.position.addScaledVector(right, -speed);
+  if (keys["d"] || keys["ArrowRight"]) camera.position.addScaledVector(right, speed);
 
-    if(keys["w"] || keys["ArrowUp"]) camera.position.addScaledVector(forward, speed);
-    if(keys["a"] || keys["ArrowLeft"]) camera.position.addScaledVector(right, -speed);
-    if(keys["s"] || keys["ArrowDown"]) camera.position.addScaledVector(forward, -speed);
-    if(keys["d"] || keys["ArrowRight"]) camera.position.addScaledVector(right, speed);
-}
-function FollowMe() {
-    // In your animation loop:
-    const targetPosition = cube.position;
-    const targetPos = cube.position.clone();
-    const alpha = 0.1; // Speed of the follow
-    camera.position.lerp(targetPosition, alpha);
-    camera.position.lerp(targetPos, alpha);
-    // camera.lookAt(cube.position); // Keep the camera looking at the mesh
+  // jumping (basic)
+  if (isJumping) {
+    camera.position.y += jumpSpd * jumpDir;
+    if (jumpDir === 1 && camera.position.y >= startY + jumpHeight) {
+      jumpDir = -1;
+    } else if (jumpDir === -1 && camera.position.y <= startY) {
+      camera.position.y = startY;
+      isJumping = false;
+      jumpDir = 1;
+    }
+  }
 }
 
 let lastTime = performance.now();
 function animate() {
-    // animation loop
-    requestAnimationFrame(animate);
-    const now = performance.now();
-    const delta = (now - lastTime) / 1000;
-    lastTime = now;
-    CameraMove(delta);
-    renderer.render(scene, camera);
+  requestAnimationFrame(animate);
+  const now = performance.now();
+  const delta = (now - lastTime) / 1000;
+  lastTime = now;
+
+  updateControls(delta);
+  renderer.render(scene, camera);
 }
 animate();
 
