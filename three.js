@@ -1,14 +1,11 @@
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js"; 
 import { computeBoundsTree, disposeBoundsTree, computeBatchedBoundsTree, disposeBatchedBoundsTree, acceleratedRaycast } from "https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.9.1/+esm";
-import { PointerLockControls } from "https://cdn.jsdelivr.net/npm/three-pointer-lock-controls@1.0.0/+esm";
+// import { PointerLockControls } from "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/controls/PointerLockControls.js";
 
 // add extension functions
 THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
 THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
-THREE.BatchedMesh.prototype.computeBoundsTree = computeBatchedBoundsTree;
-THREE.BatchedMesh.prototype.disposeBoundsTree = disposeBatchedBoundsTree;
-THREE.BatchedMesh.prototype.raycast = acceleratedRaycast;
 /*
 import * as THREE from 'three';
 import {
@@ -63,7 +60,8 @@ flashlight.shadow.mapSize.width = 1024;
 flashlight.shadow.mapSize.height = 1024;
 flashlight.shadow.camera.near = 0.1;
 flashlight.shadow.camera.far = 40; 
-const controls = new PointerLockControls(camera, document.body);
+//const controls = new PointerLockControls(camera, document.body);
+//scene.add(controls.getObject());
 
 // Renderer setup: Enable shadow maps
 const renderer = new THREE.WebGLRenderer();
@@ -156,7 +154,9 @@ function animate() {
     // Update camera position to follow the cube's position (first-person)
     camera.position.copy(cube.position);
     camera.position.y += 0.5; // Adjust camera height
+    camera.position.z -= 
 
+    //controls.update();
     renderer.render(scene, camera);
 }
 
