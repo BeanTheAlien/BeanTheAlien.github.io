@@ -70,6 +70,18 @@ var jumpSpd = 0.1;
 var jumpDir = 1;
 const startY = cube.position.y;
 
+var yaw = 0; // left-right
+var pitch = 0; // up-down
+const sensitivity = 0.002;
+document.addEventListener("mousemove", (e) => {
+    yaw -= e.movementX * sensitivity;
+    pitch -= e.movementY * sensitivity;
+    // clamp pitch so you don’t flip upside down
+    pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch));
+}, false);
+
+function updateControls(delta) {}
+
 function PlayerMove() {
     const spd = 0.05;
     const dir = new THREE.Vector3();
@@ -99,21 +111,47 @@ function PlayerMove() {
         }
     }
 }
+function CameraMove(delta) {
+    // update camera rotation
+    camera.rotation.x = pitch;
+    camera.rotation.y = yaw;
 
+    // direction vector
+    const forward = new THREE.Vector3();
+    camera.getWorldDirection(forward);
+    forward.y = 0; // lock to ground plane
+    forward.normalize();
+
+    const right = new THREE.Vector3();
+    right.crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
+
+    const speed = 5 * delta;
+
+    if(keys["w"] || keys["ArrowUp"]) camera.position.addScaledVector(forward, speed);
+    if(keys["a"] || keys["ArrowLeft"]) camera.position.addScaledVector(right, -speed);
+    if(keys["s"] || keys["ArrowDown"]) camera.position.addScaledVector(forward, -speed);
+    if(keys["d"] || keys["ArrowRight"]) camera.position.addScaledVector(right, speed);
+}
 function FollowMe() {
+    // In your animation loop:
+    const targetPosition = cube.position;
     const targetPos = cube.position.clone();
     const alpha = 0.1; // Speed of the follow
+    camera.position.lerp(targetPosition, alpha);
     camera.position.lerp(targetPos, alpha);
-    camera.lookAt(cube.position); // Keep the camera looking at the mesh
+    // camera.lookAt(cube.position); // Keep the camera looking at the mesh
 }
 
+let lastTime = performance.now();
 function animate() {
+    // animation loop
     requestAnimationFrame(animate);
-    PlayerMove();
-    FollowMe();
+    const now = performance.now();
+    const delta = (now - lastTime) / 1000;
+    lastTime = now;
+    CameraMove(delta);
     renderer.render(scene, camera);
 }
-
 animate();
 
 // SEE https://discourse.threejs.org/t/first-person-shooter-game/26986
