@@ -133,12 +133,12 @@ function updateControls(delta) {
 
 let lastTime = performance.now();
 function animate() {
-  requestAnimationFrame(animate);
-  const now = performance.now();
-  const delta = (now - lastTime) / 1000;
-  lastTime = now;
-  updateControls(delta);
-  renderer.render(scene, camera);
+    requestAnimationFrame(animate);
+    const now = performance.now();
+    const delta = (now - lastTime) / 1000;
+    lastTime = now;
+    updateControls(delta);
+    renderer.render(scene, camera);
 }
 animate();
 
