@@ -21,4 +21,13 @@ function appendFile(filepath, content) {
     fs.appendFile(path.join(__dirname, filepath), content);
 }
 
-module.exports = { writeFile, readFile, appendFile };
+function pathExists(filepath) {
+    return fs.existsSync(filepath);
+}
+
+module.exports = {
+    writeFile,
+    readFile,
+    appendFile,
+    pathExists
+};
