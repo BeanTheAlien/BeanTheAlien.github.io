@@ -199,6 +199,17 @@ class sub extends GSMethod {
         });
     }
 }
+class add extends GSMethod {
+    constructor() {
+        super({
+            gsMethodDesire: false,
+            gsMethodType: GSArray,
+            gsMethodName: "add",
+            gsMethodAttach: GSArray,
+            gsMethodArgs: []
+        });
+    }
+}
 // class null extends GSMethod {
 //     constructor() {
 //         super({
@@ -351,6 +362,11 @@ class GSEvent extends CustomEvent {
             bubbles: s.bubbles,
             cancelable: s.cancelable
         });
+    }
+}
+class GSGroup {
+    constructor(s) {
+        this.gsGroupName = s.gsGroupName;
     }
 }
 
