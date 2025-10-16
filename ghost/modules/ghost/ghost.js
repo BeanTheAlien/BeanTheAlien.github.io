@@ -87,7 +87,8 @@ class count extends GSMethod {
             gsMethodArgs: [{
                 desire: true,
                 type: GSString,
-                name: "delim"
+                name: "delim",
+                def: null
             }],
             gsMethodBody: (target, delim) => {
                 let result = 0;
@@ -108,16 +109,57 @@ class replace extends GSMethod {
                 {
                     desire: true,
                     type: GSString,
-                    name: "pattern"
+                    name: "pattern",
+                    def: null
                 },
                 {
                     desire: false,
                     type: GSEntity,
-                    name: "value"
+                    name: "value",
+                    def: null
                 }
             ],
             gsMethodBody: (target, pattern, value) => {
                 return target.replace(pattern, value);
+            }
+        });
+    }
+}
+class indexOf extends GSMethod {
+    constructor() {
+        super({
+            gsMethodDesire: true,
+            gsMethodType: GSInt,
+            gsMethodName: "indexOf",
+            gsMethodAttach: GSInt,
+            gsMethodArgs: [
+                {
+                    desire: false,
+                    type: GSEntity,
+                    name: "item",
+                    def: null
+                },
+                {
+                    desire: false,
+                    type: GSInt,
+                    name: "startindex",
+                    def: 0
+                },
+                {
+                    desire: false,
+                    type: GSInt,
+                    name: "endindex",
+                    def: Infinity
+                },
+                {
+                    desire: false,
+                    type: GSInt,
+                    name: "occurence",
+                    def: 1
+                }
+            ],
+            gsMethodBody: (target, item) => {
+                return target.indexOf(item);
             }
         });
     }
