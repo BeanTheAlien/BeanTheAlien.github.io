@@ -367,6 +367,14 @@ class GSEvent extends CustomEvent {
 class GSGroup {
     constructor(s) {
         this.gsGroupName = s.gsGroupName;
+        const {
+            gsGroupName,
+            gsGroupType = GSEntity,
+            gsGroupLimit = Infinity
+        } = s.gsGroupOptions;
+        this.gsGroupName = gsGroupName;
+        this.gsGroupType = gsGroupType;
+        this.gsGroupLimit = gsGroupLimit;
     }
 }
 
