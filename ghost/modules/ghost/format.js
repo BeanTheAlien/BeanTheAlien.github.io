@@ -16,9 +16,26 @@ base: string
 code: s
 props:
 len(int) - truncates the string to the passed max length
-padS(string, int) - pads the string's start with string for int
-padE(string, int) - pads the string's end with string for int
-
+== Number ==
+base: num
+code: n
+props:
+round(int) - rounds the value to the passed places, uses Math.round if places <= 0
+== Bool ==
+base: bool
+code: b
+props:
+none
+== Array ==
+base: array
+code: a
+props:
+len(int) - truncates the array to the passed max length
+== Object ==
+base: obj
+code: o
+props:
+none
 */
 
 function format() {}
