@@ -63,6 +63,13 @@ class GSProp {
         this.gsPropSet = s.gsPropSet;
     }
 }
+class GSModifier {
+    constructor(s) {
+        this.gsModifierName = s.gsModifierName;
+        this.gsModifierGet = s.gsModifierGet;
+        this.gsModifierSet = s.gsModifierSet;
+    }
+}
 class GSErr extends Error {
     constructor(nm, msg) {
         super(`${nm}: ${msg}`);
