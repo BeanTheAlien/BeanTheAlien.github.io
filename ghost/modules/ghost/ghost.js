@@ -119,7 +119,7 @@ class replace extends GSMethod {
                     gsArgVal: null,
                     gsArgDesire: true,
                     gsArgType: GSString
-                },
+                }),
                 new GSArg({
                     gsArgName: "value",
                     gsArgVal: null,
