@@ -35,6 +35,14 @@ class GSMethod {
         this.gsMethodBody = s.gsMethodBody;
     }
 }
+class GSArg {
+    constructor(s) {
+        this.gsArgName = s.gsArgName;
+        this.gsArgVal = s.gsArgVal;
+        this.gsArgDesire  = s.gsArgDesire;
+        this.gsArgType = s.gsArgType;
+    }
+}
 class toUpper extends GSMethod {
     constructor() {
         super({
@@ -106,18 +114,18 @@ class replace extends GSMethod {
             gsMethodName: "replace",
             gsMethodAttach: GSString,
             gsMethodArgs: [
-                {
-                    desire: true,
-                    type: GSString,
-                    name: "pattern",
-                    def: null
+                new GSArg({
+                    gsArgName: "pattern",
+                    gsArgVal: null,
+                    gsArgDesire: true,
+                    gsArgType: GSString
                 },
-                {
-                    desire: false,
-                    type: GSEntity,
-                    name: "value",
-                    def: null
-                }
+                new GSArg({
+                    gsArgName: "value",
+                    gsArgVal: null,
+                    gsArgDesire: false,
+                    gsArgType: GSEntity
+                })
             ],
             gsMethodBody: (target, pattern, value) => {
                 return target.replace(pattern, value);
@@ -133,33 +141,33 @@ class indexOf extends GSMethod {
             gsMethodName: "indexOf",
             gsMethodAttach: GSInt,
             gsMethodArgs: [
-                {
-                    desire: false,
-                    type: GSEntity,
-                    name: "item",
-                    def: null
-                },
-                {
-                    desire: false,
-                    type: GSInt,
-                    name: "startindex",
-                    def: 0
-                },
-                {
-                    desire: false,
-                    type: GSInt,
-                    name: "endindex",
-                    def: Infinity
-                },
-                {
-                    desire: false,
-                    type: GSInt,
-                    name: "occurence",
-                    def: 1
-                }
+                new GSArg({
+                    gsArgName: "item",
+                    gsArgVal: null,
+                    gsArgDesire: false,
+                    gsArgType: GSEntity
+                }),
+                new GSArg({
+                    gsArgName: "startidx",
+                    gsArgVal: 0,
+                    gsArgDesire: false,
+                    gsArgType: GSInt
+                }),
+                new GSArg({
+                    gsArgName: "endidx",
+                    gsArgVal: Infinity,
+                    gsArgDesire: false,
+                    gsArgType: GSInt
+                }),
+                new GSArg({
+                    gsArgName: "occurence",
+                    gsArgVal: 1,
+                    gsArgDesire: false,
+                    gsArgType: GSInt
+                })
             ],
-            gsMethodBody: (target, item) => {
-                return target.indexOf(item);
+            gsMethodBody: (target, item, startidx, endidx, occurence) => {
+                //
             }
         });
     }
