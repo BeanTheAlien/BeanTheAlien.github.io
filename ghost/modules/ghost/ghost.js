@@ -148,6 +148,26 @@ class GSInt extends GSType {
         });
     }
 }
+class GSFloat extends GSType {
+    constructor() {
+        super({
+            gsTypeName: "float",
+            gsTypeCheck: (value) => {
+                return typeof value == "number" && Math.round(value) != value;
+            }
+        });
+    }
+}
+class GSNumber extends GSType {
+    constructor() {
+        super({
+            gsTypeName: "number",
+            gsTypeCheck: (value) => {
+                return typeof value == "number";
+            }
+        });
+    }
+}
 class GSArray extends GSType {
     constructor() {
         super({
@@ -224,6 +244,8 @@ module.exports = {
     GSType,
     GSString,
     GSInt,
+    GSFloat,
+    GSNumber,
     GSArray,
     GSProp,
     GSModifier,
