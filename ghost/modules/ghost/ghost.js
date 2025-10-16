@@ -65,6 +65,7 @@ class GSProp {
 }
 class GSModifier {
     constructor(s) {
+        this.gsModifierAttach = s.gsModifierAttach;
         this.gsModifierName = s.gsModifierName;
         this.gsModifierGet = s.gsModifierGet;
         this.gsModifierSet = s.gsModifierSet;
@@ -97,6 +98,15 @@ class BadTypeError extends GSErr {
         super("BadTypeError", `Type '${tp}' does not exist.`)
     }
 }
+class GSEvent extends CustomEvent {
+    constructor(s) {
+        super(s.name, {
+            detail: s.detail,
+            bubbles: s.bubbles,
+            cancelable: s.cancelable
+        });
+    }
+}
 
 module.exports = {
     GSVar,
@@ -105,6 +115,7 @@ module.exports = {
     GSClass,
     GSType,
     GSProp,
+    GSModifier,
     GSErr,
     InternalJavaScriptError,
     ImportMissingError,
