@@ -26,6 +26,7 @@ class GSErr extends Error {
         super(`${nm}: ${msg}`);
     }
 }
+// GhostScript
 class InternalJavaScriptError extends GSErr {
     constructor() {
         super("InternalJavaScriptError", "An internal JS error occured.");
@@ -34,6 +35,17 @@ class InternalJavaScriptError extends GSErr {
 class ImportMissingError extends GSErr {
     constructor(imp) {
         super("ImportMissingError", `Import '${imp}' does not exist.`)
+    }
+}
+class ImportInternalError extends GSErr {
+    constructor() {
+        super("ImportInternalError", "An internal error occured within an import.");
+    }
+}
+// Variables
+class BadTypeError extends GSErr {
+    constructor(tp) {
+        super("BadTypeError", `Type '${tp}' does not exist.`)
     }
 }
 
@@ -47,5 +59,7 @@ module.exports = {
     GSErr,
     InternalJavaScriptError,
     ImportMissingError,
+    ImportInternalError,
+    BadTypeError,
     ghostmodule
 };
