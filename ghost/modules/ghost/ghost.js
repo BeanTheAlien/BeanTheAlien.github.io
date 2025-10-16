@@ -185,9 +185,17 @@ class sub extends GSMethod {
                     gsArgVal: null,
                     gsArgDesire: false,
                     gsArgType: GSEntity
+                }),
+                new GSArg({
+                    gsArgName: "newitem",
+                    gsArgVal: null,
+                    gsArgDesire: false,
+                    gsArgType: GSEntity
                 })
             ],
-            gsMethodBody: null
+            gsMethodBody: (target, olditem, newitem) => {
+                for(let i = 0; i < target.length; i++) if(target[i] == olditem) target[i] = newitem;
+            }
         });
     }
 }
