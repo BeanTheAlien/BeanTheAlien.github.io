@@ -121,5 +121,6 @@ module.exports = {
     ImportMissingError,
     ImportInternalError,
     BadTypeError,
+    GSEvent,
     ghostmodule
 };
