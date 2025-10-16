@@ -35,6 +35,80 @@ class GSMethod {
         this.gsMethodBody = s.gsMethodBody;
     }
 }
+class toUpper extends GSMethod {
+    constructor() {
+        super({
+            gsMethodDesire: false,
+            gsMethodType: GSString,
+            gsMethodName: "toUpper",
+            gsMethodAttach: GSString,
+            gsMethodArgs: null,
+            gsMethodBody: (target) => {
+                return target.toUpperCase();
+            }
+        });
+    }
+}
+class toLower extends GSMethod {
+    constructor() {
+        super({
+            gsMethodDesire: false,
+            gsMethodType: GSString,
+            gsMethodName: "toLower",
+            gsMethodAttach: GSString,
+            gsMethodArgs: null,
+            gsMethodBody: (target) => {
+                return target.toLowerCase();
+            }
+        });
+    }
+}
+class toTitle extends GSMethod {
+    constructor() {
+        super({
+            gsMethodDesire: false,
+            gsMethodType: GSString,
+            gsMethodName: "toTitle",
+            gsMethodAttach: GSString,
+            gsMethodArgs: null,
+            gsMethodBody: (target) => {
+                return target.replace(/\w\S*/g, text => text.charAt(0).toUpperCase() + text.substring(1).toLowerCase());
+            }
+        });
+    }
+}
+class count extends GSMethod {
+    constructor() {
+        super({
+            gsMethodDesire: false,
+            gsMethodType: GSInt,
+            gsMethodName: "count",
+            gsMethodAttach: [GSString, GSArray],
+            gsMethodArgs: [{
+                desire: true,
+                type: GSString,
+                name: "delim"
+            }],
+            gsMethodBody: (target, delim) => {
+                let result = 0;
+                for(let i = 0; i < target.length; i++) if(target[i] == delim) result++;
+                return result;
+            }
+        });
+    }
+}
+// class null extends GSMethod {
+//     constructor() {
+//         super({
+//             gsMethodDesire: null,
+//             gsMethodType: null,
+//             gsMethodName: null,
+//             gsMethodAttach: null,
+//             gsMethodArgs: null,
+//             gsMethodBody: null
+//         });
+//     }
+// }
 class GSClass {
     constructor(s) {
         this.gsClassType = s.gsClassType;
@@ -52,6 +126,36 @@ class GSType {
     constructor(s) {
         this.gsTypeName = s.gsClassName;
         this.gsTypeCheck = s.gsTypeCheck;
+    }
+}
+class GSString extends GSType {
+    constructor() {
+        super({
+            gsTypeName: "string",
+            gsTypeCheck: (value) => {
+                return typeof value == "string"
+            }
+        });
+    }
+}
+class GSInt extends GSType {
+    constructor() {
+        super({
+            gsTypeName: "int",
+            gsTypeCheck: (value) => {
+                return typeof value == "number" && Math.round(value) == value;
+            }
+        });
+    }
+}
+class GSArray extends GSType {
+    constructor() {
+        super({
+            gsTypeName: "array",
+            gsTypeCheck: (value) => {
+                return Array.isArray(value);
+            }
+        });
     }
 }
 class GSProp {
