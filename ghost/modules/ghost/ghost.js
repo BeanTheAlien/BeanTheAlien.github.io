@@ -16,11 +16,53 @@ class GSVar {
         this.gsVarVal = s.gsVarVal;
     }
 }
-class GSFunc {}
-class GSMethod {}
-class GSClass {}
-class GSType {}
-class GSProp {}
+class GSFunc {
+    constructor(s) {
+        this.gsFuncDesire = s.gsFuncDesire;
+        this.gsFuncType = s.gsFuncType;
+        this.gsFuncName = s.gsFuncName;
+        this.gsFuncArgs = s.gsFuncArgs;
+        this.gsFuncBody = s.gsFuncBody;
+    }
+}
+class GSMethod {
+    constructor(s) {
+        this.gsMethodDesire = s.gsMethodDesire;
+        this.gsMethodType = s.gsMethodType;
+        this.gsMethodName = s.gsMethodName;
+        this.gsMethodAttach = s.gsMethodAttach;
+        this.gsMethodArgs = s.gsMethodArgs;
+        this.gsMethodBody = s.gsMethodBody;
+    }
+}
+class GSClass {
+    constructor(s) {
+        this.gsClassType = s.gsClassType;
+        this.gsClassName = s.gsClassName;
+        this.gsClassBuilder = s.gsClassBuilder;
+        this.gsClassVars = s.gsClassVars;
+        this.gsClassFuncs = s.gsClassFuncs;
+        this.gsClassMethods = s.gsClassMethods;
+        this.gsClassClasses = s.gsClassClasses;
+        this.gsClassTypes = s.gsClassTypes;
+        this.gsClassProps = s.gsClassProps;
+    }
+}
+class GSType {
+    constructor(s) {
+        this.gsTypeName = s.gsClassName;
+        this.gsTypeCheck = s.gsTypeCheck;
+    }
+}
+class GSProp {
+    constructor(s) {
+        this.gsPropDesire = s.gsPropDesire
+        this.gsPropType = s.gsPropType;
+        this.gsPropName = s.gsPropName;
+        this.gsPropGet = s.gsPropGet;
+        this.gsPropSet = s.gsPropSet;
+    }
+}
 class GSErr extends Error {
     constructor(nm, msg) {
         super(`${nm}: ${msg}`);
