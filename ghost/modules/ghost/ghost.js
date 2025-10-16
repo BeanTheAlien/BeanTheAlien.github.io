@@ -166,8 +166,8 @@ class indexOf extends GSMethod {
                     gsArgType: GSInt
                 })
             ],
-            gsMethodBody: (target, item, startidx, endidx, occurence) => {
-                //
+            gsMethodBody: (target, item) => {
+                return target.indexOf(item);
             }
         });
     }
