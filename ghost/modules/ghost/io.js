@@ -4,6 +4,8 @@ const path = require("path");
 const ghostmodule = {
     name: "io",
     desc: "The I/O module for GhostScript.",
+    version: "1.0.0",
+    author: "GhostScript",
     root: "ghost",
     reqroot: false,
     defroot: "io"
@@ -25,9 +27,22 @@ function pathExists(filepath) {
     return fs.existsSync(filepath);
 }
 
+function makeDir(dir) {
+    fs.mkdir(path.join(__dirname, dir), { recursive: true }, (err) => {
+        if(err) throw err;
+    });
+}
+
+function readDir(dir) {
+    return fs.readdir(path.join(__dirname, dir));
+}
+
 module.exports = {
     writeFile,
     readFile,
     appendFile,
-    pathExists
+    pathExists,
+    makeDir,
+    readDir,
+    ghostmodule
 };
