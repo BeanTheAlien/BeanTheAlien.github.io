@@ -24,7 +24,7 @@ function appendFile(filepath, content) {
 }
 
 function pathExists(filepath) {
-    return fs.existsSync(filepath);
+    return fs.existsSync(path.join(__dirname, filepath));
 }
 
 function makeDir(dir) {
