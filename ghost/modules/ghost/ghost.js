@@ -97,6 +97,31 @@ class count extends GSMethod {
         });
     }
 }
+class replace extends GSMethod {
+    constructor() {
+        super({
+            gsMethodDesire: false,
+            gsMethodType: GSBool,
+            gsMethodName: "replace",
+            gsMethodAttach: GSString,
+            gsMethodArgs: [
+                {
+                    desire: true,
+                    type: GSString,
+                    name: "pattern"
+                },
+                {
+                    desire: false,
+                    type: GSEntity,
+                    name: "value"
+                }
+            ],
+            gsMethodBody: (target, pattern, value) => {
+                return target.replace(pattern, value);
+            }
+        });
+    }
+}
 // class null extends GSMethod {
 //     constructor() {
 //         super({
@@ -126,6 +151,16 @@ class GSType {
     constructor(s) {
         this.gsTypeName = s.gsClassName;
         this.gsTypeCheck = s.gsTypeCheck;
+    }
+}
+class GSEntity extends GSType {
+    constructor() {
+        super({
+            gsTypeName: "entity",
+            gsTypeCheck: (value) => {
+                return typeof value == "object";
+            }
+        });
     }
 }
 class GSString extends GSType {
@@ -164,6 +199,16 @@ class GSNumber extends GSType {
             gsTypeName: "number",
             gsTypeCheck: (value) => {
                 return typeof value == "number";
+            }
+        });
+    }
+}
+class GSBool extends GSType {
+    constructor() {
+        super({
+            gsTypeName: "bool",
+            gsTypeCheck: (value) => {
+                return typeof value == "boolean";
             }
         });
     }
@@ -240,12 +285,15 @@ module.exports = {
     toLower,
     toTitle,
     count,
+    replace,
     GSClass,
     GSType,
+    GSEntity,
     GSString,
     GSInt,
     GSFloat,
     GSNumber,
+    GSBool,
     GSArray,
     GSProp,
     GSModifier,
