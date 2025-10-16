@@ -172,6 +172,25 @@ class indexOf extends GSMethod {
         });
     }
 }
+class sub extends GSMethod {
+    constructor() {
+        super({
+            gsMethodDesire: false,
+            gsMethodType: GSArray,
+            gsMethodName: "sub",
+            gsMethodAttach: GSArray,
+            gsMethodArgs: [
+                new GSArg({
+                    gsArgName: "olditem",
+                    gsArgVal: null,
+                    gsArgDesire: false,
+                    gsArgType: GSEntity
+                })
+            ],
+            gsMethodBody: null
+        });
+    }
+}
 // class null extends GSMethod {
 //     constructor() {
 //         super({
