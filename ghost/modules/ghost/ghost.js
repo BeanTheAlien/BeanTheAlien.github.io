@@ -206,7 +206,15 @@ class add extends GSMethod {
             gsMethodType: GSArray,
             gsMethodName: "add",
             gsMethodAttach: GSArray,
-            gsMethodArgs: []
+            gsMethodArgs: new GSArg({
+                gsArgName: "items",
+                gsArgVal: null,
+                gsArgDesire: false,
+                gsArgType: GSEntity
+            }),
+            gsMethodBody: (target, items) => {
+                target.push(...items);
+            }
         });
     }
 }
