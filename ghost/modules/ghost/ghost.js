@@ -117,6 +117,10 @@ class GSManager {
         delete this.gsManagerVals[name];
     }
 }
+const gsVarManager = new GSManager({
+    gsManagerName: "gsVarManager",
+    gsManagerVals: {}
+});
 
 function createVar({ name, val = null, mods = [], type = entity, desire = false }) {
     return new GSVar({
