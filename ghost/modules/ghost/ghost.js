@@ -41,12 +41,7 @@ class GSClass {
         this.gsClassType = s.gsClassType;
         this.gsClassName = s.gsClassName;
         this.gsClassBuilder = s.gsClassBuilder;
-        this.gsClassVars = s.gsClassVars;
-        this.gsClassFuncs = s.gsClassFuncs;
-        this.gsClassMethods = s.gsClassMethods;
-        this.gsClassClasses = s.gsClassClasses;
-        this.gsClassTypes = s.gsClassTypes;
-        this.gsClassProps = s.gsClassProps;
+        this.gsClassData = {};
     }
 }
 class GSType {
@@ -134,6 +129,13 @@ function createMethod({ name, attach = entity, type = entity, args = [], desire 
         gsMethodArgs: args,
         gsMethodDesire: desire,
         gsMethodBody: body
+    });
+}
+function createClass({ name, type = null, builder }) {
+    return new GSClass({
+        gsClassType: type,
+        gsClassName: name,
+        gsClassBuilder: builder
     });
 }
 function createType({ name, check }) {
