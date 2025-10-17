@@ -307,6 +307,10 @@ const array = createType({
     check: (val) => Array.isArray(val)
 });
 
+const props = [];
+
+const mods = [];
+
 const errors = [
     InternalJavaScriptError,
     ImportMissingError,
