@@ -23,7 +23,7 @@ function appendFile(filepath, content) {
     fs.appendFile(path.join(__dirname, filepath), content);
 }
 
-function pathExists(filepath) {
+function exists(filepath) {
     return fs.existsSync(path.join(__dirname, filepath));
 }
 
@@ -37,22 +37,22 @@ function readDir(dir) {
     return fs.readdir(path.join(__dirname, dir));
 }
 
-function remFile(filepath) {
-    fs.rm(path.join(__dirname, filepath));
+function rem(dir) {
+    fs.rm(path.join(__dirname, dir));
 }
 
-function remDir(dir) {
-    fs.rmdir(path.join(__dirname, dir));
+function copyFile(filepath, dir) {
+    fs.cp(path.join(__dirname, filepath), path.join(__dirname, dir));
 }
 
 module.exports = {
     writeFile,
     readFile,
     appendFile,
-    pathExists,
+    exists,
     makeDir,
     readDir,
-    remFile,
-    remDir,
+    rem,
+    copyFile,
     ghostmodule
 };
