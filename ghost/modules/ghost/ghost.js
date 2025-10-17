@@ -425,7 +425,9 @@ const errors = [
     InternalJavaScriptError,
     ImportMissingError,
     ImportInternalError,
-    BadTypeError
+    BadTypeError,
+    TypeMismatchError,
+    OutOfBoundsError
 ];
 // GhostScript
 const InternalJavaScriptError = createErr("InternalJavaScriptError", "An internal JS error occured.");
@@ -433,6 +435,8 @@ const ImportMissingError = createErr("ImportMissingError", "Import does not exis
 const ImportInternalError = createErr("ImportInternalError", "An internal error occured within an import.");
 // Variables
 const BadTypeError = createErr("BadTypeError", "Type does not exist.");
+const TypeMismatchError = createErr("TypeMismatchError", "Value does not match variable type.");
+const OutOfBoundsError = createErr("OutOfBoundsError", "Index does not exist.");
 
 const events = [];
 
