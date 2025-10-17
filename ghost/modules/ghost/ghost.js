@@ -8,6 +8,24 @@ const ghostmodule = {
     defroot: "ghost"
 };
 
+function createMethod({ name, attach = GSEntity, type = GSEntity, args = [], desire = false, body }) {
+    return new GSMethod({
+        gsMethodName: name,
+        gsMethodAttach: attach,
+        gsMethodType: type,
+        gsMethodArgs: args,
+        gsMethodDesire: desire,
+        gsMethodBody: body
+    });
+}
+
+const toUpper = createMethod({
+    name: "toUpper",
+    attach: GSString,
+    type: GSString,
+    body: (target) => target.toUpperCase()
+});
+
 class GSVar {
     constructor(s) {
         this.gsVarMods = s.gsVarMods;
@@ -41,34 +59,6 @@ class GSArg {
         this.gsArgVal = s.gsArgVal;
         this.gsArgDesire  = s.gsArgDesire;
         this.gsArgType = s.gsArgType;
-    }
-}
-class toUpper extends GSMethod {
-    constructor() {
-        super({
-            gsMethodDesire: false,
-            gsMethodType: GSString,
-            gsMethodName: "toUpper",
-            gsMethodAttach: GSString,
-            gsMethodArgs: null,
-            gsMethodBody: (target) => {
-                return target.toUpperCase();
-            }
-        });
-    }
-}
-class toLower extends GSMethod {
-    constructor() {
-        super({
-            gsMethodDesire: false,
-            gsMethodType: GSString,
-            gsMethodName: "toLower",
-            gsMethodAttach: GSString,
-            gsMethodArgs: null,
-            gsMethodBody: (target) => {
-                return target.toLowerCase();
-            }
-        });
     }
 }
 class toTitle extends GSMethod {
