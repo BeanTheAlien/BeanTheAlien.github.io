@@ -463,7 +463,8 @@ const types = [
     float,
     number,
     bool,
-    array
+    array,
+    func
 ];
 const entity = createType({
     name: "entity",
