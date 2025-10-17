@@ -98,7 +98,24 @@ class GSGroup {
         this.gsGroupLimit = gsGroupLimit;
     }
 }
+class GSArg {
+    constructor(s) {
+        this.gsArgName = s.gsArgName;
+        this.gsArgVal = s.gsArgVal;
+        this.gsArgDesire  = s.gsArgDesire;
+        this.gsArgType = s.gsArgType;
+    }
+}
 
+function createFunc({ name, args = [], type = entity, desire = false, body }) {
+    return new GSFunc({
+        gsFuncDesire: desire,
+        gsFuncType: type,
+        gsFuncName: name,
+        gsFuncArgs: args,
+        gsFuncBody: body
+    });
+}
 function createMethod({ name, attach = entity, type = entity, args = [], desire = false, body }) {
     return new GSMethod({
         gsMethodName: name,
@@ -132,6 +149,17 @@ function arg(name, val = null, type = entity, desire = false) {
     });
 }
 
+const funcs = [];
+const methods = [
+    toUpper,
+    toLower,
+    toTitle,
+    count,
+    replace,
+    indexOf,
+    sub,
+    add
+];
 const toUpper = createMethod({
     name: "toUpper",
     attach: string,
@@ -211,6 +239,15 @@ const add = createMethod({
     body: (target, items) => target.push(...items)
 });
 
+const types = [
+    entity,
+    string,
+    int,
+    float,
+    number,
+    bool,
+    array
+];
 const entity = createType({
     name: "entity",
     check: (val) => typeof val == "object"
@@ -240,21 +277,19 @@ const array = createType({
     check: (val) => Array.isArray(val)
 });
 
+const errors = [
+    InternalJavaScriptError,
+    ImportMissingError,
+    ImportInternalError,
+    BadTypeError
+];
 // GhostScript
 const InternalJavaScriptError = createErr("InternalJavaScriptError", "An internal JS error occured.");
 const ImportMissingError = createErr("ImportMissingError", "Import does not exist.");
 const ImportInternalError = createErr("ImportInternalError", "An internal error occured within an import.");
 // Variables
 const BadTypeError = createErr("BadTypeError", "Type does not exist.");
-
-class GSArg {
-    constructor(s) {
-        this.gsArgName = s.gsArgName;
-        this.gsArgVal = s.gsArgVal;
-        this.gsArgDesire  = s.gsArgDesire;
-        this.gsArgType = s.gsArgType;
-    }
-}
+const events = [];
 
 module.exports = {
     GSVar,
