@@ -142,6 +142,23 @@ function createType({ name, check }) {
         gsTypeCheck: check
     });
 }
+function createProp({ name, type = entity, desire = false, get, set }) {
+    return new GSProp({
+        gsPropDesire: desire,
+        gsPropType: type,
+        gsPropName: name,
+        gsPropGet: get,
+        gsPropSet: set
+    });
+}
+function createMod({ name, attach = entity, get, set }) {
+    return new GSModifier({
+        gsModifierAttach: attach,
+        gsModifierName: name,
+        gsModifierGet: get,
+        gsModifierSet: set
+    });
+}
 function createErr(nm, msg) {
     return new GSErr(nm, msg);
 }
@@ -306,8 +323,11 @@ const BadTypeError = createErr("BadTypeError", "Type does not exist.");
 const events = [];
 
 module.exports = {
+    ...vars.reduce((acc, m) => (acc[m.gsVarName] = m, acc), {}),
     ...funcs.reduce((acc, m) => (acc[m.gsFuncName] = m, acc), {}),
     ...methods.reduce((acc, m) => (acc[m.gsMethodName] = m, acc), {}),
+    ...types.reduce((acc, m) => (acc[gsTypeName] = m, acc), {}),
+    ...
     GSVar, GSFunc, GSMethod
 };
 
