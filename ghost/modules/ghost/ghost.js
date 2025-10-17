@@ -427,10 +427,14 @@ const array = createType({
     check: (val) => Array.isArray(val)
 });
 
-const props = [];
+const props = [
+    length
+];
 const length = createProp({
     name: "length",
-    type: ""
+    attach: [string, array],
+    get: (target) => target.length,
+    set: (target, len) => target = target.slice(0, len)
 });
 
 const mods = [];
