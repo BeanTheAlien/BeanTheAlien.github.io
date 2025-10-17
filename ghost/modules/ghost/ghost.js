@@ -281,6 +281,55 @@ const add = createMethod({
     ],
     body: (target, items) => target.push(...items)
 });
+const toString = createMethod({
+    name: "toString",
+    type: string,
+    body: (target) => String(target)
+});
+const toInt = createMethod({
+    name: "toInt",
+    type: int,
+    args: [
+        arg("fallback", 0, int)
+    ],
+    body: (target, fallback) => {
+        let str = String(target);
+        let d = 0;
+        for(let i = 0; i < str.length; i++) if(str[i] == ".") d++;
+        while(d > 1) {
+            str = str.replace(".", "");
+            d--;
+        }
+        try {
+            return parseInt(str);
+        } catch(e) {
+            console.error(e);
+            return fallback;
+        }
+    }
+});
+const toFloat = createMethod({
+    name: "toFloat",
+    type: float,
+    args: [
+        arg("fallback", 0, float)
+    ],
+    body: (target, fallback) => {
+        let str = String(target);
+        let d = 0;
+        for(let i = 0; i < str.length; i++) if(str[i] == ".") d++;
+        while(d > 1) {
+            str = str.replace(".", "");
+            d--;
+        }
+        try {
+            return parseFloat(str);
+        } catch(e) {
+            console.error(e);
+            return fallback;
+        }
+    }
+});
 
 const classes = [];
 
