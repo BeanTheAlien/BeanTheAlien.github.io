@@ -37,6 +37,14 @@ function readDir(dir) {
     return fs.readdir(path.join(__dirname, dir));
 }
 
+function remFile(filepath) {
+    fs.rm(path.join(__dirname, filepath));
+}
+
+function remDir(dir) {
+    fs.rmdir(path.join(__dirname, dir));
+}
+
 module.exports = {
     writeFile,
     readFile,
@@ -44,5 +52,7 @@ module.exports = {
     pathExists,
     makeDir,
     readDir,
+    remFile,
+    remDir,
     ghostmodule
 };
