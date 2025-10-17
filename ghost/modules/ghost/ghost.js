@@ -212,7 +212,8 @@ const methods = [
     has,
     addEvent,
     remEvent,
-    clear
+    clear,
+    insert
 ];
 const toUpper = createMethod({
     name: "toUpper",
@@ -423,6 +424,15 @@ const clear = createMethod({
     name: "clear",
     attach: array,
     body: (target) => target.splice(0, target.length)
+});
+const insert = createMethod({
+    name: "insert",
+    attach: array,
+    args: [
+        arg("item"),
+        arg("idx", null, int, true)
+    ],
+    body: (target, item, idx) => target.splice(idx, 0, item) 
 });
 
 const classes = [];
