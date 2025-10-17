@@ -102,6 +102,21 @@ class GSArg {
         this.gsArgType = s.gsArgType;
     }
 }
+class GSManager {
+    constructor(s) {
+        this.gsManagerName = s.gsManagerName;
+        this.gsManagerVals = s.gsManagerVals;
+    }
+    get(name) {
+        return this.gsManagerVals[name];
+    }
+    set(name, val) {
+        this.gsManagerVals[name] = val;
+    }
+    del(name) {
+        delete this.gsManagerVals[name];
+    }
+}
 
 function createVar({ name, val = null, mods = [], type = entity, desire = false }) {
     return new GSVar({
@@ -153,7 +168,7 @@ function createProp({ name, attach = entity, desire = false, get, set }) {
         gsPropSet: set
     });
 }
-function createMod({ name, attach = entity, get, set }) {
+function createMod({ name, attach, get, set }) {
     return new GSModifier({
         gsModifierAttach: attach,
         gsModifierName: name,
@@ -497,6 +512,16 @@ const onOverflow = createProp({
 });
 
 const mods = [];
+const single = createMod({
+    name: "single",
+    attach: GSVar,
+    get: (target) => {
+        // will remove from GhostVariables
+    },
+    set: () => {
+        throw new SingleSetError();
+    }
+});
 
 const errors = [
     InternalJavaScriptError,
@@ -504,7 +529,8 @@ const errors = [
     ImportInternalError,
     BadTypeError,
     TypeMismatchError,
-    OutOfBoundsError
+    OutOfBoundsError,
+    SingleSetError
 ];
 // GhostScript
 const InternalJavaScriptError = createErr("InternalJavaScriptError", "An internal JS error occured.");
@@ -514,6 +540,7 @@ const ImportInternalError = createErr("ImportInternalError", "An internal error 
 const BadTypeError = createErr("BadTypeError", "Type does not exist.");
 const TypeMismatchError = createErr("TypeMismatchError", "Value does not match variable type.");
 const OutOfBoundsError = createErr("OutOfBoundsError", "Index does not exist.");
+const SingleSetError = createErr("SingleSetErr", "Cannot set a variable with modifier of single.");
 
 const events = [];
 
