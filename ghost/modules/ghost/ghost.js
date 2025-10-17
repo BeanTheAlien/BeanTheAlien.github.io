@@ -12,6 +12,7 @@ class GSVar {
     constructor(s) {
         this.gsVarMods = s.gsVarMods;
         this.gsVarType = s.gsVarType;
+        this.gsVarDesire = s.gsVarDesire;
         this.gsVarName = s.gsVarName;
         this.gsVarVal = s.gsVarVal;
     }
@@ -107,6 +108,15 @@ class GSArg {
     }
 }
 
+function createVar({ name, val = null, mods = [], type = entity, desire = false }) {
+    return new GSVar({
+        gsVarMods: mods,
+        gsVarType: type,
+        gsVarDesire: desire,
+        gsVarName: name,
+        gsVarVal: val
+    });
+}
 function createFunc({ name, args = [], type = entity, desire = false, body }) {
     return new GSFunc({
         gsFuncDesire: desire,
@@ -149,7 +159,10 @@ function arg(name, val = null, type = entity, desire = false) {
     });
 }
 
+const vars = [];
+
 const funcs = [];
+
 const methods = [
     toUpper,
     toLower,
@@ -289,7 +302,14 @@ const ImportMissingError = createErr("ImportMissingError", "Import does not exis
 const ImportInternalError = createErr("ImportInternalError", "An internal error occured within an import.");
 // Variables
 const BadTypeError = createErr("BadTypeError", "Type does not exist.");
+
 const events = [];
+
+module.exports = {
+    ...funcs.reduce((acc, m) => (acc[m.gsFuncName] = m, acc), {}),
+    ...methods.reduce((acc, m) => (acc[m.gsMethodName] = m, acc), {}),
+    GSVar, GSFunc, GSMethod
+};
 
 module.exports = {
     GSVar,
