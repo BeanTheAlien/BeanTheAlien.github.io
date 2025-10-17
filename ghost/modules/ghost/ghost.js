@@ -123,6 +123,14 @@ function createEvent({ name, detail, bubbles, cancelable }) {
         name, detail, bubbles, cancelable
     });
 }
+function arg(name, val = null, type = entity, desire = false) {
+    return new GSArg({
+        gsArgName: name,
+        gsArgVal: val,
+        gsArgType: type,
+        gsArgDesire: desire
+    });
+}
 
 const toUpper = createMethod({
     name: "toUpper",
@@ -146,7 +154,9 @@ const count = createMethod({
     name: "count",
     attach: [string, array],
     type: int,
-    args: [],
+    args: [
+        arg("delim", null, string, true)
+    ],
     body: (target, delim) => {
         let r = 0;
         for(let i = 0; i < target.length; i++) if(target[i] == delim) r++;
@@ -157,21 +167,36 @@ const replace = createMethod({
     name: "replace",
     attach: string,
     type: string,
-    args: [],
+    args: [
+        arg("pattern"),
+        arg("value")
+    ],
     body: (target, pattern, value) => target.replace(pattern, value)
 });
 const indexOf = createMethod({
     name: "indexOf",
     attach: [string, array],
     type: int,
-    args: [],
-    body: (target, item) => target.indexOf(item)
+    args: [
+        arg("item"),
+        arg("startpos", 0, int),
+        arg("endpos", Infinity, int),
+        arg("occurence", 1, int)
+    ],
+    body: (target, item, startpos, endpos, occurence) => {
+        let o = 0;
+        for(let i = startpos; i < target.length && i < endpos; i++) if(target[i] == item) o++; if(o == occurence) return i;
+        return -1;
+    }
 });
 const sub = createMethod({
     name: "sub",
     attach: array,
     type: array,
-    args: [],
+    args: [
+        arg("olditem"),
+        arg("newitem")
+    ],
     body: (target, olditem, newitem) => {
         for(let i = 0; i < target.length; i++) if(target[i] == olditem) target[i] = newitem;
     }
@@ -180,7 +205,9 @@ const add = createMethod({
     name: "add",
     attach: array,
     type: array,
-    args: [],
+    args: [
+        arg("items")
+    ],
     body: (target, items) => target.push(...items)
 });
 
