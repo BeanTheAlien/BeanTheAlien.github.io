@@ -271,6 +271,8 @@ const add = createMethod({
     body: (target, items) => target.push(...items)
 });
 
+const classes = [];
+
 const types = [
     entity,
     string,
