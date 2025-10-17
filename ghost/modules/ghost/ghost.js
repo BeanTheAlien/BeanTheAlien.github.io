@@ -202,9 +202,13 @@ const methods = [
     indexOf,
     sub,
     add,
+    remove,
     toString,
     toInt,
-    toFloat
+    toFloat,
+    floor,
+    roof,
+    round
 ];
 const toUpper = createMethod({
     name: "toUpper",
@@ -284,6 +288,21 @@ const add = createMethod({
     ],
     body: (target, items) => target.push(...items)
 });
+const remove = createMethod({
+    name: "remove",
+    attach: array,
+    type: array,
+    args: [
+        arg("bad")
+    ],
+    body: (target, bad) => {
+        for(let i = target.length - 1; i >= 0; i--) {
+            if(bad.includes(target[i])) {
+                target.splice(i, 1);
+            }
+        }
+    }
+});
 const toString = createMethod({
     name: "toString",
     type: string,
@@ -331,6 +350,30 @@ const toFloat = createMethod({
             console.error(e);
             return fallback;
         }
+    }
+});
+const floor = createMethod({
+    name: "floor",
+    type: int,
+    attach: number,
+    body: (target) => Math.floor(target)
+});
+const roof = createMethod({
+    name: "roof",
+    type: int,
+    attach: number,
+    body: (target) => Math.ceil(target)
+});
+const round = createMethod({
+    name: "round",
+    type: int,
+    attach: number,
+    args: [
+        arg("places", 0, int)
+    ],
+    body: (target, places) => {
+        if(places != 0) return target.toFixed(places);
+        else return Math.round(target);
     }
 });
 
