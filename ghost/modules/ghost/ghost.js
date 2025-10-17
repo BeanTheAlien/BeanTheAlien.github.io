@@ -208,7 +208,8 @@ const methods = [
     toFloat,
     floor,
     roof,
-    round
+    round,
+    has
 ];
 const toUpper = createMethod({
     name: "toUpper",
@@ -375,6 +376,15 @@ const round = createMethod({
         if(places != 0) return target.toFixed(places);
         else return Math.round(target);
     }
+});
+const has = createMethod({
+    name: "has",
+    type: bool,
+    attach: array,
+    args: [
+        arg("items")
+    ],
+    body: (target, items) => items.every(i => target.includes(i))
 });
 
 const classes = [];
