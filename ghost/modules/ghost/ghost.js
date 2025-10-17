@@ -331,35 +331,9 @@ module.exports = {
     ...funcs.reduce((acc, m) => (acc[m.gsFuncName] = m, acc), {}),
     ...methods.reduce((acc, m) => (acc[m.gsMethodName] = m, acc), {}),
     ...types.reduce((acc, m) => (acc[gsTypeName] = m, acc), {}),
-    ...
-    GSVar, GSFunc, GSMethod
-};
-
-module.exports = {
-    GSVar,
-    GSFunc,
-    GSMethod,
-    toUpper,
-    toLower,
-    toTitle,
-    count,
-    replace,
-    GSClass,
-    GSType,
-    GSEntity,
-    GSString,
-    GSInt,
-    GSFloat,
-    GSNumber,
-    GSBool,
-    GSArray,
-    GSProp,
-    GSModifier,
-    GSErr,
-    InternalJavaScriptError,
-    ImportMissingError,
-    ImportInternalError,
-    BadTypeError,
-    GSEvent,
+    ...props.reduce((acc, m) => (acc[gsPropName] = m, acc), {}),
+    ...mods.reduce((acc, m) => (acc[gsModName] = m, acc), {}),
+    ...errors.reduce((acc, m) => (acc[gsErrorName] = m, acc), {}),
+    ...events.reduce((acc, m) => (acc[gsEventName] = m, acc), {}),
     ghostmodule
 };
