@@ -516,7 +516,9 @@ const onOverflow = createProp({
     set: (target, func) => target.onOverflow = func
 });
 
-const mods = [];
+const mods = [
+    single
+];
 const single = createMod({
     name: "single",
     attach: GSVar,
