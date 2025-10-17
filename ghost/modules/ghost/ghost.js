@@ -8,24 +8,6 @@ const ghostmodule = {
     defroot: "ghost"
 };
 
-function createMethod({ name, attach = GSEntity, type = GSEntity, args = [], desire = false, body }) {
-    return new GSMethod({
-        gsMethodName: name,
-        gsMethodAttach: attach,
-        gsMethodType: type,
-        gsMethodArgs: args,
-        gsMethodDesire: desire,
-        gsMethodBody: body
-    });
-}
-
-const toUpper = createMethod({
-    name: "toUpper",
-    attach: GSString,
-    type: GSString,
-    body: (target) => target.toUpperCase()
-});
-
 class GSVar {
     constructor(s) {
         this.gsVarMods = s.gsVarMods;
@@ -53,173 +35,6 @@ class GSMethod {
         this.gsMethodBody = s.gsMethodBody;
     }
 }
-class GSArg {
-    constructor(s) {
-        this.gsArgName = s.gsArgName;
-        this.gsArgVal = s.gsArgVal;
-        this.gsArgDesire  = s.gsArgDesire;
-        this.gsArgType = s.gsArgType;
-    }
-}
-class toTitle extends GSMethod {
-    constructor() {
-        super({
-            gsMethodDesire: false,
-            gsMethodType: GSString,
-            gsMethodName: "toTitle",
-            gsMethodAttach: GSString,
-            gsMethodArgs: null,
-            gsMethodBody: (target) => {
-                return target.replace(/\w\S*/g, text => text.charAt(0).toUpperCase() + text.substring(1).toLowerCase());
-            }
-        });
-    }
-}
-class count extends GSMethod {
-    constructor() {
-        super({
-            gsMethodDesire: false,
-            gsMethodType: GSInt,
-            gsMethodName: "count",
-            gsMethodAttach: [GSString, GSArray],
-            gsMethodArgs: [{
-                desire: true,
-                type: GSString,
-                name: "delim",
-                def: null
-            }],
-            gsMethodBody: (target, delim) => {
-                let result = 0;
-                for(let i = 0; i < target.length; i++) if(target[i] == delim) result++;
-                return result;
-            }
-        });
-    }
-}
-class replace extends GSMethod {
-    constructor() {
-        super({
-            gsMethodDesire: false,
-            gsMethodType: GSBool,
-            gsMethodName: "replace",
-            gsMethodAttach: GSString,
-            gsMethodArgs: [
-                new GSArg({
-                    gsArgName: "pattern",
-                    gsArgVal: null,
-                    gsArgDesire: true,
-                    gsArgType: GSString
-                }),
-                new GSArg({
-                    gsArgName: "value",
-                    gsArgVal: null,
-                    gsArgDesire: false,
-                    gsArgType: GSEntity
-                })
-            ],
-            gsMethodBody: (target, pattern, value) => {
-                return target.replace(pattern, value);
-            }
-        });
-    }
-}
-class indexOf extends GSMethod {
-    constructor() {
-        super({
-            gsMethodDesire: true,
-            gsMethodType: GSInt,
-            gsMethodName: "indexOf",
-            gsMethodAttach: GSInt,
-            gsMethodArgs: [
-                new GSArg({
-                    gsArgName: "item",
-                    gsArgVal: null,
-                    gsArgDesire: false,
-                    gsArgType: GSEntity
-                }),
-                new GSArg({
-                    gsArgName: "startidx",
-                    gsArgVal: 0,
-                    gsArgDesire: false,
-                    gsArgType: GSInt
-                }),
-                new GSArg({
-                    gsArgName: "endidx",
-                    gsArgVal: Infinity,
-                    gsArgDesire: false,
-                    gsArgType: GSInt
-                }),
-                new GSArg({
-                    gsArgName: "occurence",
-                    gsArgVal: 1,
-                    gsArgDesire: false,
-                    gsArgType: GSInt
-                })
-            ],
-            gsMethodBody: (target, item) => {
-                return target.indexOf(item);
-            }
-        });
-    }
-}
-class sub extends GSMethod {
-    constructor() {
-        super({
-            gsMethodDesire: false,
-            gsMethodType: GSArray,
-            gsMethodName: "sub",
-            gsMethodAttach: GSArray,
-            gsMethodArgs: [
-                new GSArg({
-                    gsArgName: "olditem",
-                    gsArgVal: null,
-                    gsArgDesire: false,
-                    gsArgType: GSEntity
-                }),
-                new GSArg({
-                    gsArgName: "newitem",
-                    gsArgVal: null,
-                    gsArgDesire: false,
-                    gsArgType: GSEntity
-                })
-            ],
-            gsMethodBody: (target, olditem, newitem) => {
-                for(let i = 0; i < target.length; i++) if(target[i] == olditem) target[i] = newitem;
-            }
-        });
-    }
-}
-class add extends GSMethod {
-    constructor() {
-        super({
-            gsMethodDesire: false,
-            gsMethodType: GSArray,
-            gsMethodName: "add",
-            gsMethodAttach: GSArray,
-            gsMethodArgs: new GSArg({
-                gsArgName: "items",
-                gsArgVal: null,
-                gsArgDesire: false,
-                gsArgType: GSEntity
-            }),
-            gsMethodBody: (target, items) => {
-                target.push(...items);
-            }
-        });
-    }
-}
-// class null extends GSMethod {
-//     constructor() {
-//         super({
-//             gsMethodDesire: null,
-//             gsMethodType: null,
-//             gsMethodName: null,
-//             gsMethodAttach: null,
-//             gsMethodArgs: null,
-//             gsMethodBody: null
-//         });
-//     }
-// }
 class GSClass {
     constructor(s) {
         this.gsClassType = s.gsClassType;
@@ -237,76 +52,6 @@ class GSType {
     constructor(s) {
         this.gsTypeName = s.gsClassName;
         this.gsTypeCheck = s.gsTypeCheck;
-    }
-}
-class GSEntity extends GSType {
-    constructor() {
-        super({
-            gsTypeName: "entity",
-            gsTypeCheck: (value) => {
-                return typeof value == "object";
-            }
-        });
-    }
-}
-class GSString extends GSType {
-    constructor() {
-        super({
-            gsTypeName: "string",
-            gsTypeCheck: (value) => {
-                return typeof value == "string"
-            }
-        });
-    }
-}
-class GSInt extends GSType {
-    constructor() {
-        super({
-            gsTypeName: "int",
-            gsTypeCheck: (value) => {
-                return typeof value == "number" && Math.round(value) == value;
-            }
-        });
-    }
-}
-class GSFloat extends GSType {
-    constructor() {
-        super({
-            gsTypeName: "float",
-            gsTypeCheck: (value) => {
-                return typeof value == "number" && Math.round(value) != value;
-            }
-        });
-    }
-}
-class GSNumber extends GSType {
-    constructor() {
-        super({
-            gsTypeName: "number",
-            gsTypeCheck: (value) => {
-                return typeof value == "number";
-            }
-        });
-    }
-}
-class GSBool extends GSType {
-    constructor() {
-        super({
-            gsTypeName: "bool",
-            gsTypeCheck: (value) => {
-                return typeof value == "boolean";
-            }
-        });
-    }
-}
-class GSArray extends GSType {
-    constructor() {
-        super({
-            gsTypeName: "array",
-            gsTypeCheck: (value) => {
-                return Array.isArray(value);
-            }
-        });
     }
 }
 class GSProp {
@@ -331,28 +76,6 @@ class GSErr extends Error {
         super(`${nm}: ${msg}`);
     }
 }
-// GhostScript
-class InternalJavaScriptError extends GSErr {
-    constructor() {
-        super("InternalJavaScriptError", "An internal JS error occured.");
-    }
-}
-class ImportMissingError extends GSErr {
-    constructor(imp) {
-        super("ImportMissingError", `Import '${imp}' does not exist.`)
-    }
-}
-class ImportInternalError extends GSErr {
-    constructor() {
-        super("ImportInternalError", "An internal error occured within an import.");
-    }
-}
-// Variables
-class BadTypeError extends GSErr {
-    constructor(tp) {
-        super("BadTypeError", `Type '${tp}' does not exist.`)
-    }
-}
 class GSEvent extends CustomEvent {
     constructor(s) {
         super(s.name, {
@@ -367,12 +90,142 @@ class GSGroup {
         this.gsGroupName = s.gsGroupName;
         const {
             gsGroupName,
-            gsGroupType = GSEntity,
+            gsGroupType = entity,
             gsGroupLimit = Infinity
         } = s.gsGroupOptions;
         this.gsGroupName = gsGroupName;
         this.gsGroupType = gsGroupType;
         this.gsGroupLimit = gsGroupLimit;
+    }
+}
+
+function createMethod({ name, attach = entity, type = entity, args = [], desire = false, body }) {
+    return new GSMethod({
+        gsMethodName: name,
+        gsMethodAttach: attach,
+        gsMethodType: type,
+        gsMethodArgs: args,
+        gsMethodDesire: desire,
+        gsMethodBody: body
+    });
+}
+function createType({ name, check }) {
+    return new GSType({
+        gsTypeName: name,
+        gsTypeCheck: check
+    });
+}
+function createErr(nm, msg) {
+    return new GSErr(nm, msg);
+}
+function createEvent({ name, detail, bubbles, cancelable }) {
+    return new GSEvent({
+        name, detail, bubbles, cancelable
+    });
+}
+
+const toUpper = createMethod({
+    name: "toUpper",
+    attach: string,
+    type: string,
+    body: (target) => target.toUpperCase()
+});
+const toLower = createMethod({
+    name: "toLower",
+    attach: string,
+    type: string,
+    body: (target) => target.toLowerCase()
+});
+const toTitle = createMethod({
+    name: "toTitle",
+    attach: string,
+    type: string,
+    body: (target) => target.replace(/\w\S*/g, text => text.charAt(0).toUpperCase() + text.substring(1).toLowerCase())
+});
+const count = createMethod({
+    name: "count",
+    attach: [string, array],
+    type: int,
+    args: [],
+    body: (target, delim) => {
+        let r = 0;
+        for(let i = 0; i < target.length; i++) if(target[i] == delim) r++;
+        return r;
+    }
+});
+const replace = createMethod({
+    name: "replace",
+    attach: string,
+    type: string,
+    args: [],
+    body: (target, pattern, value) => target.replace(pattern, value)
+});
+const indexOf = createMethod({
+    name: "indexOf",
+    attach: [string, array],
+    type: int,
+    args: [],
+    body: (target, item) => target.indexOf(item)
+});
+const sub = createMethod({
+    name: "sub",
+    attach: array,
+    type: array,
+    args: [],
+    body: (target, olditem, newitem) => {
+        for(let i = 0; i < target.length; i++) if(target[i] == olditem) target[i] = newitem;
+    }
+});
+const add = createMethod({
+    name: "add",
+    attach: array,
+    type: array,
+    args: [],
+    body: (target, items) => target.push(...items)
+});
+
+const entity = createType({
+    name: "entity",
+    check: (val) => typeof val == "object"
+});
+const string = createType({
+    name: "string",
+    check: (val) => typeof val == "string"
+});
+const int = createType({
+    name: "int",
+    check: (val) => typeof val == "number" && Number.isInteger(val)
+});
+const float = createType({
+    name: "float",
+    check: (val) => typeof val == "number" && !Number.isInteger(val)
+});
+const number = createType({
+    name: "number",
+    check: (val) => typeof val == "number"
+});
+const bool = createType({
+    name: "bool",
+    check: (val) => typeof val == "boolean"
+});
+const array = createType({
+    name: "array",
+    check: (val) => Array.isArray(val)
+});
+
+// GhostScript
+const InternalJavaScriptError = createErr("InternalJavaScriptError", "An internal JS error occured.");
+const ImportMissingError = createErr("ImportMissingError", "Import does not exist.");
+const ImportInternalError = createErr("ImportInternalError", "An internal error occured within an import.");
+// Variables
+const BadTypeError = createErr("BadTypeError", "Type does not exist.");
+
+class GSArg {
+    constructor(s) {
+        this.gsArgName = s.gsArgName;
+        this.gsArgVal = s.gsArgVal;
+        this.gsArgDesire  = s.gsArgDesire;
+        this.gsArgType = s.gsArgType;
     }
 }
 
