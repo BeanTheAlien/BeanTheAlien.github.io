@@ -201,7 +201,10 @@ const methods = [
     replace,
     indexOf,
     sub,
-    add
+    add,
+    toString,
+    toInt,
+    toFloat
 ];
 const toUpper = createMethod({
     name: "toUpper",
