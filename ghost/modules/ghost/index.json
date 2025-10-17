@@ -1,0 +1,8 @@
+{
+    "files": [
+        "ghost.js",
+        "io.js",
+        "random.js",
+        "format.js"
+    ]
+}
