@@ -520,7 +520,7 @@ const single = createMod({
     name: "single",
     attach: GSVar,
     get: (target) => {
-        // will remove from GhostVariables
+        gsVarManager.del(target.gsVarName);
     },
     set: () => {
         throw new SingleSetError();
