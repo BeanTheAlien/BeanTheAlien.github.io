@@ -474,15 +474,26 @@ const array = createType({
     name: "array",
     check: (val) => Array.isArray(val)
 });
+const func = createType({
+    name: "func",
+    check: (val) => typeof val == "function"
+});
 
 const props = [
-    length
+    length,
+    onOverflow
 ];
 const length = createProp({
     name: "length",
     attach: [string, array],
     get: (target) => target.length,
     set: (target, len) => target = target.slice(0, len)
+});
+const onOverflow = createProp({
+    name: "onOverflow",
+    attach: funcs,
+    get: (target) => target.onOverflow,
+    set: (target, func) => target.onOverflow = func
 });
 
 const mods = [];
