@@ -334,6 +334,7 @@ module.exports = {
     ...vars.reduce((acc, m) => (acc[m.gsVarName] = m, acc), {}),
     ...funcs.reduce((acc, m) => (acc[m.gsFuncName] = m, acc), {}),
     ...methods.reduce((acc, m) => (acc[m.gsMethodName] = m, acc), {}),
+    ...classes.reduce((acc, m) => (acc[m.gsClassName] = m, acc), {}),
     ...types.reduce((acc, m) => (acc[gsTypeName] = m, acc), {}),
     ...props.reduce((acc, m) => (acc[gsPropName] = m, acc), {}),
     ...mods.reduce((acc, m) => (acc[gsModName] = m, acc), {}),
