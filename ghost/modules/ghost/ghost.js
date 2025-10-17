@@ -53,7 +53,7 @@ class GSType {
 class GSProp {
     constructor(s) {
         this.gsPropDesire = s.gsPropDesire
-        this.gsPropType = s.gsPropType;
+        this.gsPropAttach = s.gsPropAttach;
         this.gsPropName = s.gsPropName;
         this.gsPropGet = s.gsPropGet;
         this.gsPropSet = s.gsPropSet;
@@ -144,10 +144,10 @@ function createType({ name, check }) {
         gsTypeCheck: check
     });
 }
-function createProp({ name, type = entity, desire = false, get, set }) {
+function createProp({ name, attach = entity, desire = false, get, set }) {
     return new GSProp({
         gsPropDesire: desire,
-        gsPropType: type,
+        gsPropAttach: attach,
         gsPropName: name,
         gsPropGet: get,
         gsPropSet: set
@@ -428,6 +428,10 @@ const array = createType({
 });
 
 const props = [];
+const length = createProp({
+    name: "length",
+    type: ""
+});
 
 const mods = [];
 
