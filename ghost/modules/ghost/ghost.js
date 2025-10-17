@@ -211,7 +211,8 @@ const methods = [
     round,
     has,
     addEvent,
-    remEvent
+    remEvent,
+    clear
 ];
 const toUpper = createMethod({
     name: "toUpper",
@@ -417,6 +418,11 @@ const remEvent = createMethod({
             delete target.eventStore[eventname];
         }
     }
+});
+const clear = createMethod({
+    name: "clear",
+    attach: array,
+    body: (target) => target.splice(0, target.length)
 });
 
 const classes = [];
