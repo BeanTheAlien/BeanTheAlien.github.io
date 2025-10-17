@@ -232,7 +232,9 @@ const methods = [
     addEvent,
     remEvent,
     clear,
-    insert
+    insert,
+    min,
+    max
 ];
 const toUpper = createMethod({
     name: "toUpper",
@@ -452,6 +454,22 @@ const insert = createMethod({
         arg("idx", null, int, true)
     ],
     body: (target, item, idx) => target.splice(idx, 0, item) 
+});
+const min = createMethod({
+    name: "min",
+    attach: array,
+    args: [
+        arg("idx", 0, int)
+    ],
+    body: (target, idx) => [...target].sort((a, b) => b - a)[idx]
+});
+const max = createMethod({
+    name: "max",
+    attach: array,
+    args: [
+        arg("idx", 0, int)
+    ],
+    body: (target, idx) => [...target].sort((a, b) => a - b)[idx]
 });
 
 const classes = [];
