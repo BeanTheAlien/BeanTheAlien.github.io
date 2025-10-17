@@ -209,7 +209,9 @@ const methods = [
     floor,
     roof,
     round,
-    has
+    has,
+    addEvent,
+    remEvent
 ];
 const toUpper = createMethod({
     name: "toUpper",
@@ -385,6 +387,36 @@ const has = createMethod({
         arg("items")
     ],
     body: (target, items) => items.every(i => target.includes(i))
+});
+const addEvent = createMethod({
+    name: "addEvent",
+    args: [
+        arg("eventname"),
+        arg("eventexec")
+    ],
+    body: (target, eventname, eventexec) => {
+        target.addEventListener(eventname, () => eventexec);
+        if(!target.eventStore) target.eventStore = {};
+        if(!target.eventStore[eventname]) target.eventStore[eventname] = [];
+        target.eventStore[eventname].push(eventexec);
+    }
+});
+const remEvent = createMethod({
+    name: "remEvent",
+    args: [
+        arg("eventname"),
+        arg("eventexec", null)
+    ],
+    body: (target, eventname, eventexec) => {
+        if(eventexec) {
+            target.removeEventListener(eventname, eventexec);
+            target.eventStore[eventname].splice(target.eventStore[eventname].indexOf(eventexec), 1);
+        }
+        else {
+            target.eventStore[eventname].forEach(e => target.removeEventListener(eventname, eventexec));
+            delete target.eventStore[eventname];
+        }
+    }
 });
 
 const classes = [];
