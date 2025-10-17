@@ -180,7 +180,18 @@ function arg(name, val = null, type = entity, desire = false) {
 
 const vars = [];
 
-const funcs = [];
+const funcs = [
+    wait
+];
+const wait = createFunc({
+    name: "wait",
+    args: [
+        arg("time", null, int, true)
+    ],
+    type: int,
+    desire: false,
+    body: (time) => new Promise((resolve) => setTimeout(resolve, time))
+});
 
 const methods = [
     toUpper,
