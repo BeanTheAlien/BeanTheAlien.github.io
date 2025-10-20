@@ -559,6 +559,7 @@ const single = createMod({
     attach: GSVar,
     get: (target) => {
         gsVarManager.del(target.gsVarName);
+        return target.gsVarVal;
     },
     set: () => {
         throw new SingleSetError();
