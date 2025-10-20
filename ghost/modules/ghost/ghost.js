@@ -591,7 +591,7 @@ const operators = [
 ];
 const somewhatLike = createOperator({
     name: "somewhatlike",
-    exp: "~",
+    exp: ["~=", "~=="],
     exec: (lhs, rhs) => lhs == rhs || String(lhs).toLowerCase() == String(rhs).toLowerCase() || Math.abs((parseFloat(String(lhs)) || 0) - (parseFloat(String(rhs)) || 0)) <= 0.000001 || Math.abs(String(rhs).split("").filter(i => !String(lhs).includes(i)).length - String(lhs).split("").filter(i => !String(rhs).includes(i)).length) <= 3,
     type: bool
 });
