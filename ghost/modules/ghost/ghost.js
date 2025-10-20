@@ -96,7 +96,8 @@ class GSGroup {
 class GSOperator {
     constructor(s) {
         this.gsOperatorName = s.gsOperatorName;
-        this.gsOperatorEval = s.gsOperatorEval;
+        this.gsOperatorExpression = s.gsOperatorExpression;
+        this.gsOperatorExec = s.gsOperatorExec;
         this.gsOperatorType = s.gsOperatorType;
         this.gsOperatorDesire = s.gsOperatorDesire;
     }
@@ -195,10 +196,11 @@ function createEvent({ name, detail, bubbles, cancelable }) {
         name, detail, bubbles, cancelable
     });
 }
-function createOperator({ name, exec, type = entity, desire = false }) {
+function createOperator({ name, exp, exec, type = entity, desire = false }) {
     return new GSOperator({
         gsOperatorName: name,
-        gsOperatorEval: exec,
+        gsOperatorExpression: exp,
+        gsOperatorExec: exec,
         gsOperatorType: type,
         gsOperatorDesire: desire
     });
@@ -585,6 +587,12 @@ const SingleSetError = createErr("SingleSetErr", "Cannot set a variable with mod
 const events = [];
 
 const operators = [];
+const somewhatLike = createOperator({
+    name: "somewhatlike",
+    exp: "~",
+    exec: (lhs, rhs) => lhs == rhs || String(lhs).toLowerCase() == String(rhs).toLowerCase() || Math.abs(parseFloat(String(lhs)) - parseFloat(String(rhs))) <= 0.000001,
+    type: bool
+});
 
 module.exports = {
     ...vars.reduce((acc, m) => (acc[m.gsVarName] = m, acc), {}),
