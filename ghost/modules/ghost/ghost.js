@@ -546,7 +546,7 @@ const length = createProp({
 });
 const onOverflow = createProp({
     name: "onOverflow",
-    attach: funcs,
+    attach: func,
     get: (target) => target.onOverflow,
     set: (target, func) => target.onOverflow = func
 });
