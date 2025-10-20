@@ -592,7 +592,7 @@ const operators = [
 const somewhatLike = createOperator({
     name: "somewhatlike",
     exp: "~",
-    exec: (lhs, rhs) => lhs == rhs || String(lhs).toLowerCase() == String(rhs).toLowerCase() || Math.abs(parseFloat(String(lhs)) - parseFloat(String(rhs))) <= 0.000001,
+    exec: (lhs, rhs) => lhs == rhs || String(lhs).toLowerCase() == String(rhs).toLowerCase() || Math.abs((parseFloat(String(lhs)) || 0) - (parseFloat(String(rhs)) || 0)) <= 0.000001,
     type: bool
 });
 
