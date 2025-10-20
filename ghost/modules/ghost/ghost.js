@@ -582,7 +582,7 @@ const ImportInternalError = createErr("ImportInternalError", "An internal error 
 const BadTypeError = createErr("BadTypeError", "Type does not exist.");
 const TypeMismatchError = createErr("TypeMismatchError", "Value does not match variable type.");
 const OutOfBoundsError = createErr("OutOfBoundsError", "Index does not exist.");
-const SingleSetError = createErr("SingleSetErr", "Cannot set a variable with modifier of single.");
+const SingleSetError = createErr("SingleSetError", "Cannot set a variable with modifier of single.");
 
 const events = [];
 
