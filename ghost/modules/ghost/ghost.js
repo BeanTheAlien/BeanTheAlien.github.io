@@ -83,7 +83,6 @@ class GSEvent extends CustomEvent {
 }
 class GSGroup {
     constructor(s) {
-        this.gsGroupName = s.gsGroupName;
         const {
             gsGroupName,
             gsGroupType = entity,
@@ -92,6 +91,14 @@ class GSGroup {
         this.gsGroupName = gsGroupName;
         this.gsGroupType = gsGroupType;
         this.gsGroupLimit = gsGroupLimit;
+    }
+}
+class GSOperator {
+    constructor(s) {
+        this.gsOperatorName = s.gsOperatorName;
+        this.gsOperatorEval = s.gsOperatorEval;
+        this.gsOperatorType = s.gsOperatorType;
+        this.gsOperatorDesire = s.gsOperatorDesire;
     }
 }
 class GSArg {
@@ -186,6 +193,14 @@ function createErr(nm, msg) {
 function createEvent({ name, detail, bubbles, cancelable }) {
     return new GSEvent({
         name, detail, bubbles, cancelable
+    });
+}
+function createOperator({ name, exec, type = entity, desire = false }) {
+    return new GSOperator({
+        gsOperatorName: name,
+        gsOperatorEval: exec,
+        gsOperatorType: type,
+        gsOperatorDesire: desire
     });
 }
 function arg(name, val = null, type = entity, desire = false) {
@@ -569,15 +584,18 @@ const SingleSetError = createErr("SingleSetErr", "Cannot set a variable with mod
 
 const events = [];
 
+const operators = [];
+
 module.exports = {
     ...vars.reduce((acc, m) => (acc[m.gsVarName] = m, acc), {}),
     ...funcs.reduce((acc, m) => (acc[m.gsFuncName] = m, acc), {}),
     ...methods.reduce((acc, m) => (acc[m.gsMethodName] = m, acc), {}),
     ...classes.reduce((acc, m) => (acc[m.gsClassName] = m, acc), {}),
-    ...types.reduce((acc, m) => (acc[gsTypeName] = m, acc), {}),
-    ...props.reduce((acc, m) => (acc[gsPropName] = m, acc), {}),
-    ...mods.reduce((acc, m) => (acc[gsModName] = m, acc), {}),
-    ...errors.reduce((acc, m) => (acc[gsErrorName] = m, acc), {}),
-    ...events.reduce((acc, m) => (acc[gsEventName] = m, acc), {}),
+    ...types.reduce((acc, m) => (acc[m.gsTypeName] = m, acc), {}),
+    ...props.reduce((acc, m) => (acc[m.gsPropName] = m, acc), {}),
+    ...mods.reduce((acc, m) => (acc[m.gsModifierName] = m, acc), {}),
+    ...errors.reduce((acc, m) => (acc[m.gsErrorName] = m, acc), {}),
+    ...events.reduce((acc, m) => (acc[m.gsEventName] = m, acc), {}),
+    ...operators.reduce((acc, m) => (acc[m.gsOperatorName] = m, acc), {}),
     ghostmodule
 };
