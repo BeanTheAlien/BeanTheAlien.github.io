@@ -586,7 +586,9 @@ const SingleSetError = createErr("SingleSetErr", "Cannot set a variable with mod
 
 const events = [];
 
-const operators = [];
+const operators = [
+    somewhatLike
+];
 const somewhatLike = createOperator({
     name: "somewhatlike",
     exp: "~",
