@@ -125,6 +125,15 @@ class GSManager {
         delete this.gsManagerVals[name];
     }
 }
+// class GSConsole {
+//     constructor() {}
+//     write(...args) {
+//         process.stdout.write(...args);
+//     }
+//     writeline(...args) {
+//         console.log(...args);
+//     }
+// }
 const gsVarManager = new GSManager({
     gsManagerName: "gsVarManager",
     gsManagerVals: {}
@@ -268,8 +277,24 @@ const wait = createFunc({
     desire: false,
     body: (time) => new Promise((resolve) => setTimeout(resolve, time))
 });
+const print = createFunc({
+    name: "print",
+    args: [
+        arg("msg", null)
+    ],
+    body: (...msg) => process.stdout.write(msg.join(""))
+});
+const println = createFunc({
+    name: "println",
+    args: [
+        arg("msg", null)
+    ],
+    body: (...msg) => console.log(msg.join(""))
+});
 const funcs = [
-    wait
+    wait,
+    print,
+    println
 ];
 
 const toUpper = createMethod({
