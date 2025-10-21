@@ -46,7 +46,7 @@ class GSClass {
 }
 class GSType {
     constructor(s) {
-        this.gsTypeName = s.gsClassName;
+        this.gsTypeName = s.gsTypeName;
         this.gsTypeCheck = s.gsTypeCheck;
     }
 }
