@@ -130,6 +130,49 @@ const gsVarManager = new GSManager({
     gsManagerVals: {}
 });
 
+const entity = createType({
+    name: "entity",
+    check: (val) => typeof val == "object"
+});
+const string = createType({
+    name: "string",
+    check: (val) => typeof val == "string"
+});
+const int = createType({
+    name: "int",
+    check: (val) => typeof val == "number" && Number.isInteger(val)
+});
+const float = createType({
+    name: "float",
+    check: (val) => typeof val == "number" && !Number.isInteger(val)
+});
+const number = createType({
+    name: "number",
+    check: (val) => typeof val == "number"
+});
+const bool = createType({
+    name: "bool",
+    check: (val) => typeof val == "boolean"
+});
+const array = createType({
+    name: "array",
+    check: (val) => Array.isArray(val)
+});
+const func = createType({
+    name: "func",
+    check: (val) => typeof val == "function"
+});
+const types = [
+    entity,
+    string,
+    int,
+    float,
+    number,
+    bool,
+    array,
+    func
+];
+
 function createVar({ name, val = null, mods = [], type = entity, desire = false }) {
     return new GSVar({
         gsVarMods: mods,
@@ -216,9 +259,6 @@ function arg(name, val = null, type = entity, desire = false) {
 
 const vars = [];
 
-const funcs = [
-    wait
-];
 const wait = createFunc({
     name: "wait",
     args: [
@@ -228,31 +268,10 @@ const wait = createFunc({
     desire: false,
     body: (time) => new Promise((resolve) => setTimeout(resolve, time))
 });
-
-const methods = [
-    toUpper,
-    toLower,
-    toTitle,
-    count,
-    replace,
-    indexOf,
-    sub,
-    add,
-    remove,
-    toString,
-    toInt,
-    toFloat,
-    floor,
-    roof,
-    round,
-    has,
-    addEvent,
-    remEvent,
-    clear,
-    insert,
-    min,
-    max
+const funcs = [
+    wait
 ];
+
 const toUpper = createMethod({
     name: "toUpper",
     attach: string,
@@ -488,56 +507,33 @@ const max = createMethod({
     ],
     body: (target, idx) => [...target].sort((a, b) => a - b)[idx]
 });
+const methods = [
+    toUpper,
+    toLower,
+    toTitle,
+    count,
+    replace,
+    indexOf,
+    sub,
+    add,
+    remove,
+    toString,
+    toInt,
+    toFloat,
+    floor,
+    roof,
+    round,
+    has,
+    addEvent,
+    remEvent,
+    clear,
+    insert,
+    min,
+    max
+];
 
 const classes = [];
 
-const types = [
-    entity,
-    string,
-    int,
-    float,
-    number,
-    bool,
-    array,
-    func
-];
-const entity = createType({
-    name: "entity",
-    check: (val) => typeof val == "object"
-});
-const string = createType({
-    name: "string",
-    check: (val) => typeof val == "string"
-});
-const int = createType({
-    name: "int",
-    check: (val) => typeof val == "number" && Number.isInteger(val)
-});
-const float = createType({
-    name: "float",
-    check: (val) => typeof val == "number" && !Number.isInteger(val)
-});
-const number = createType({
-    name: "number",
-    check: (val) => typeof val == "number"
-});
-const bool = createType({
-    name: "bool",
-    check: (val) => typeof val == "boolean"
-});
-const array = createType({
-    name: "array",
-    check: (val) => Array.isArray(val)
-});
-const func = createType({
-    name: "func",
-    check: (val) => typeof val == "function"
-});
-
-const props = [
-    length,
-    onOverflow
-];
 const length = createProp({
     name: "length",
     attach: [string, array],
@@ -550,10 +546,11 @@ const onOverflow = createProp({
     get: (target) => target.onOverflow,
     set: (target, func) => target.onOverflow = func
 });
-
-const mods = [
-    single
+const props = [
+    length,
+    onOverflow
 ];
+
 const single = createMod({
     name: "single",
     attach: GSVar,
@@ -565,16 +562,10 @@ const single = createMod({
         throw new SingleSetError();
     }
 });
-
-const errors = [
-    InternalJavaScriptError,
-    ImportMissingError,
-    ImportInternalError,
-    BadTypeError,
-    TypeMismatchError,
-    OutOfBoundsError,
-    SingleSetError
+const mods = [
+    single
 ];
+
 // GhostScript
 const InternalJavaScriptError = createErr("InternalJavaScriptError", "An internal JS error occured.");
 const ImportMissingError = createErr("ImportMissingError", "Import does not exist.");
@@ -584,18 +575,27 @@ const BadTypeError = createErr("BadTypeError", "Type does not exist.");
 const TypeMismatchError = createErr("TypeMismatchError", "Value does not match variable type.");
 const OutOfBoundsError = createErr("OutOfBoundsError", "Index does not exist.");
 const SingleSetError = createErr("SingleSetError", "Cannot set a variable with modifier of single.");
+const errors = [
+    InternalJavaScriptError,
+    ImportMissingError,
+    ImportInternalError,
+    BadTypeError,
+    TypeMismatchError,
+    OutOfBoundsError,
+    SingleSetError
+];
 
 const events = [];
 
-const operators = [
-    somewhatLike
-];
 const somewhatLike = createOperator({
     name: "somewhatlike",
     exp: ["~="],
     exec: (lhs, rhs) => lhs == rhs || String(lhs).toLowerCase() == String(rhs).toLowerCase() || Math.abs((parseFloat(String(lhs)) || 0) - (parseFloat(String(rhs)) || 0)) <= 0.000001 || Math.abs(String(rhs).split("").filter(i => !String(lhs).includes(i)).length - String(lhs).split("").filter(i => !String(rhs).includes(i)).length) <= 3 || typeof lhs == typeof rhs,
     type: bool
 });
+const operators = [
+    somewhatLike
+];
 
 module.exports = {
     ...vars.reduce((acc, m) => (acc[m.gsVarName] = m, acc), {}),
