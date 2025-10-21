@@ -382,7 +382,7 @@ const remove = createMethod({
     args: [
         arg("bad")
     ],
-    body: (target, bad) => {
+    body: (target, ...bad) => {
         for(let i = target.length - 1; i >= 0; i--) {
             if(bad.includes(target[i])) {
                 target.splice(i, 1);
