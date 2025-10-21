@@ -147,7 +147,7 @@ const gsVarManager = new GSManager({
 
 const entity = createType({
     name: "entity",
-    check: (val) => typeof val == "object"
+    check: (val) => val != null && val != undefined
 });
 const string = createType({
     name: "string",
