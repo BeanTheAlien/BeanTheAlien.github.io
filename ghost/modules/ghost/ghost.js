@@ -414,19 +414,7 @@ const toInt = createMethod({
         arg("fallback", 0, int)
     ],
     body: (target, fallback) => {
-        let str = String(target);
-        let d = 0;
-        for(let i = 0; i < str.length; i++) if(str[i] == ".") d++;
-        while(d > 1) {
-            str = str.replace(".", "");
-            d--;
-        }
-        try {
-            return parseInt(str);
-        } catch(e) {
-            console.error(e);
-            return fallback;
-        }
+        return parseInt(String(target)) || (fallback ?? 0);
     }
 });
 const toFloat = createMethod({
@@ -436,19 +424,7 @@ const toFloat = createMethod({
         arg("fallback", 0, float)
     ],
     body: (target, fallback) => {
-        let str = String(target);
-        let d = 0;
-        for(let i = 0; i < str.length; i++) if(str[i] == ".") d++;
-        while(d > 1) {
-            str = str.replace(".", "");
-            d--;
-        }
-        try {
-            return parseFloat(str);
-        } catch(e) {
-            console.error(e);
-            return fallback;
-        }
+        return parseFloat(String(target)) || (fallback ?? 0);
     }
 });
 const floor = createMethod({
