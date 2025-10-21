@@ -634,6 +634,8 @@ const operators = [
     somewhatLike
 ];
 
+const directives = [];
+
 module.exports = {
     ...vars.reduce((acc, m) => (acc[m.gsVarName] = m, acc), {}),
     ...funcs.reduce((acc, m) => (acc[m.gsFuncName] = m, acc), {}),
@@ -645,5 +647,6 @@ module.exports = {
     ...errors.reduce((acc, m) => (acc[m.gsErrorName] = m, acc), {}),
     ...events.reduce((acc, m) => (acc[m.gsEventName] = m, acc), {}),
     ...operators.reduce((acc, m) => (acc[m.gsOperatorName] = m, acc), {}),
+    ...directives.reduce((acc, m) => (acc[m.gsDirectiveName] = m, acc), {}),
     ghostmodule
 };
