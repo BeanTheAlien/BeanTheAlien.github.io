@@ -102,6 +102,12 @@ class GSOperator {
         this.gsOperatorDesire = s.gsOperatorDesire;
     }
 }
+class GSDirective {
+    constructor(s) {
+        this.gsDirectiveName = s.gsDirectiveName;
+        this.gsDirectiveExec = s.gsDirectiveExec;
+    }
+}
 class GSArg {
     constructor(s) {
         this.gsArgName = s.gsArgName;
@@ -255,6 +261,12 @@ function createOperator({ name, exp, exec, type = entity, desire = false }) {
         gsOperatorExec: exec,
         gsOperatorType: type,
         gsOperatorDesire: desire
+    });
+}
+function createDirective({ name, exec }) {
+    return new GSDirective({
+        gsDirectiveName: name,
+        gsDirectiveExec: exec
     });
 }
 function arg(name, val = null, type = entity, desire = false) {
