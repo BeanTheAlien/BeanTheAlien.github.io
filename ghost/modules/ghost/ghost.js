@@ -308,7 +308,7 @@ const println = createFunc({
 const prompt = createFunc({
     name: "prompt",
     args: [
-        arg("msg", null)
+        arg("msg", "")
     ],
     body: async (msg) => {
         const rl = readline.createInterface({
