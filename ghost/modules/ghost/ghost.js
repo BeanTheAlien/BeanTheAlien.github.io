@@ -310,7 +310,7 @@ const prompt = createFunc({
     args: [
         arg("msg", null)
     ],
-    body: (msg) => {
+    body: async (msg) => {
         const rl = readline.createInterface({
             input: process.stdin,
             output: process.stdout
