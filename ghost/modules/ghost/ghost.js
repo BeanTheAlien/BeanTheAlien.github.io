@@ -315,7 +315,9 @@ const prompt = createFunc({
             input: process.stdin,
             output: process.stdout
         });
-        const resp = await new Promise((resolve) => rl.question(msg, resolve));
+        const ask = (q) => new Promise(res => rl.question(q, res));
+        const resp = await ask(msg);
+        rl.close();
         return resp;
     }
 });
