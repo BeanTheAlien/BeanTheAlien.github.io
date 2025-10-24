@@ -1,3 +1,5 @@
+const readline = require("readline");
+
 const ghostmodule = {
     name: "ghost",
     desc: "The GhostScript standard library.",
@@ -303,10 +305,25 @@ const println = createFunc({
     ],
     body: (...msg) => console.log(msg.join(""))
 });
+const prompt = createFunc({
+    name: "prompt",
+    args: [
+        arg("msg", null)
+    ],
+    body: (msg) => {
+        const rl = readline.createInterface({
+            input: process.stdin,
+            output: process.stdout
+        });
+        const resp = await new Promise((resolve) => rl.question(msg, resolve));
+        return resp;
+    }
+});
 const funcs = [
     wait,
     print,
-    println
+    println,
+    prompt
 ];
 
 const toUpper = createMethod({
