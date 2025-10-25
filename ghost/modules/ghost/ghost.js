@@ -296,14 +296,14 @@ const print = createFunc({
     args: [
         arg("msg", null)
     ],
-    body: (...msg) => process.stdout.write(msg.join(""))
+    body: (...msg) => process.stdout.write(msg.map(m => typeof m == "string" ? m : JSON.stringify(m)).join(""))
 });
 const println = createFunc({
     name: "println",
     args: [
         arg("msg", null)
     ],
-    body: (...msg) => console.log(msg.join(""))
+    body: (...msg) => console.log(msg.map(m => typeof m == "string" ? m : JSON.stringify(m)).join(""))
 });
 const prompt = createFunc({
     name: "prompt",
