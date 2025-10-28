@@ -147,18 +147,32 @@ const gsVarManager = new GSManager({
     gsManagerVals: {}
 });
 
+/**
+ * The entity type. Represents any value that is not null or undefined.
+ */
 const entity = createType({
     name: "entity",
     check: (val) => val != null && val != undefined
 });
+/**
+ * The string type represents any value that has quotes.
+ */
 const string = createType({
     name: "string",
     check: (val) => typeof val == "string"
 });
+/**
+ * Integers are a 1-step number value.
+ * Integer values are limited to +-2.147.483.647.
+ */
 const int = createType({
     name: "int",
     check: (val) => typeof val == "number" && Number.isInteger(val)
 });
+/**
+ * Floating-point values are double-accuracy decimals.
+ * Float values are limited to +-1,7976931348623157E+308.
+ */
 const float = createType({
     name: "float",
     check: (val) => typeof val == "number" && !Number.isInteger(val)
