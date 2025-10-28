@@ -685,7 +685,8 @@ const insert = createMethod({
 /**
  * Finds the smallest value in the array.
  * @param {Array.<Object>} target - The target array.
- * @param {int} idx - The index 
+ * @param {int} [idx=0] - The nth smallest number to get.
+ * @returns {number} The nth smallest value.
  */
 const min = createMethod({
     name: "min",
@@ -695,6 +696,12 @@ const min = createMethod({
     ],
     body: (target, idx) => [...target].sort((a, b) => b - a)[idx]
 });
+/**
+ * Finds the largest value in the array.
+ * @param {Array.<Object>} target - The target array.
+ * @param {int} [idx=0] - The nth largest number to get.
+ * @returns {number} The nth largest value.
+ */
 const max = createMethod({
     name: "max",
     attach: array,
@@ -730,6 +737,9 @@ const methods = [
 
 const classes = [];
 
+/**
+ * The length of a value.
+ */
 const length = createProp({
     name: "length",
     attach: [string, array],
