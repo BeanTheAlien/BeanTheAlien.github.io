@@ -163,6 +163,7 @@ const string = createType({
 });
 /**
  * Integers are a 1-step number value.
+ * 
  * Integer values are limited to +-2.147.483.647.
  */
 const int = createType({
@@ -171,24 +172,39 @@ const int = createType({
 });
 /**
  * Floating-point values are double-accuracy decimals.
+ * 
  * Float values are limited to +-1,7976931348623157E+308.
  */
 const float = createType({
     name: "float",
     check: (val) => typeof val == "number" && !Number.isInteger(val)
 });
+/**
+ * Number values are any value that is a numeric.
+ */
 const number = createType({
     name: "number",
     check: (val) => typeof val == "number"
 });
+/**
+ * Booleans are a truthy value of true or false.
+ */
 const bool = createType({
     name: "bool",
     check: (val) => typeof val == "boolean"
 });
+/**
+ * Arrays are a collection of values.
+ * 
+ * Arrays act like lists in other languages.
+ */
 const array = createType({
     name: "array",
     check: (val) => Array.isArray(val)
 });
+/**
+ * Functions are re-usable pieces of code.
+ */
 const func = createType({
     name: "func",
     check: (val) => typeof val == "function"
@@ -296,6 +312,10 @@ function arg(name, val = null, type = entity, desire = false) {
 
 const vars = [];
 
+/**
+ * The wait function forces the script thread to be paused.
+ * @param {int} time - The milliseconds to wait.
+ */
 const wait = createFunc({
     name: "wait",
     args: [
@@ -305,6 +325,10 @@ const wait = createFunc({
     desire: false,
     body: (time) => new Promise((resolve) => setTimeout(resolve, time))
 });
+/**
+ * Prints a message to the console. No carriage return.
+ * @param {...Object} msg - The message to be printed to the console.
+ */
 const print = createFunc({
     name: "print",
     args: [
@@ -312,6 +336,10 @@ const print = createFunc({
     ],
     body: (...msg) => process.stdout.write(msg.map(m => m === null  ? "null" : m === undefined ? "undefined" : typeof m == "string" ? m : JSON.stringify(m)).join(""))
 });
+/**
+ * Prints a message to the console. Carriage return.
+ * @param {...Object} msg - The message to be printed to the console.
+ */
 const println = createFunc({
     name: "println",
     args: [
@@ -319,6 +347,11 @@ const println = createFunc({
     ],
     body: (...msg) => console.log(msg.map(m => m === null ? "null" : m === undefined ? "undefined" : typeof m == "string" ? m : JSON.stringify(m)).join(""))
 });
+/**
+ * Retrieves an input from the user.
+ * @param {Object} msg - The question to ask the user.
+ * @returns {string} The response from the user.
+ */
 const prompt = createFunc({
     name: "prompt",
     args: [
@@ -342,24 +375,45 @@ const funcs = [
     prompt
 ];
 
+/**
+ * Applies uppercase format to a string.
+ * @param {string} target - The string to convert.
+ * @returns {string} The uppercase version of the string.
+ */
 const toUpper = createMethod({
     name: "toUpper",
     attach: string,
     type: string,
     body: (target) => target.toUpperCase()
 });
+/**
+ * Applies lowercase format to a string.
+ * @param {string} target - The string to convert.
+ * @returns {string} The lowercase version of the string.
+ */
 const toLower = createMethod({
     name: "toLower",
     attach: string,
     type: string,
     body: (target) => target.toLowerCase()
 });
+/**
+ * Applies titlecase format to a string.
+ * @param {string} target - The string to convert.
+ * @returns {string} The titlecase version of the string.
+ */
 const toTitle = createMethod({
     name: "toTitle",
     attach: string,
     type: string,
     body: (target) => target.replace(/\w\S*/g, text => text.charAt(0).toUpperCase() + text.substring(1).toLowerCase())
 });
+/**
+ * Finds the amount of occurences of the delimiter.
+ * @param {string|Array.<Object>} target - The source to check.
+ * @param {Object} delim - The delimiter to check for.
+ * @returns {number} The amount of times the delimiter appears.
+ */
 const count = createMethod({
     name: "count",
     attach: [string, array],
@@ -373,6 +427,12 @@ const count = createMethod({
         return r;
     }
 });
+/**
+ * Replaces an occurence of the pattern with the value.
+ * @param {string} target - The target to check.
+ * @param {RegExp|string} pattern - The pattern to match.
+ * @param {Object} value - The value to use.
+ */
 const replace = createMethod({
     name: "replace",
     attach: string,
@@ -383,6 +443,14 @@ const replace = createMethod({
     ],
     body: (target, pattern, value) => target.replace(pattern, value)
 });
+/**
+ * Finds the index of an item.
+ * @param {string|Array.<Object>} target - The source to check.
+ * @param {int} [startpos=0] - The starting position.
+ * @param {int} [endpos=Infinity] - The ending position.
+ * @param {int} [occurence=1] - The occurence to find.
+ * @returns {int} The index.
+ */
 const indexOf = createMethod({
     name: "indexOf",
     attach: [string, array],
@@ -399,6 +467,12 @@ const indexOf = createMethod({
         return -1;
     }
 });
+/**
+ * Substitue values within an array.
+ * @param {Array.<Object>} target - The source array.
+ * @param {Object} olditem - The old item to remove.
+ * @param {Object} newitem - The new item to insert.
+ */
 const sub = createMethod({
     name: "sub",
     attach: array,
@@ -411,6 +485,11 @@ const sub = createMethod({
         for(let i = 0; i < target.length; i++) if(target[i] == olditem) target[i] = newitem;
     }
 });
+/**
+ * Adds items to an array.
+ * @param {Array.<Object>} target - The source array to add to.
+ * @param {...Object} items - The items to add.
+ */
 const add = createMethod({
     name: "add",
     attach: array,
@@ -420,6 +499,11 @@ const add = createMethod({
     ],
     body: (target, items) => target.push(...items)
 });
+/**
+ * Removes items from an array.
+ * @param {Array.<Object>} target - The source array to remove from.
+ * @param {...Object} bad - The items to remove.
+ */
 const remove = createMethod({
     name: "remove",
     attach: array,
@@ -435,11 +519,22 @@ const remove = createMethod({
         }
     }
 });
+/**
+ * Turns an item into a string.
+ * @param {Object} target - The item to stringify.
+ * @returns {string} The target as a string.
+ */
 const toString = createMethod({
     name: "toString",
     type: string,
     body: (target) => String(target)
 });
+/**
+ * Parses an item into an int.
+ * @param {Object} target - The item to parse.
+ * @param {int} [fallback=0] - The target to fall back to, if the parse returns NaN.
+ * @returns {int} The parsed value.
+ */
 const toInt = createMethod({
     name: "toInt",
     type: int,
@@ -450,6 +545,12 @@ const toInt = createMethod({
         return parseInt(String(target)) || (fallback ?? 0);
     }
 });
+/**
+ * Parses an item into a float.
+ * @param {Object} target - The item to parse.
+ * @param {float} [fallback=0] - The target to fall back to, if the parse returns NaN.
+ * @returns {float} The parsed value.
+ */
 const toFloat = createMethod({
     name: "toFloat",
     type: float,
@@ -460,18 +561,34 @@ const toFloat = createMethod({
         return parseFloat(String(target)) || (fallback ?? 0);
     }
 });
+/**
+ * Returns a number, floored.
+ * @param {number} target - The source value.
+ * @returns {int} The target, floored.
+ */
 const floor = createMethod({
     name: "floor",
     type: int,
     attach: number,
     body: (target) => Math.floor(target)
 });
+/**
+ * Returns a number, ceiled.
+ * @param {number} target - The source value.
+ * @returns {int} The target, ceiled.
+ */
 const roof = createMethod({
     name: "roof",
     type: int,
     attach: number,
     body: (target) => Math.ceil(target)
 });
+/**
+ * Rounds a number.
+ * @param {number} target - The source value.
+ * @param {int} [places=0] - The places to round to.
+ * @returns {int} The value, rounded.
+ */
 const round = createMethod({
     name: "round",
     type: int,
@@ -484,6 +601,12 @@ const round = createMethod({
         else return Math.round(target);
     }
 });
+/**
+ * Returns whether an array contains the item(s) provided.
+ * @param {Array.<Object>} target - The source array.
+ * @param {...Object} items - The items to check against the array.
+ * @returns {boolean} Whether the array does or does not contain all the items provided.
+ */
 const has = createMethod({
     name: "has",
     type: bool,
@@ -493,6 +616,12 @@ const has = createMethod({
     ],
     body: (target, items) => items.every(i => target.includes(i))
 });
+/**
+ * Adds a new event listener.
+ * @param {Object} target - The target to apply the event.
+ * @param {string} eventname - The name of the event.
+ * @param {function} eventexec - The exec function of the event.
+ */
 const addEvent = createMethod({
     name: "addEvent",
     args: [
@@ -506,6 +635,12 @@ const addEvent = createMethod({
         target.eventStore[eventname].push(eventexec);
     }
 });
+/**
+ * Removes an event listener.
+ * @param {Object} target - The target to remove the event.
+ * @param {string} eventname - The name of the event.
+ * @param {function|undefined} eventexec - The exec function of the event.
+ */
 const remEvent = createMethod({
     name: "remEvent",
     args: [
@@ -518,16 +653,26 @@ const remEvent = createMethod({
             target.eventStore[eventname].splice(target.eventStore[eventname].indexOf(eventexec), 1);
         }
         else {
-            target.eventStore[eventname].forEach(e => target.removeEventListener(eventname, eventexec));
+            target.eventStore[eventname].forEach(e => target.removeEventListener(eventname, e));
             delete target.eventStore[eventname];
         }
     }
 });
+/**
+ * Clears the contents of an array.
+ * @param {Array.<Object>} target - The array to clear.
+ */
 const clear = createMethod({
     name: "clear",
     attach: array,
     body: (target) => target.splice(0, target.length)
 });
+/**
+ * Inserts an element into an array at an index.
+ * @param {Array.<Object>} target - The target array.
+ * @param {Object} item - The thing to insert.
+ * @param {int} idx - The index to insert at.
+ */
 const insert = createMethod({
     name: "insert",
     attach: array,
@@ -537,6 +682,11 @@ const insert = createMethod({
     ],
     body: (target, item, idx) => target.splice(idx, 0, item) 
 });
+/**
+ * Finds the smallest value in the array.
+ * @param {Array.<Object>} target - The target array.
+ * @param {int} idx - The index 
+ */
 const min = createMethod({
     name: "min",
     attach: array,
