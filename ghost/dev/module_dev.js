@@ -39,7 +39,7 @@ class GSFunc {
 class GSMethod {
     /**
      * The constructor for GhostScript methods.
-     * @param {{ gsMethodDesire: boolean, gsMethodType: GSType, gsMethodName: string, gsMethodAttach: GSType[], gsMethodArgs: Object[], gsMethodBody: function }} s - The method settings.
+     * @param {{ gsMethodDesire: boolean, gsMethodType: GSType, gsMethodName: string, gsMethodAttach: GSType|GSType[], gsMethodArgs: Object[], gsMethodBody: function }} s - The method settings.
      */
     constructor(s) {
         this.gsMethodDesire = s.gsMethodDesire;
@@ -51,13 +51,13 @@ class GSMethod {
     }
 }
 /**
- * Used for creating functions.
+ * Used for creating classes.
  * @class
  */
 class GSClass {
     /**
-     * The constructor for GhostScript variables.
-     * @param {{ gsVarMods: GSModifier[], gsVarType: GSType, gsVarDesire: boolean, gsVarName: string, gsVarVal: Object }} s - The variable settings.
+     * The constructor for GhostScript classes.
+     * @param {{ gsClassType: string, gsClassName: string, gsClassBuilder: function }} s - The class settings.
      */
     constructor(s) {
         this.gsClassType = s.gsClassType;
@@ -67,13 +67,13 @@ class GSClass {
     }
 }
 /**
- * Used for creating functions.
+ * Used for creating types.
  * @class
  */
 class GSType {
     /**
-     * The constructor for GhostScript variables.
-     * @param {{ gsVarMods: GSModifier[], gsVarType: GSType, gsVarDesire: boolean, gsVarName: string, gsVarVal: Object }} s - The variable settings.
+     * The constructor for GhostScript types.
+     * @param {{ gsTypeName: string, gsTypeCheck: function }} s - The type settings.
      */
     constructor(s) {
         this.gsTypeName = s.gsTypeName;
@@ -81,13 +81,13 @@ class GSType {
     }
 }
 /**
- * Used for creating functions.
+ * Used for creating properties.
  * @class
  */
 class GSProp {
     /**
-     * The constructor for GhostScript variables.
-     * @param {{ gsVarMods: GSModifier[], gsVarType: GSType, gsVarDesire: boolean, gsVarName: string, gsVarVal: Object }} s - The variable settings.
+     * The constructor for GhostScript properties.
+     * @param {{ gsPropDesire: boolean, gsPropAttach: GSType|GSType[], gsPropName: string, gsPropGet: function, gsPropSet: function }} s - The property settings.
      */
     constructor(s) {
         this.gsPropDesire = s.gsPropDesire
