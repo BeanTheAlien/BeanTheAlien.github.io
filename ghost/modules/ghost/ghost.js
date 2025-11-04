@@ -1,5 +1,7 @@
 const readline = require("readline");
-const { GSVar, GSFunc, GSMethod, GSClass, GSType, GSProp, GSModifier, GSErr, GSEvent, GSGroup, GSOperator, GSDirective, GSArg, GSManager } = require("ghost/dev/module_dev.js");
+const path = require("path");
+const mod = path.resolve(path.join(__dirname, "../../BeanTheAlien.github.io/ghost/dev/module_dev.js"));
+const { GSVar, GSFunc, GSMethod, GSClass, GSType, GSProp, GSModifier, GSErr, GSEvent, GSGroup, GSOperator, GSDirective, GSArg, GSManager } = require(mod);
 
 const ghostmodule = {
     name: "ghost",
