@@ -1,5 +1,5 @@
 const readline = require("readline");
-const { GSVar, GSFunc, GSMethod, GSClass, GSType, GSProp, GSModifier, GSErr, GSEvent, GSGroup, GSOperator, GSDirective, GSArg, GSManager } = require("../../dev/module_dev");
+const { GSVar, GSFunc, GSMethod, GSClass, GSType, GSProp, GSModifier, GSErr, GSEvent, GSGroup, GSOperator, GSDirective, GSArg, GSManager } = require("ghost/dev/module_dev.js");
 
 const ghostmodule = {
     name: "ghost",
