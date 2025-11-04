@@ -22,7 +22,7 @@ class GSVar {
 class GSFunc {
     /**
      * The constructor for GhostScript functions.
-     * @param {{ gsFuncDesire: boolean, gsFuncType: GSType, gsFuncName: string, gsFuncArgs: Object[], gsFuncBody: function }} s - The function settings.
+     * @param {{ gsFuncDesire: boolean, gsFuncType: GSType, gsFuncName: string, gsFuncArgs: GSArg[], gsFuncBody: function }} s - The function settings.
      */
     constructor(s) {
         this.gsFuncDesire = s.gsFuncDesire;
@@ -39,7 +39,7 @@ class GSFunc {
 class GSMethod {
     /**
      * The constructor for GhostScript methods.
-     * @param {{ gsMethodDesire: boolean, gsMethodType: GSType, gsMethodName: string, gsMethodAttach: GSType|GSType[], gsMethodArgs: Object[], gsMethodBody: function }} s - The method settings.
+     * @param {{ gsMethodDesire: boolean, gsMethodType: GSType, gsMethodName: string, gsMethodAttach: GSType|GSType[], gsMethodArgs: GSArg[], gsMethodBody: function }} s - The method settings.
      */
     constructor(s) {
         this.gsMethodDesire = s.gsMethodDesire;
@@ -98,13 +98,13 @@ class GSProp {
     }
 }
 /**
- * Used for creating functions.
+ * Used for creating modifier.
  * @class
  */
 class GSModifier {
     /**
-     * The constructor for GhostScript variables.
-     * @param {{ gsVarMods: GSModifier[], gsVarType: GSType, gsVarDesire: boolean, gsVarName: string, gsVarVal: Object }} s - The variable settings.
+     * The constructor for GhostScript modifier.
+     * @param {{ gsModifierAttach: GSType|GSType[], gsModifierName: string, gsModifierGet: function, gsModifierSet: function }} s - The modifier settings.
      */
     constructor(s) {
         this.gsModifierAttach = s.gsModifierAttach;
@@ -114,26 +114,27 @@ class GSModifier {
     }
 }
 /**
- * Used for creating functions.
+ * Used for creating errors.
  * @class
  */
 class GSErr extends Error {
     /**
-     * The constructor for GhostScript variables.
-     * @param {{ gsVarMods: GSModifier[], gsVarType: GSType, gsVarDesire: boolean, gsVarName: string, gsVarVal: Object }} s - The variable settings.
+     * The constructor for GhostScript errors.
+     * @param {string} nm - The error name.
+     * @param {string} msg - The error message.
      */
     constructor(nm, msg) {
         super(`${nm}: ${msg}`);
     }
 }
 /**
- * Used for creating functions.
+ * Used for creating events.
  * @class
  */
 class GSEvent extends CustomEvent {
     /**
-     * The constructor for GhostScript variables.
-     * @param {{ gsVarMods: GSModifier[], gsVarType: GSType, gsVarDesire: boolean, gsVarName: string, gsVarVal: Object }} s - The variable settings.
+     * The constructor for GhostScript event.
+     * @param {{ detail: Object, bubbles: boolean, cancelable: boolean }} s - The event settings.
      */
     constructor(s) {
         super(s.name, {
@@ -142,15 +143,21 @@ class GSEvent extends CustomEvent {
             cancelable: s.cancelable
         });
     }
+    /**
+     * Dispatches the event.
+     */
+    dispatch() {
+        window.dispatchEvent(this);
+    }
 }
 /**
- * Used for creating functions.
+ * Used for creating group.
  * @class
  */
 class GSGroup {
     /**
-     * The constructor for GhostScript variables.
-     * @param {{ gsVarMods: GSModifier[], gsVarType: GSType, gsVarDesire: boolean, gsVarName: string, gsVarVal: Object }} s - The variable settings.
+     * The constructor for GhostScript groups.
+     * @param {{ gsGroupName: string, gsGroupType: GSType, gsGroupLimit: number }} s - The group settings.
      */
     constructor(s) {
         const {
@@ -164,13 +171,13 @@ class GSGroup {
     }
 }
 /**
- * Used for creating functions.
+ * Used for creating operators.
  * @class
  */
 class GSOperator {
     /**
-     * The constructor for GhostScript variables.
-     * @param {{ gsVarMods: GSModifier[], gsVarType: GSType, gsVarDesire: boolean, gsVarName: string, gsVarVal: Object }} s - The variable settings.
+     * The constructor for GhostScript operators.
+     * @param {{ gsOperatorName: string, gsOperatorExpression: string[], gsOperatorExec: function, gsOperatorType: GSType, gsOperatorDesire: boolean }} s - The operator settings.
      */
     constructor(s) {
         this.gsOperatorName = s.gsOperatorName;
@@ -181,13 +188,13 @@ class GSOperator {
     }
 }
 /**
- * Used for creating functions.
+ * Used for creating directives.
  * @class
  */
 class GSDirective {
     /**
-     * The constructor for GhostScript variables.
-     * @param {{ gsVarMods: GSModifier[], gsVarType: GSType, gsVarDesire: boolean, gsVarName: string, gsVarVal: Object }} s - The variable settings.
+     * The constructor for GhostScript directives.
+     * @param {{ gsDirectiveName: string, gsDirectiveExec: function }} s - The directive settings.
      */
     constructor(s) {
         this.gsDirectiveName = s.gsDirectiveName;
@@ -195,13 +202,13 @@ class GSDirective {
     }
 }
 /**
- * Used for creating functions.
+ * Used for creating arguments.
  * @class
  */
 class GSArg {
     /**
-     * The constructor for GhostScript variables.
-     * @param {{ gsVarMods: GSModifier[], gsVarType: GSType, gsVarDesire: boolean, gsVarName: string, gsVarVal: Object }} s - The variable settings.
+     * The constructor for GhostScript arguments.
+     * @param {{ gsArgName: string, gsArgVal: Object, gsArgDesire: boolean, gsArgType: GSType }} s - The argument settings.
      */
     constructor(s) {
         this.gsArgName = s.gsArgName;
@@ -211,24 +218,38 @@ class GSArg {
     }
 }
 /**
- * Used for creating functions.
+ * Used for creating managers.
  * @class
  */
 class GSManager {
     /**
-     * The constructor for GhostScript variables.
-     * @param {{ gsVarMods: GSModifier[], gsVarType: GSType, gsVarDesire: boolean, gsVarName: string, gsVarVal: Object }} s - The variable settings.
+     * The constructor for GhostScript managers.
+     * @param {{ gsManagerName: string, gsManagerVals: Object }} s - The manager settings.
      */
     constructor(s) {
         this.gsManagerName = s.gsManagerName;
         this.gsManagerVals = s.gsManagerVals;
     }
+    /**
+     * Gets an entry.
+     * @param {string} name - The entry name.
+     * @returns {Object|undefined} The entry value.
+     */
     get(name) {
         return this.gsManagerVals[name];
     }
+    /**
+     * Sets an entry.
+     * @param {string} name - The entry name.
+     * @param {Object} val - The entry value.
+     */
     set(name, val) {
         this.gsManagerVals[name] = val;
     }
+    /**
+     * Deletes an entry.
+     * @param {string} name - The entry name.
+     */
     del(name) {
         delete this.gsManagerVals[name];
     }

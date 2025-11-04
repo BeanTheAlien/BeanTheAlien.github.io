@@ -40,7 +40,20 @@ props:
 none
 */
 
-const format = new GSFunc({});
+const format = new gs.GSFunc({
+    gsFuncDesire: false,
+    gsFuncType: String,
+    gsFuncName: "format",
+    gsFuncArgs: [
+        new gs.GSArg({
+            gsArgName: "val",
+            gsArgVal: null,
+            gsArgDesire: true,
+            gsArgType: String
+        })
+    ],
+    gsFuncBody: (val) => {}
+});
 
 module.exports = {
     format,
