@@ -1,3 +1,5 @@
+const gs = require("../../dev/module_dev");
+
 const ghostmodule = {
     name: "format",
     desc: "The GhostScriptFormat module for GhostScript.",
@@ -38,7 +40,7 @@ props:
 none
 */
 
-function format() {}
+const format = new GSFunc({});
 
 module.exports = {
     format,
