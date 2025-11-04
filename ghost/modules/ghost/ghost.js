@@ -1,5 +1,5 @@
 const readline = require("readline");
-const path = reuqire("path");
+const path = require("path");
 const { GSVar, GSFunc, GSMethod, GSClass, GSType, GSProp, GSModifier, GSErr, GSEvent, GSGroup, GSOperator, GSDirective, GSArg, GSManager } = require(path.join("../..", "dev/module_dev.js"));
 
 const ghostmodule = {
