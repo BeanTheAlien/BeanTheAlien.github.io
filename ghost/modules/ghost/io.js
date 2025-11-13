@@ -1,5 +1,5 @@
 const fs = require("fs");
-const path = require("path");
+const { GSFunc, GSArg } = require("../../dev/module_dev");
 
 const ghostmodule = {
     name: "io",
@@ -11,48 +11,80 @@ const ghostmodule = {
     defroot: "io"
 };
 
-function writeFile(filepath, content) {
-    fs.writeFile(path.join(__dirname, filepath), content);
-}
-
-function readFile(filepath) {
-    return fs.readFile(path.join(__dirname, filepath));
-}
-
-function appendFile(filepath, content) {
-    fs.appendFile(path.join(__dirname, filepath), content);
-}
-
-function exists(filepath) {
-    return fs.existsSync(path.join(__dirname, filepath));
-}
-
-function makeDir(dir) {
-    fs.mkdir(path.join(__dirname, dir), { recursive: true }, (err) => {
-        if(err) throw err;
-    });
-}
-
-function readDir(dir) {
-    return fs.readdir(path.join(__dirname, dir));
-}
-
-function rem(dir) {
-    fs.rm(path.join(__dirname, dir));
-}
-
-function copyFile(filepath, dir) {
-    fs.cp(path.join(__dirname, filepath), path.join(__dirname, dir));
-}
+const write = new GSFunc({
+    gsFuncDesire: false, gsFuncType: "void",
+    gsFuncName: "write", gsFuncArgs: [
+        new GSArg({
+            gsArgName: "filepath", gsArgVAL: null, gsArgDesire: true, gsArgType: "string"
+        }),
+        new GSArg({
+            gsArgname: "cont", gsArgVal: null, gsArgDesire: true, gsArgType: "string"
+        })
+    ],
+    gsFuncBody: fs.writeFileSync
+});
+const read = new GSFunc({
+    gsFuncDesire: false, gsFuncType: "string",
+    gsFuncName: "read", gsFuncArgs: [new GSArg({ gsArgName: "filepath", gsArgVAL: null, gsArgDesire: true, gsArgType: "string" })],
+    gsFuncBody: fs.readFileSync
+});
+const append = new GSFunc({
+    gsFuncDesire: false, gsFuncType: "void",
+    gsFuncName: "append", gsFuncArgs: [
+        new GSArg({
+            gsArgName: "filepath", gsArgVAL: null, gsArgDesire: true, gsArgType: "string"
+        }),
+        new GSArg({
+            gsArgname: "cont", gsArgVal: null, gsArgDesire: true, gsArgType: "string"
+        })
+    ],
+    gsFuncBody: fs.appendFileSync
+});
+const exists = new GSFunc({
+    gsFuncDesire: false, gsFuncType: "bool",
+    gsFuncName: "exists", gsFuncArgs: [new GSArg({ gsArgName: "filepath", gsArgVAL: null, gsArgDesire: true, gsArgType: "string" })],
+    gsFuncBody: fs.existsSync
+});
+const mkdir = new GSFunc({
+    gsFuncDesire: false, gsFuncType: "void",
+    gsFuncName: "mkdir", gsFuncArgs: [new GSArg({ gsArgName: "filepath", gsArgVAL: null, gsArgDesire: true, gsArgType: "string" })],
+    gsFuncBody: fs.mkdirSync
+});
+const readdir = new GSFunc({
+    gsFuncDesire: false, gsFuncType: "string",
+    gsFuncName: "readdir", gsFuncArgs: [new GSArg({ gsArgName: "dirpath", gsArgVAL: null, gsArgDesire: true, gsArgType: "string" })],
+    gsFuncBody: fs.readdirSync
+});
+const rem = new GSFunc({
+    gsFuncDesire: false, gsFuncType: "void",
+    gsFuncName: "rem", gsFuncArgs: [new GSArg({ gsArgName: "filepath", gsArgVAL: null, gsArgDesire: true, gsArgType: "string" })],
+    gsFuncBody: fs.rmSync
+});
+const remdir = new GSFunc({
+    gsFuncDesire: false, gsFuncType: "void",
+    gsFuncName: "remdir", gsFuncArgs: [new GSArg({ gsArgName: "dirpath", gsArgVAL: null, gsArgDesire: true, gsArgType: "string" })],
+    gsFuncBody: fs.rmdirSync
+});
+const cp = new GSFunc({
+    gsFuncDesire: false, gsFuncType: "void",
+    gsFuncName: "cp", gsFuncArgs: [
+        new GSArg({ gsArgName: "sourcefile", gsArgVAL: null, gsArgDesire: true, gsArgType: "string" }),
+        new GSArg({ gsArgName: "destinationfile", gsArgVAL: null, gsArgDesire: true, gsArgType: "string" })
+    ],
+    gsFuncBody: fs.copyFileSync
+});
+const json = {
+    read: new GSFunc({
+        gsFuncDesire: false, gsFuncType: "string",
+        gsFuncName: "read", gsFuncArgs: [new GSArg({ gsArgName: "filepath", gsArgVAL: null, gsArgDesire: true, gsArgType: "string" })],
+        gsFuncBody: (fpath) => JSON.parse(fs.readFileSync(fpath))
+    })
+};
 
 module.exports = {
-    writeFile,
-    readFile,
-    appendFile,
-    exists,
-    makeDir,
-    readDir,
-    rem,
-    copyFile,
+    read, write,
+    readdir, writedir,
+    append, cp, rem, remdir,
+    exists, mkdir,
     ghostmodule
 };
