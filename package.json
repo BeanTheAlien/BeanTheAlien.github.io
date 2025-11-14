@@ -9,5 +9,13 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs"
+  "type": "commonjs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BeanTheAlien/BeanTheAlien.github.io.git"
+  },
+  "bugs": {
+    "url": "https://github.com/BeanTheAlien/BeanTheAlien.github.io/issues"
+  },
+  "homepage": "https://github.com/BeanTheAlien/BeanTheAlien.github.io#readme"
 }
