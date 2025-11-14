@@ -1,7 +1,5 @@
-import * as readline from "readline";
-//const readline = require("readline");
-import { GSVar, GSFunc, GSMethod, GSClass, GSType, GSProp, GSModifier, GSErr, GSEvent, GSGroup, GSOperator, GSDirective, GSArg, GSManager } from "../../dev/module_dev.js";
-//const { GSVar, GSFunc, GSMethod, GSClass, GSType, GSProp, GSModifier, GSErr, GSEvent, GSGroup, GSOperator, GSDirective, GSArg, GSManager } = require("../../dev/module_dev.js");
+const readline = require("readline");
+const { GSVar, GSFunc, GSMethod, GSClass, GSType, GSProp, GSModifier, GSErr, GSEvent, GSGroup, GSOperator, GSDirective, GSArg, GSManager } = require("../../dev/module_dev.js");
 
 const ghostmodule = {
     name: "ghost",
@@ -685,22 +683,17 @@ const operators = [
 
 const directives = [];
 
-export {
-    print, println,
+module.exports = {
+    ...vars.reduce((acc, m) => (acc[m.gsVarName] = m, acc), {}),
+    ...funcs.reduce((acc, m) => (acc[m.gsFuncName] = m, acc), {}),
+    ...methods.reduce((acc, m) => (acc[m.gsMethodName] = m, acc), {}),
+    ...classes.reduce((acc, m) => (acc[m.gsClassName] = m, acc), {}),
+    ...types.reduce((acc, m) => (acc[m.gsTypeName] = m, acc), {}),
+    ...props.reduce((acc, m) => (acc[m.gsPropName] = m, acc), {}),
+    ...mods.reduce((acc, m) => (acc[m.gsModifierName] = m, acc), {}),
+    ...errors.reduce((acc, m) => (acc[m.gsErrorName] = m, acc), {}),
+    ...events.reduce((acc, m) => (acc[m.gsEventName] = m, acc), {}),
+    ...operators.reduce((acc, m) => (acc[m.gsOperatorName] = m, acc), {}),
+    ...directives.reduce((acc, m) => (acc[m.gsDirectiveName] = m, acc), {}),
     ghostmodule
 };
-
-// module.exports = {
-//     ...vars.reduce((acc, m) => (acc[m.gsVarName] = m, acc), {}),
-//     ...funcs.reduce((acc, m) => (acc[m.gsFuncName] = m, acc), {}),
-//     ...methods.reduce((acc, m) => (acc[m.gsMethodName] = m, acc), {}),
-//     ...classes.reduce((acc, m) => (acc[m.gsClassName] = m, acc), {}),
-//     ...types.reduce((acc, m) => (acc[m.gsTypeName] = m, acc), {}),
-//     ...props.reduce((acc, m) => (acc[m.gsPropName] = m, acc), {}),
-//     ...mods.reduce((acc, m) => (acc[m.gsModifierName] = m, acc), {}),
-//     ...errors.reduce((acc, m) => (acc[m.gsErrorName] = m, acc), {}),
-//     ...events.reduce((acc, m) => (acc[m.gsEventName] = m, acc), {}),
-//     ...operators.reduce((acc, m) => (acc[m.gsOperatorName] = m, acc), {}),
-//     ...directives.reduce((acc, m) => (acc[m.gsDirectiveName] = m, acc), {}),
-//     ghostmodule
-// };
