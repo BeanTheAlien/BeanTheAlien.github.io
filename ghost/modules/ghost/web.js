@@ -47,7 +47,7 @@ class WebDoc {
     }
 }
 
-module.exports = {
+exports = {
     WebDoc,
     ghostmodule
 };

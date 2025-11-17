@@ -683,7 +683,7 @@ const operators = [
 
 const directives = [];
 
-module.exports = {
+exports = {
     ...vars.reduce((acc, m) => (acc[m.gsVarName] = m, acc), {}),
     ...funcs.reduce((acc, m) => (acc[m.gsFuncName] = m, acc), {}),
     ...methods.reduce((acc, m) => (acc[m.gsMethodName] = m, acc), {}),
