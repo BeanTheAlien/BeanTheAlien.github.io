@@ -1,5 +1,6 @@
 const fs = require("fs");
 const cp = require("child_process");
+const { GSVar, GSFunc, GSMethod, GSClass, GSType, GSProp, GSModifier, GSErr, GSEvent, GSGroup, GSOperator, GSDirective, GSArg, GSManager } = module_dev;
 
 const ghostmodule = {
     name: "web",

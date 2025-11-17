@@ -1,3 +1,5 @@
+const { GSVar, GSFunc, GSMethod, GSClass, GSType, GSProp, GSModifier, GSErr, GSEvent, GSGroup, GSOperator, GSDirective, GSArg, GSManager } = module_dev;
+
 const ghostmodule = {
     name: "random",
     desc: "The Random module for GhostScript.",

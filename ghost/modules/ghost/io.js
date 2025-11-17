@@ -1,5 +1,5 @@
 const fs = require("fs");
-const { GSFunc, GSArg } = require("../../dev/module_dev");
+const { GSVar, GSFunc, GSMethod, GSClass, GSType, GSProp, GSModifier, GSErr, GSEvent, GSGroup, GSOperator, GSDirective, GSArg, GSManager } = module_dev;
 
 const ghostmodule = {
     name: "io",
