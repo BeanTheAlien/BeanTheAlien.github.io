@@ -255,7 +255,7 @@ class GSManager {
     }
 }
 
-module.exports = {
+exports = {
     GSVar, GSFunc, GSMethod, GSClass,
     GSType, GSProp, GSModifier, GSErr,
     GSEvent, GSGroup, GSOperator,
