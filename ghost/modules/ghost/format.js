@@ -55,7 +55,7 @@ const format = new GSFunc({
     gsFuncBody: (val) => {}
 });
 
-exports = {
+module.exports = {
     format,
     ghostmodule
 };

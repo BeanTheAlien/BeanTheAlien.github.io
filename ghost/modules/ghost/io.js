@@ -89,7 +89,7 @@ const json = {
     })
 };
 
-exports = {
+module.exports = {
     read, write,
     readdir, writedir,
     append, cp, rem, remdir,

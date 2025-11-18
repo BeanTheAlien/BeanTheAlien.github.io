@@ -107,7 +107,7 @@ const ranString = new GSFunc({
 // this.gsArgDesire  = s.gsArgDesire;
 // this.gsArgType = s.gsArgType;
 
-exports = {
+module.exports = {
     random,
     chance,
     ranBool,
