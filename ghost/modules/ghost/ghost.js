@@ -288,7 +288,7 @@ const toTitle = createMethod({
 });
 /**
  * Finds the amount of occurences of the delimiter.
- * @param {string|Array.<Object>} target - The source to check.
+ * @param {string|Object[]} target - The source to check.
  * @param {Object} delim - The delimiter to check for.
  * @returns {number} The amount of times the delimiter appears.
  */
@@ -323,7 +323,7 @@ const replace = createMethod({
 });
 /**
  * Finds the index of an item.
- * @param {string|Array.<Object>} target - The source to check.
+ * @param {string|Object[]} target - The source to check.
  * @param {int} [startpos=0] - The starting position.
  * @param {int} [endpos=Infinity] - The ending position.
  * @param {int} [occurence=1] - The occurence to find.
@@ -347,7 +347,7 @@ const indexOf = createMethod({
 });
 /**
  * Substitue values within an array.
- * @param {Array.<Object>} target - The source array.
+ * @param {Object[]} target - The source array.
  * @param {Object} olditem - The old item to remove.
  * @param {Object} newitem - The new item to insert.
  */
@@ -365,7 +365,7 @@ const sub = createMethod({
 });
 /**
  * Adds items to an array.
- * @param {Array.<Object>} target - The source array to add to.
+ * @param {Object[]} target - The source array to add to.
  * @param {...Object} items - The items to add.
  */
 const add = createMethod({
@@ -379,7 +379,7 @@ const add = createMethod({
 });
 /**
  * Removes items from an array.
- * @param {Array.<Object>} target - The source array to remove from.
+ * @param {Object[]} target - The source array to remove from.
  * @param {...Object} bad - The items to remove.
  */
 const remove = createMethod({
@@ -481,7 +481,7 @@ const round = createMethod({
 });
 /**
  * Returns whether an array contains the item(s) provided.
- * @param {Array.<Object>} target - The source array.
+ * @param {Object[]} target - The source array.
  * @param {...Object} items - The items to check against the array.
  * @returns {boolean} Whether the array does or does not contain all the items provided.
  */
@@ -538,7 +538,7 @@ const remEvent = createMethod({
 });
 /**
  * Clears the contents of an array.
- * @param {Array.<Object>} target - The array to clear.
+ * @param {Object[]} target - The array to clear.
  */
 const clear = createMethod({
     name: "clear",
@@ -547,7 +547,7 @@ const clear = createMethod({
 });
 /**
  * Inserts an element into an array at an index.
- * @param {Array.<Object>} target - The target array.
+ * @param {Object[]} target - The target array.
  * @param {Object} item - The thing to insert.
  * @param {int} idx - The index to insert at.
  */
@@ -562,7 +562,7 @@ const insert = createMethod({
 });
 /**
  * Finds the smallest value in the array.
- * @param {Array.<Object>} target - The target array.
+ * @param {Object[]} target - The target array.
  * @param {int} [idx=0] - The nth smallest number to get.
  * @returns {number} The nth smallest value.
  */
@@ -576,7 +576,7 @@ const min = createMethod({
 });
 /**
  * Finds the largest value in the array.
- * @param {Array.<Object>} target - The target array.
+ * @param {Object[]} target - The target array.
  * @param {int} [idx=0] - The nth largest number to get.
  * @returns {number} The nth largest value.
  */
