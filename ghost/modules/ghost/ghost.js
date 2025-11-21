@@ -87,6 +87,10 @@ const func = createType({
     name: "func",
     check: (val) => typeof val == "function"
 });
+const gsVoid = createType({
+    name: "void",
+    check: (val) => val === null || val === undefined
+});
 const types = [
     entity,
     string,
@@ -95,7 +99,8 @@ const types = [
     number,
     bool,
     array,
-    func
+    func,
+    gsVoid
 ];
 
 function createVar({ name, val = null, mods = [], type = entity, desire = false }) {
@@ -628,7 +633,13 @@ const onOverflow = createProp({
     name: "onOverflow",
     attach: func,
     get: (target) => target.onOverflow,
-    set: (target, func) => target.onOverflow = func
+    set: (target, fn) => target.onOverflow = fn
+});
+const onUnderflow = createProp({
+    name: "onUnderflow",
+    attach: func,
+    get: (target) => target.onUnderflow,
+    set: (target, fn) => target.onUnderflow = fn
 });
 const props = [
     length,
