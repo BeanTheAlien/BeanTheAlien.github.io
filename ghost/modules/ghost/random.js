@@ -1,4 +1,5 @@
 const { GSVar, GSFunc, GSMethod, GSClass, GSType, GSProp, GSModifier, GSErr, GSEvent, GSGroup, GSOperator, GSDirective, GSArg, GSManager } = module_dev;
+const { entity, string, int, float, number, bool, array, func, gsVoid } = runtime.scope.ghost;
 
 const ghostmodule = {
     name: "random",
@@ -12,11 +13,11 @@ const ghostmodule = {
 
 const random = new GSFunc({
     gsFuncDesire: false,
-    gsFuncType: "int",
+    gsFuncType: int,
     gsFuncName: "random",
     gsFuncArgs: [
-        new GSArg({ gsArgName: "a", gsArgVal: null, gsArgDesire: true, gsArgType: "int" }),
-        new GSArg({ gsArgName: "b", gsArgVal: null, gsArgDesire: true, gsArgType: "int" })
+        new GSArg({ gsArgName: "a", gsArgVal: null, gsArgDesire: true, gsArgType: int }),
+        new GSArg({ gsArgName: "b", gsArgVal: null, gsArgDesire: true, gsArgType: int })
     ],
     gsFuncBody: (a, b) => {
         if(a == null && b == null) {
@@ -42,16 +43,16 @@ const random = new GSFunc({
 });
 const chance = new GSFunc({
     gsFuncDesire: false,
-    gsFuncType: "bool",
+    gsFuncType: bool,
     gsFuncName: "chance",
-    gsFuncArgs: [new GSArg({ gsArgName: "floor", gsArgVal: null, gsArgDesire: true, gsArgType: "int" })],
+    gsFuncArgs: [new GSArg({ gsArgName: "floor", gsArgVal: null, gsArgDesire: true, gsArgType: int })],
     gsFuncBody: (floor) => {
         return random.gsFuncBody() <= floor;
     }
 });
 const ranBool = new GSFunc({
     gsFuncDesire: false,
-    gsFuncType: "bool",
+    gsFuncType: bool,
     gsFuncName: "ranBool",
     gsFuncArgs: [],
     gsFuncBody: () => {
@@ -60,11 +61,11 @@ const ranBool = new GSFunc({
 });
 const ranFloat = new GSFunc({
     gsFuncDesire: false,
-    gsFuncType: "float",
+    gsFuncType: float,
     gsFuncName: "ranFloat",
     gsFuncArgs: [
-        new GSArg({ gsArgName: "a", gsArgVal: null, gsArgDesire: true, gsArgType: "float" }),
-        new GSArg({ gsArgName: "b", gsArgVal: null, gsArgDesire: true, gsArgType: "float" })
+        new GSArg({ gsArgName: "a", gsArgVal: null, gsArgDesire: true, gsArgType: float }),
+        new GSArg({ gsArgName: "b", gsArgVal: null, gsArgDesire: true, gsArgType: float })
     ],
     gsFuncBody: (a, b) => {
         if(a == null && b == null) {
@@ -84,7 +85,7 @@ const ranFloat = new GSFunc({
 });
 const ranChar = new GSFunc({
     gsFuncDesire: false,
-    gsFuncType: "string",
+    gsFuncType: string,
     gsFuncName: "ranChar",
     gsFuncArgs: [],
     gsFuncBody: () => {
@@ -93,9 +94,9 @@ const ranChar = new GSFunc({
 });
 const ranString = new GSFunc({
     gsFuncDesire: false,
-    gsFuncType: "string",
+    gsFuncType: string,
     gsFuncName: "ranString",
-    gsFuncArgs: [new GSArg({ gsArgName: "len", gsArgVal: null, gsArgDesire: true, gsArgType: "int" })],
+    gsFuncArgs: [new GSArg({ gsArgName: "len", gsArgVal: null, gsArgDesire: true, gsArgType: int })],
     gsFuncBody: (len) => {
         let c = [];
         for(let i = 0; i < len; i++) c.push(ranChar.gsFuncBody());

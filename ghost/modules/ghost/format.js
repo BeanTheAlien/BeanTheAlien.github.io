@@ -1,4 +1,5 @@
 const { GSVar, GSFunc, GSMethod, GSClass, GSType, GSProp, GSModifier, GSErr, GSEvent, GSGroup, GSOperator, GSDirective, GSArg, GSManager } = module_dev;
+const { entity, string, int, float, number, bool, array, func, gsVoid } = runtime.scope.ghost;
 
 const ghostmodule = {
     name: "format",
@@ -42,14 +43,14 @@ none
 
 const format = new GSFunc({
     gsFuncDesire: false,
-    gsFuncType: String,
+    gsFuncType: string,
     gsFuncName: "format",
     gsFuncArgs: [
         new gs.GSArg({
             gsArgName: "val",
             gsArgVal: null,
             gsArgDesire: true,
-            gsArgType: String
+            gsArgType: string
         })
     ],
     gsFuncBody: (val) => {}
