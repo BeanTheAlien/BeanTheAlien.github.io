@@ -2,7 +2,7 @@ import { mk, add, rem, el, style } from "./htmlutils.js";
 window.location.href = "gswebsite.construction.html";
 const title = mk("h1", { textContent: "Learn GhostScript" });
 const lessonsOpts = [
-  { section: "test", items: [] }
+  { section: "Chapter 1 - Getting Started With Ghost", items: [{ title: "1.1 - Welcome To Ghost", val: "1.1" }] }
 ];
 const lessons = {
   "1.1": {
