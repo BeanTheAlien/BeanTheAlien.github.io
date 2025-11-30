@@ -654,7 +654,7 @@ const single = createMod({
         return target.gsVarVal;
     },
     set: () => {
-        throw new SingleSetError();
+        throw SingleSetError;
     }
 });
 const mods = [
