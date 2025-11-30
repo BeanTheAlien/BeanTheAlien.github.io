@@ -646,21 +646,6 @@ const props = [
     onOverflow
 ];
 
-const single = createMod({
-    name: "single",
-    attach: GSVar,
-    get: (target) => {
-        gsVarManager.del(target.gsVarName);
-        return target.gsVarVal;
-    },
-    set: () => {
-        throw SingleSetError;
-    }
-});
-const mods = [
-    single
-];
-
 // GhostScript
 const InternalJavaScriptError = createErr("InternalJavaScriptError", "An internal JS error occured.");
 const ImportMissingError = createErr("ImportMissingError", "Import does not exist.");
@@ -678,6 +663,21 @@ const errors = [
     TypeMismatchError,
     OutOfBoundsError,
     SingleSetError
+];
+
+const single = createMod({
+    name: "single",
+    attach: GSVar,
+    get: (target) => {
+        gsVarManager.del(target.gsVarName);
+        return target.gsVarVal;
+    },
+    set: () => {
+        throw SingleSetError;
+    }
+});
+const mods = [
+    single
 ];
 
 const events = [];
