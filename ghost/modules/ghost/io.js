@@ -1,6 +1,6 @@
 const fs = require("fs");
 const { GSVar, GSFunc, GSMethod, GSClass, GSType, GSProp, GSModifier, GSErr, GSEvent, GSGroup, GSOperator, GSDirective, GSArg, GSManager } = module_dev;
-const { entity, string, int, float, number, bool, array, func, gsVoid } = runtime.scope.ghost;
+const { entity, string, int, float, number, bool, array, func, gsVoid } = runtime.scope;
 
 const ghostmodule = {
     name: "io",
