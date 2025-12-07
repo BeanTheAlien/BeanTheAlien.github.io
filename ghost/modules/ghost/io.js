@@ -92,8 +92,8 @@ const json = {
 
 module.exports = {
     read, write,
-    readdir, writedir,
-    append, cp, rem, remdir,
+    readdir, append,
+    cp, rem, remdir,
     exists, mkdir, json,
     ghostmodule
 };
