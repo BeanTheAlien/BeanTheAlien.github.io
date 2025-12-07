@@ -46,7 +46,7 @@ const format = new GSFunc({
     gsFuncType: string,
     gsFuncName: "format",
     gsFuncArgs: [
-        new gs.GSArg({
+        new GSArg({
             gsArgName: "val",
             gsArgVal: null,
             gsArgDesire: true,
