@@ -646,23 +646,23 @@ const props = [
     onOverflow
 ];
 
-// GhostScript
-const InternalJavaScriptError = createErr("InternalJavaScriptError", "An internal JS error occured.");
-const ImportMissingError = createErr("ImportMissingError", "Import does not exist.");
-const ImportInternalError = createErr("ImportInternalError", "An internal error occured within an import.");
-// Variables
-const BadTypeError = createErr("BadTypeError", "Type does not exist.");
-const TypeMismatchError = createErr("TypeMismatchError", "Value does not match variable type.");
-const OutOfBoundsError = createErr("OutOfBoundsError", "Index does not exist.");
-const SingleSetError = createErr("SingleSetError", "Cannot set a variable with modifier of single.");
+// // GhostScript
+// const InternalJavaScriptError = createErr("InternalJavaScriptError", "An internal JS error occured.");
+// const ImportMissingError = createErr("ImportMissingError", "Import does not exist.");
+// const ImportInternalError = createErr("ImportInternalError", "An internal error occured within an import.");
+// // Variables
+// const BadTypeError = createErr("BadTypeError", "Type does not exist.");
+// const TypeMismatchError = createErr("TypeMismatchError", "Value does not match variable type.");
+// const OutOfBoundsError = createErr("OutOfBoundsError", "Index does not exist.");
+// const SingleSetError = createErr("SingleSetError", "Cannot set a variable with modifier of single.");
 const errors = [
-    InternalJavaScriptError,
-    ImportMissingError,
-    ImportInternalError,
-    BadTypeError,
-    TypeMismatchError,
-    OutOfBoundsError,
-    SingleSetError
+    // InternalJavaScriptError,
+    // ImportMissingError,
+    // ImportInternalError,
+    // BadTypeError,
+    // TypeMismatchError,
+    // OutOfBoundsError,
+    // SingleSetError
 ];
 
 const single = createMod({
