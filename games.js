@@ -1,5 +1,6 @@
 import '/utils.js';
 import { random, chance, getEl, wait, isTrue, isFalse, safeEval, RandomNums, ClickRegion, copyToClipboard, dist, mouse, lsGet, lsSet, quadratic, getQuerys, isFactorable, makeEl } from '/utils.js';
+import * as phantom from "https://cdn.jsdelivr.net/npm/@beanthealien/phantomjs@1.0.0/phantom2d.min.js";
 
 /*
 games:
@@ -1718,6 +1719,31 @@ const games = [
                 });
             }
             setup();
+        },
+        "hide": false
+    },
+    {
+        "filename": "markerflip",
+        "name": "Marker Flip",
+        "exec": (popup) => {
+            const d1 = document.createElement("div");
+            const d2 = document.createElement("div");
+            d1.className = "score1";
+            d2.className = "score2";
+            popup.appendChild(d2);
+            const c = document.createElement("canvas");
+            d2.appendChild(c);
+            const scene = new phantom.Scene(c, 500, 500, "100vw", "100vh");
+            const marker = new phantom.StaticObject({id:"marker",x:0,y:0,width:50,height:100,rot:0,shape:"rect",color:"#ff0000ff"});
+            scene.addEvent("click", () => marker.rot += random(1, 101));
+            scene.add(marker);
+            function update() {
+                scene.clear();
+                scene.update();
+                scene.render();
+                requestAnimationFrame(update);
+            }
+            update();
         },
         "hide": false
     }
