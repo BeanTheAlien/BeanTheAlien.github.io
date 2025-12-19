@@ -1,6 +1,6 @@
-import '/utils.js';
-import { random, chance, getEl, wait, isTrue, isFalse, safeEval, RandomNums, ClickRegion, copyToClipboard, dist, mouse, lsGet, lsSet, quadratic, getQuerys, isFactorable, makeEl } from '/utils.js';
-import * as phantom from "https://cdn.jsdelivr.net/npm/@beanthealien/phantomjs@1.0.0/phantom2d.min.js";
+import "/utils.js";
+import { random, chance, getEl, wait, isTrue, isFalse, safeEval, RandomNums, ClickRegion, copyToClipboard, dist, mouse, lsGet, lsSet, quadratic, getQuerys, isFactorable, makeEl } from "/utils.js";
+//import * as phantom from "https://cdn.jsdelivr.net/npm/@beanthealien/phantomjs@1.0.0/phantom2d.min.js";
 
 /*
 games:
