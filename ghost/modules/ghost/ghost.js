@@ -161,8 +161,12 @@ function createMod({ name, attach, get, set }) {
         gsModifierSet: set
     });
 }
-function createErr(nm, msg) {
-    return new GSErr(nm, msg);
+function createErr(nm, msgFn) {
+    return class extends GSErr {
+        constructor(...ctx) {
+            super(nm, msgFn(...ctx));
+        }
+    }
 }
 function createEvent({ name, detail, bubbles, cancelable }) {
     return new GSEvent({
@@ -646,34 +650,28 @@ const props = [
     onOverflow
 ];
 
-// // GhostScript
-// const InternalJavaScriptError = createErr("InternalJavaScriptError", "An internal JS error occured.");
-// const ImportMissingError = createErr("ImportMissingError", "Import does not exist.");
-// const ImportInternalError = createErr("ImportInternalError", "An internal error occured within an import.");
-// // Variables
-// const BadTypeError = createErr("BadTypeError", "Type does not exist.");
-// const TypeMismatchError = createErr("TypeMismatchError", "Value does not match variable type.");
-// const OutOfBoundsError = createErr("OutOfBoundsError", "Index does not exist.");
-// const SingleSetError = createErr("SingleSetError", "Cannot set a variable with modifier of single.");
+// GhostScript
+const InternalJavaScriptError = createErr("InternalJavaScriptError", (n) => `An internal JS error occured within '${n}'.`);
+const ImportMissingError = createErr("ImportMissingError", (n) => `Import '${n}' does not exist.`);
+const ImportInternalError = createErr("ImportInternalError", (n) => `An internal error occured within import '${n}'.`);
+// Variables
+const BadTypeError = createErr("BadTypeError", (n) => `Type '${n}' does not exist.`);
+const IndexOutOfBoundsError = createErr("IndexOutOfBoundsError", (i) => `Index ${i} does not exist.`);
+const SingleSetError = createErr("SingleSetError", (v) => `Cannot set variable '${v.gsVarName}' because of single modifier.`);
 const errors = [
-    // InternalJavaScriptError,
-    // ImportMissingError,
-    // ImportInternalError,
-    // BadTypeError,
-    // TypeMismatchError,
-    // OutOfBoundsError,
-    // SingleSetError
+    InternalJavaScriptError, ImportMissingError, ImportInternalError,
+    BadTypeError, IndexOutOfBoundsError, SingleSetError
 ];
 
 const single = createMod({
     name: "single",
     attach: GSVar,
     get: (target) => {
-        gsVarManager.del(target.gsVarName);
+        runtime.rm(target.gsVarName);
         return target.gsVarVal;
     },
-    set: () => {
-        // throw SingleSetError;
+    set: (target) => {
+        throw new SingleSetError(target);
     }
 });
 const mods = [

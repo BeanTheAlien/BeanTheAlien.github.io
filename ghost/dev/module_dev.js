@@ -117,14 +117,23 @@ class GSModifier {
  * Used for creating errors.
  * @class
  */
-class GSErr extends Error {
+class GSErr {
     /**
      * The constructor for GhostScript errors.
      * @param {string} nm - The error name.
      * @param {string} msg - The error message.
      */
     constructor(nm, msg) {
-        super(`${nm}: ${msg}`);
+        this.gsErrName = nm;
+        this.gsErrMsg = msg;
+    }
+    /**
+     * Formats the token with line and column.
+     * @param {Object} t - A GhostScript token.
+     * @returns {String} The formatted version with line and column.
+     */
+    static tkFmt(t) {
+        return `(ln ${t.ln}, col ${t.col})`;
     }
 }
 /**
