@@ -1831,7 +1831,7 @@ function gameEnd(runtime, score, hsname) {
             clearInterval(trophy);
             if(hs < score) {
                 localStorage.setItem(hsname, JSON.stringify(score));
-                display.innerHTML = `${score}<br><div id="newhs"></div>`;
+                display.innerHTML = `${score}<br><div id="newhs"></div><br><button id="restart">Restart</button>`;
                 const newhs = document.getElementById("newhs");
                 newhs.style.fontSize = `clamp(10px, ${display.style.fontSize - 10}px, 80px)`;
                 const text = "New Highscore!";
@@ -1855,8 +1855,10 @@ function gameEnd(runtime, score, hsname) {
                     if(waveIndex >= len) waveIndex = 0; // loop back for infinite wave
                 }, 30);
             } else {
-                display.innerHTML = `${score}<br><div>Highscore: ${parseInt(localStorage.getItem(hsname) ?? 0)}</div>`;
+                display.innerHTML = `${score}<br><div>Highscore: ${parseInt(localStorage.getItem(hsname) ?? 0)}</div><br><button id="restart">Restart</button>`;
             }
+            const restart = document.getElementById("restart");
+            restart.addEventListener("click", () => window.location.reload());
         }
         else i++;
     }, 50);
