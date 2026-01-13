@@ -1,6 +1,5 @@
 import "/utils.js";
 import { random, chance, getEl, wait, isTrue, isFalse, safeEval, RandomNums, ClickRegion, copyToClipboard, dist, mouse, lsGet, lsSet, quadratic, getQuerys, isFactorable, makeEl } from "/utils.js";
-//import * as phantom from "https://cdn.jsdelivr.net/npm/@beanthealien/phantomjs@1.0.0/phantom2d.min.js";
 
 /*
 games:
@@ -1733,8 +1732,8 @@ const games = [
             popup.appendChild(d2);
             const c = document.createElement("canvas");
             d2.appendChild(c);
-            const scene = new phantom.Scene(c, 500, 500, "100vw", "100vh");
-            const marker = new phantom.StaticObject({id:"marker",x:0,y:0,width:50,height:100,rot:0,shape:"rect",color:"#ff0000ff"});
+            const scene = new window.Scene(c, 500, 500, "100vw", "100vh");
+            const marker = new window.StaticObject({id:"marker",x:0,y:0,width:50,height:100,rot:0,shape:"rect",color:"#ff0000ff"});
             scene.addEvent("click", () => marker.rot += random(1, 101));
             scene.add(marker);
             function update() {
@@ -1745,7 +1744,7 @@ const games = [
             }
             update();
         },
-        "hide": false
+        "hide": true
     }
 ];
 
