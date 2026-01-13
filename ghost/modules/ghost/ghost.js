@@ -650,18 +650,18 @@ const props = [
     onOverflow
 ];
 
-// GhostScript
-const InternalJavaScriptError = createErr("InternalJavaScriptError", (n) => `An internal JS error occured within '${n}'.`);
-const ImportMissingError = createErr("ImportMissingError", (n) => `Import '${n}' does not exist.`);
-const ImportInternalError = createErr("ImportInternalError", (n) => `An internal error occured within import '${n}'.`);
-// Variables
-const BadTypeError = createErr("BadTypeError", (n) => `Type '${n}' does not exist.`);
-const IndexOutOfBoundsError = createErr("IndexOutOfBoundsError", (i) => `Index ${i} does not exist.`);
-const SingleSetError = createErr("SingleSetError", (v) => `Cannot set variable '${v.gsVarName}' because of single modifier.`);
-const errors = [
-    InternalJavaScriptError, ImportMissingError, ImportInternalError,
-    BadTypeError, IndexOutOfBoundsError, SingleSetError
-];
+// // GhostScript
+// const InternalJavaScriptError = createErr("InternalJavaScriptError", (n) => `An internal JS error occured within '${n}'.`);
+// const ImportMissingError = createErr("ImportMissingError", (n) => `Import '${n}' does not exist.`);
+// const ImportInternalError = createErr("ImportInternalError", (n) => `An internal error occured within import '${n}'.`);
+// // Variables
+// const BadTypeError = createErr("BadTypeError", (n) => `Type '${n}' does not exist.`);
+// const IndexOutOfBoundsError = createErr("IndexOutOfBoundsError", (i) => `Index ${i} does not exist.`);
+// const SingleSetError = createErr("SingleSetError", (v) => `Cannot set variable '${v.gsVarName}' because of single modifier.`);
+// const errors = [
+//     InternalJavaScriptError, ImportMissingError, ImportInternalError,
+//     BadTypeError, IndexOutOfBoundsError, SingleSetError
+// ];
 
 const single = createMod({
     name: "single",
@@ -671,7 +671,7 @@ const single = createMod({
         return target.gsVarVal;
     },
     set: (target) => {
-        throw new SingleSetError(target);
+        // throw new SingleSetError(target);
     }
 });
 const mods = [
@@ -700,7 +700,7 @@ module.exports = {
     ...types.reduce((acc, m) => (acc[m.gsTypeName] = m, acc), {}),
     ...props.reduce((acc, m) => (acc[m.gsPropName] = m, acc), {}),
     ...mods.reduce((acc, m) => (acc[m.gsModifierName] = m, acc), {}),
-    ...errors.reduce((acc, m) => (acc[m.gsErrorName] = m, acc), {}),
+    //...errors.reduce((acc, m) => (acc[m.gsErrorName] = m, acc), {}),
     ...events.reduce((acc, m) => (acc[m.gsEventName] = m, acc), {}),
     ...operators.reduce((acc, m) => (acc[m.gsOperatorName] = m, acc), {}),
     ...directives.reduce((acc, m) => (acc[m.gsDirectiveName] = m, acc), {}),
