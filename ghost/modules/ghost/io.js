@@ -83,7 +83,7 @@ const json = {
     write: new GSFunc({
         gsFuncDesire: false, gsFuncType: gsVoid,
         gsFuncName: "json.write", gsFuncArgs: [
-            new GSArg({ gsArgName: "filepath", gsArgVla: null, gsArgDesire: true, gsArgType: string }),
+            new GSArg({ gsArgName: "filepath", gsArgVal: null, gsArgDesire: true, gsArgType: string }),
             new GSArg({ gsArgName: "content", gsArgVal: null, gsArgDesire: true, gsArgType: entity })
         ],
         gsFuncBody: (filepath, content) => fs.writeFileSync(filepath, JSON.stringify(content))
