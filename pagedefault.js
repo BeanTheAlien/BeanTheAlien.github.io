@@ -1,23 +1,21 @@
+const mk = (text, link) => {
+    const btn = document.createElement("button");
+    btn.className = "cbtn";
+    btn.textContent = text;
+    btn.addEventListener("click", () => window.location.href = link);
+    return btn;
+}
+const add = (els) => {
+    for(const el of els) {
+        topbarContainer.appendChild(el);
+    }
+}
+
 const topbarContainer = document.createElement("div");
 topbarContainer.className = "container";
-const buttonHome = document.createElement("button");
-buttonHome.className = "cbtn";
-buttonHome.textContent = "Home";
-const buttonGames = document.createElement("button");
-buttonGames.className = "cbtn";
-buttonGames.textContent = "Games";
-const buttonProjects = document.createElement("button");
-buttonProjects.className = "cbtn";
-buttonProjects.textContent = "Projects";
-const buttonResources = document.createElement("button");
-buttonResources.className = "cbtn";
-buttonResources.textContent = "Resources";
-topbarContainer.appendChild(buttonHome);
-topbarContainer.appendChild(buttonGames);
-topbarContainer.appendChild(buttonProjects);
-topbarContainer.appendChild(buttonResources);
+const buttonHome = mk("Home", "index.html");
+const buttonGames = mk("Games", "games.html");
+const buttonProjects = mk("Projects", "projects.html");
+const buttonResources = mk("Resources", "resources.html");
+add([buttonHome, buttonGames, buttonProjects, buttonResources]);
 document.body.appendChild(topbarContainer);
-buttonHome.addEventListener("click", () => window.location.href = "index.html");
-buttonGames.addEventListener("click", () => window.location.href = "games.html");
-buttonProjects.addEventListener("click", () => window.location.href = "projects.html");
-buttonResources.addEventListener("click", () => window.location.href = "resources.html");
