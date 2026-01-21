@@ -2,7 +2,7 @@ import '/utils.js';
 import { random, chance, getEl, wait, isTrue, isFalse, safeEval, RandomNums, ClickRegion, copyToClipboard, dist, mouse, lsGet, lsSet, quadratic, getQuerys } from '/utils.js';
 
 const projlist = document.createElement("div");
-Object.assign(gamelist.style, {
+Object.assign(projlist.style, {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
