@@ -8,9 +8,14 @@ class Lotto {
     constructor(...items) {
         this.items = items;
     }
-    next() {
+    /**
+     * Summons a set of n items and returns them.
+     * @param {int} d - The amount of times to summon items.
+     * @returns {Item[]} The summoned items.
+     */
+    next(d) {
         const res = [];
-        for(let i = 0; i < 3; i++) res.push(this.items[random(0, this.items.length)]);
+        for(let i = 0; i < d; i++) res.push(this.items[random(0, this.items.length)]);
         return res;
     }
     add(...els) {
@@ -35,7 +40,7 @@ const itemFac = (src) => new Item(src);
 const cheese = itemFac("missingtexture.png");
 const something = itemFac("missingtexture.png");
 const lotto = new Lotto(cheese, something);
-const out = lotto.next();
+const out = lotto.next(3);
 lotto.add(...out);
 console.log(lotto.next().map(JSON.stringify));
 console.log(document.body.children);
