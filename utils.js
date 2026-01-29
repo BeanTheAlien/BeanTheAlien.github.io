@@ -63,13 +63,13 @@ export function repeat(times) {
 Function.prototype.repeat = repeat;
 
 export function big(n = 1) {
-    return this.sort((a, b) => a - b)[n - 1];
+    return [...this].sort((a, b) => a - b)[n - 1];
 }
 
 Array.prototype.big = big;
 
 export function toInt(fb = null) {
-    let cleaned = String(this).replace(/[^0-9\.\-]/g, "");
+    let cleaned = this.replace(/[^0-9\.\-]/g, "");
     let result = [];
     let c = cleaned.split('');
     for(let i = 0; i < c.length; i++) {
@@ -90,7 +90,7 @@ export function toInt(fb = null) {
 }
 
 export function toFloat(fb = null) {
-    let cleaned = String(this).replace(/[^0-9\.\-]/g, "");
+    let cleaned = this.replace(/[^0-9\.\-]/g, "");
     let result = [];
     let c = cleaned.split('');
     for(let i = 0; i < c.length; i++) {
@@ -110,8 +110,8 @@ export function toFloat(fb = null) {
     }
 }
 
-Object.prototype.toInt = toInt;
-Object.prototype.toFloat = toFloat;
+String.prototype.toInt = toInt;
+String.prototype.toFloat = toFloat;
 
 export function floor() {
     return Math.floor(this);
@@ -862,6 +862,49 @@ export function makeEl(id) {
     return document.createElement(id);
 }
 
+class test extends HTMLElement {
+    constructor() {
+        super();
+    }
+    // added to DOM
+    connectedCallback() {
+        this.innerHTML = "<h1>Hello World</h1>";
+    }
+    // removed from DOM
+    disconnectedCallback() {
+        alert(":(");
+    }
+    // attribute change
+    attributeChangedCallback(name, oldval, newval) {
+        console.log(`'${name}' changed: ${oldval} => ${newval}`);
+    }
+    // attributes to watch
+    static get observedAttributes() {
+        return ["innerHTML"];
+    }
+}
+
+/*
+connectedCallback(): Called each time the element is added to the document. The specification recommends that, as far as possible, developers should implement custom element setup in this callback rather than the constructor.
+disconnectedCallback(): Called each time the element is removed from the document.
+connectedMoveCallback(): When defined, this is called instead of connectedCallback() and disconnectedCallback() each time the element is moved to a different place in the DOM via Element.moveBefore(). Use this to avoid running initialization/cleanup code in the connectedCallback() and disconnectedCallback() callbacks when the element is not actually being added to or removed from the DOM. See Lifecycle callbacks and state-preserving moves for more details.
+adoptedCallback(): Called each time the element is moved to a new document.
+attributeChangedCallback(): Called when attributes are changed, added, removed, or replaced. See Responding to attribute changes for more details about this callback.
+*/
+window.customElements.define("test-el", test);
+// { extends: string (el) }, 3 param
+// use with is="etwas"
+// https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement
+
+export function ranChar() {
+    return String.fromCharCode(random(97, 123));
+}
+
+export function ranString(len) {
+    let chars = [];
+    for(let i = 0; i < len; i++) chars.push(ranChar());
+    return chars.join("");
+}
 // export function getConsoleCont() {
 //     //
 // }
