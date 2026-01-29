@@ -4,15 +4,20 @@ import { random } from "/utils.js";
 const append = (e) => document.body.appendChild(e);
 const canvas = document.createElement("canvas");
 
-class User {
-    constructor(name, role, money) {
+class Char {
+    constructor(name, role) {
         this.name = name;
         this.role = role;
-        this.money = money;
-        this.inv = [];
     }
     use(skill, ...args) {
         this.role[skill](...args);
+    }
+}
+class User extends Char {
+    constructor(name, role, money) {
+        super(name, role);
+        this.money = money;
+        this.inv = [];
     }
     earn(n) {
         this.money += n;
@@ -34,13 +39,9 @@ class User {
         this.inv.splice(this.inv.indexOf(i), 1);
     }
 }
-class Enemy {
+class Enemy extends Char {
     constructor(name, role) {
-        this.name = name;
-        this.role = role;
-    }
-    use(skill, ...args) {
-        this.role[skill](...args);
+        super(name, role);
     }
 }
 class Role {
