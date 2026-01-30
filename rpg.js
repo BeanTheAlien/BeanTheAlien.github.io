@@ -10,7 +10,7 @@ class Char {
         this.role = role;
     }
     use(skill, ...args) {
-        this.role[skill](...args);
+        this.role[skill].use(...args);
     }
 }
 class User extends Char {
@@ -48,6 +48,18 @@ class Role {
     constructor(name, abls) {
         this.name = name;
         for(const [k, v] of Object.entries(abls)) this[k] = v;
+    }
+}
+class Skill {
+    constructor(onUse, cd) {
+        this.onUse = onUse;
+        this.interval = setInterval(() => this.ready = true, cd * 1000);
+        this.cd = cd;
+        this.ready = true;
+    }
+    use(...args) {
+        if(!this.ready) return;
+        this.onUse(...args);
     }
 }
 
@@ -93,7 +105,7 @@ const lotto = new Lotto(cheese, something);
 const out = lotto.next(3);
 lotto.add(...out);
 const Wizard = new Role("Wizard", {
-    "fball": () => alert("fireball")
+    "fball": new Skill(() => alert("fireball"), 1)
 });
 // alert(lotto.next(3).map(JSON.stringify));
 // alert(JSON.stringify(Array.from(document.body.children)));
