@@ -1,113 +1,45 @@
-import "/utils.js";
-import { random } from "/utils.js";
-
 const append = (e) => document.body.appendChild(e);
-const canvas = document.createElement("canvas");
+const create = (tag) => document.createElement(tag);
+const canvas = create("canvas");
+const ui = create("div");
+const teamDisp = create("div");
+const team = [];
 
 class Char {
-    constructor(name, role) {
+    constructor(name, desc, abls) {
         this.name = name;
-        this.role = role;
+        this.desc = desc;
+        this.abls = abls;
+        for(const [k, v] of Object.entries(abls)) this[k] = v;
     }
     use(skill, ...args) {
-        this.role[skill].use(...args);
-    }
-}
-class User extends Char {
-    constructor(name, role, money) {
-        super(name, role);
-        this.money = money;
-        this.inv = [];
-    }
-    earn(n) {
-        this.money += n;
-    }
-    spend(n) {
-        this.money -= n;
-    }
-    add(i) {
-        if(this.inv.includes(i)) {
-            i.comp(this);
-            return;
-        }
-        this.inv.push(i);
-    }
-    rm(i) {
-        if(!this.inv.includes(i)) {
-            return;
-        }
-        this.inv.splice(this.inv.indexOf(i), 1);
-    }
-}
-class Enemy extends Char {
-    constructor(name, role) {
-        super(name, role);
-    }
-}
-class Role {
-    constructor(name, abls) {
-        this.name = name;
-        for(const [k, v] of Object.entries(abls)) this[k] = v;
+        this[skill].use(...args);
     }
 }
 class Skill {
-    constructor(onUse, cd) {
-        this.onUse = onUse;
-        this.interval = setInterval(() => this.ready = true, cd * 1000);
+    constructor(act, cd) {
+        this.act = act;
         this.cd = cd;
         this.ready = true;
+        this.itv = setInterval(() => this.ready = true, this.cd * 1000);
     }
     use(...args) {
         if(!this.ready) return;
-        this.onUse(...args);
+        this.act(...args);
     }
 }
-
-class Lotto {
-    constructor(...items) {
-        this.items = items;
-    }
-    /**
-     * Summons a set of n items and returns them.
-     * @param {int} d - The amount of times to summon items.
-     * @returns {Item[]} The summoned items.
-     */
-    next(d) {
-        const res = [];
-        for(let i = 0; i < d; i++) res.push(this.items[random(0, this.items.length)]);
-        return res;
-    }
-    add(...els) {
-        els.forEach((e) => append(e.el()));
+const char = (name, desc, abls) => class extends Char {
+    constructor() {
+        super(name, desc, abls);
+        this.lvl = 1;
     }
 }
-class Item {
-    constructor(ico) {
-        this.img = new Image();
-        this.img.src = ico;
-        this.img.width = 100;
-        this.img.height = 100;
-        Object.assign(this.img.style, {
-            marginRight: "10px"
-        });
-    }
-    el() {
-        return this.img;
-    }
-    comp(u) {
-        u.earn(1);
-    }
-}
-const itemFac = (src) => new Item(src);
-const cheese = itemFac("missingtexture.png");
-const something = itemFac("missingtexture.png");
-const lotto = new Lotto(cheese, something);
-const out = lotto.next(3);
-lotto.add(...out);
-const Wizard = new Role("Wizard", {
+const card = (c) => `<div><h1>${c.name}</h1><p><i>${c.desc}</i></p><ul>${c.abls.map(a => {
+    return `<p></p>`;
+})}</ul></div>`;
+const Wizard = char("Wizard", "He may be old, but he has a cool hat.", {
     "fball": new Skill(() => alert("fireball"), 1)
 });
-// alert(lotto.next(3).map(JSON.stringify));
-// alert(JSON.stringify(Array.from(document.body.children)));
-const user = new User("USER", Wizard, 0);
-user.use("fball");
+
+const wiz = new Wizard();
+wiz.use("fball");
