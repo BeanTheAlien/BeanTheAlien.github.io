@@ -17,5 +17,8 @@
   "bugs": {
     "url": "https://github.com/BeanTheAlien/BeanTheAlien.github.io/issues"
   },
-  "homepage": "https://github.com/BeanTheAlien/BeanTheAlien.github.io#readme"
+  "homepage": "https://github.com/BeanTheAlien/BeanTheAlien.github.io#readme",
+  "dependencies": {
+    "@beanthealien/phantomjs": "^1.0.0"
+  }
 }

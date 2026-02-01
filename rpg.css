@@ -1,0 +1,47 @@
+@font-face {
+    font-family: "ComicSans";
+    src: url("Comic\ Sans\ MS.ttf") format("truetype");
+}
+.txbox {
+    left: 30px;
+    bottom: 30px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    position: fixed;
+}
+.txbox .box {
+    margin-left: 30px;
+    border: 5px solid #093755;
+    padding: 30px;
+}
+.txbox .box .tx {
+    font-family: "ComicSans";
+}
+.txbox .box .tx.title {
+    font-weight: bold;
+}
+.txbox .inner {
+    flex-direction: column;
+}
+.next-btn {
+    border: 2px solid #0a2352;
+    font-size: 20px;
+    padding: 5px 20px;
+}
+.team-slot {
+    display: flex;
+    flex-direction: column;
+    font-family: "ComicSans";
+}
+.team-slot.empty {
+    background-color: #555555;
+}
+.team-slot-assign {
+    background-color: #555555;
+    border: none;
+    font-size: 50px;
+}
+.team-slot-assign:hover {
+    cursor: pointer;
+}
