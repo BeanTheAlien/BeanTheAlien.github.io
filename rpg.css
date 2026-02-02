@@ -105,10 +105,10 @@
     font-family: "ComicSans";
     padding: 5px;
     font-size: 20px;
-    transition: font-size 0.5s ease;
+    transition: font-size 0.3s ease;
 }
 .start:hover {
-    font-size: 30px;
+    font-size: 25px;
 }
 .title-screen-title {
     animation: swingrot 2s ease-in-out infinite alternate;
