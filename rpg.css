@@ -78,3 +78,41 @@
 .team-select:hover {
     cursor: pointer;
 }
+.ts-bg {
+    background-color: #0188aa;
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    z-index: 99999;
+    left: 0;
+    top: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+.start {
+    border: 3px solid black;
+    border-radius: 5px;
+    font-family: "ComicSans";
+    padding: 5px;
+    font-size: 20px;
+}
+/*
+.swing-element {
+  /* Apply the animation: name, duration, timing, direction, iteration */
+  /*animation: swing 2s ease-in-out infinite alternate;
+  /* Optional: Keep rotation center-based */
+  /*transform-origin: top center; 
+  display: inline-block;
+}
+
+@keyframes swing {
+  0% {
+    transform: rotate(-15deg);
+  }
+  100% {
+    transform: rotate(15deg);
+  }
+}
+*/
