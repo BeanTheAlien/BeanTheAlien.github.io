@@ -45,3 +45,36 @@
 .team-slot-assign:hover {
     cursor: pointer;
 }
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.7);
+    pointer-events: none;
+    mask: radial-gradient(
+        circle 80px at var(--x) var(--y),
+        transparent 0%,
+        transparent 70%,
+        black 71%
+    );
+}
+.save-lineup {
+    border: 2px solid #adadad;
+    background-color: #f3f3f3;
+    font-family: "ComicSans";
+    border-radius: 2px;
+    font-size: 18px;
+    padding: 5px;
+    margin-top: 20px;
+}
+.active-skill {
+    font-weight: bold;
+    font-size: 17px;
+}
+.team-select {
+    background: none;
+    border: none;
+    font-size: 20px;
+}
+.team-select:hover {
+    cursor: pointer;
+}
