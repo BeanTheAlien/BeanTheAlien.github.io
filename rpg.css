@@ -99,21 +99,16 @@
         transform: rotate(5deg);
     }
 }
-@keyframes textgrow {
-    0% {
-        font-size: 20px;
-    }
-    100% {
-        font-size: 30px;
-    }
-}
 .start {
     border: 3px solid black;
     border-radius: 5px;
     font-family: "ComicSans";
     padding: 5px;
     font-size: 20px;
-    animation: textgrow 2s ease;
+    transition: font-size 0.5s ease;
+}
+.start:hover {
+    font-size: 30px;
 }
 .title-screen-title {
     animation: swingrot 2s ease-in-out infinite alternate;
