@@ -91,12 +91,34 @@
     align-items: center;
     flex-direction: column;
 }
+@keyframes swingrot {
+    0% {
+        transform: rotate(-5deg);
+    }
+    100% {
+        transform: rotate(5deg);
+    }
+}
+@keyframes textgrow {
+    0% {
+        font-size: 20px;
+    }
+    100% {
+        font-size: 30px;
+    }
+}
 .start {
     border: 3px solid black;
     border-radius: 5px;
     font-family: "ComicSans";
     padding: 5px;
     font-size: 20px;
+    animation: textgrow 2s ease;
+}
+.title-screen-title {
+    animation: swingrot 2s ease-in-out infinite alternate;
+    transform-origin: top center;
+    display: inline-block;
 }
 /*
 .swing-element {

@@ -182,7 +182,7 @@ const getTeamIdx = (name) => team.indexOf(team.find(c => c.name == name));
 const charList = [Wizard];
 
 const titleScreen = new UI();
-titleScreen.tx = `<div class="ts-bg"><h1>Really Bad RPG</h1><div style="margin-bottom: 20px"></div><button class="start" id="start-btn">Start</button></div>`;
+titleScreen.tx = `<div class="ts-bg"><h1 class="title-screen-title">Really Bad RPG</h1><div style="margin-bottom: 20px"></div><button class="start" id="start-btn">Start</button></div>`;
 onClick(getEl("start-btn"), () => titleScreen.hide());
 const wiz = new Wizard();
 //wiz.use("fball");
