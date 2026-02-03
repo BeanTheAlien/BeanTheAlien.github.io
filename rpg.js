@@ -1,5 +1,7 @@
 // import { Scene } from "/phantom2d.js";
 
+window.addEventListener("error", (e) => alert(`msg: ${e.message}, ln: ${e.lineno}`));
+
 const config = {
     cleanup: false
 };
@@ -148,6 +150,7 @@ class Skill {
     use(...args) {
         if(!this.ready) return;
         this.act(...args);
+        this.ready = false;
     }
 }
 class BadGuy {
@@ -171,18 +174,64 @@ class BadGuy {
         this.img.height = this.h;
     }
 }
-class Circle {
-    constructor(x, y, rad, color) {
+class Geom {
+    constructor(x, y, color) {
         this.x = x;
         this.y = y;
-        this.rad = rad;
         this.color = color;
     }
+    upd() {
+        const n = 100;
+        if(this.x + n < 0 || this.x - n > canvas.width || this.y + n < 0 || this.y - n > canvas.width) {
+            this.destroy();
+        }
+    }
     render() {
+        ctx.fillStyle = this.color;
+    }
+    destroy() {
+        geom.splice(geom.indexOf(this), 1);
+    }
+    isCol() {}
+}
+class Circle extends Geom {
+    constructor(x, y, rad, color) {
+        super(x, y, color);
+        this.rad = rad;
+    }
+    render() {
+        super.render();
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.rad, 0, Math.PI * 2, false);
-        ctx.fillStyle = this.color;
         ctx.fill();
+    }
+    isCol(o) {
+        if(!o.img.width && !o.rad) return;
+        const w1 = this.rad;
+        const h1 = this.rad;
+        const x1 = this.x;
+        const y1 = this.y;
+        const w2 = o.img.width || o.rad;
+        const h2 = o.img.height || o.rad;
+        const x2 = o.x;
+        const y2 = o.y;
+        return x2 < x1 + w1 && x2 + w2 > x1 && y2 < y1 + h1 && y2 + h2 > y1;
+    }
+    findCol() {
+        return scene.find(b => this.col(b)) || geom.find(g => this.col(g));
+    }
+}
+class Fireball extends Circle {
+    constructor(x, y, rad) {
+        super(x, y, rad, "red");
+        this.spd = 5;
+        this.dir = 0;
+        this.dir = Math.atan2(mouse.y - this.x, mouse.x - this.y);
+    }
+    upd() {
+        super.upd();
+        this.x += this.spd * Math.cos(this.dir);
+        this.y += this.spd * Math.sin(this.dir);
     }
 }
 const char = (name, desc, img, abls) => class extends Char {
@@ -210,9 +259,8 @@ const Wizard = char("Wizard", "He may be old, but he has a cool hat.", "wizzy_th
         if(!a) return;
         const w = a.img.width;
         const h = a.img.height;
-        geom.push(new Circle(x + w, y + h, 100, "red"));
-    }, "Fireball", "Launch a powerful fireball at an enemy.", 1),
-    "test": new Skill(() => {}, "TEST", "test", 1)
+        geom.push(new Fireball(x + w / 2, y + h / 2, 100));
+    }, "Fireball", "Launch a powerful fireball at an enemy.", 0.5)
 });
 const Clubber = badguy("Clubber", "He's stylish, he's angry and he's here to hit you.", "clubber_angry.png", { upd: (t) => { t.x++; }, attack: (t) => {} }, { w: 10, h: 30, hp: 10 });
 const Bower = badguy("Bower", "Nothing is going on inside his head, but he will shoot you.", "bower_angry.png", { upd: (t) => {}, attack: (t) => {} }, { w: 10, h: 30, hp: 10 });
@@ -220,7 +268,15 @@ const BigGuy = badguy("Big Guy", "A hulking beast of a man, no one dares mess wi
 const GraglonTheTerrible = badguy("Graglon The Terrible", "Angry, dangerous and ready to crush things.", "graglon_the_terrible_angry.png", { upd: (t) => {}, attack: (t) => {} }, { w: 50, h: 70, hp: 1000 });
 const getTeamIdx = (name) => team.indexOf(team.find(c => c.name == name));
 const charList = [Wizard];
+/**
+ * The components of the scene.
+ * @type {BadGuy[]}
+ */
 const scene = [];
+/**
+ * Various geometric elements.
+ * @type {Geom[]}
+ */
 const geom = [];
 
 const titleScreen = new UI();
@@ -272,6 +328,10 @@ teamSelectUI.style({
     "gap": "20px",
     "position": "fixed"
 });
+/**
+ * The characters assigned onto the player's team.
+ * @type {Char[]}
+ */
 const team = [];
 var activeChar = 0;
 var activeSkill = 0;
@@ -279,6 +339,7 @@ const inputs = {};
 const player = {
     x: 0, y: 0, spd: 5
 };
+const mouse = { x: 0, y: 0 };
 
 const tut = new UI();
 const tutOverlayUI = new UI();
@@ -440,6 +501,7 @@ function render() {
         ctx.drawImage(e.img, e.x, e.y);
     });
     geom.forEach(g => {
+        g.upd();
         g.render();
     });
     refreshSkillList();
@@ -468,4 +530,11 @@ window.addEventListener("beforeunload", (e) => {
     e.preventDefault();
     // legacy support
     e.returnValue = true;
+});
+window.addEventListener("mousemove", (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const sx = canvas.width / rect.width;
+    const sy = canvas.height / rect.height;
+    mouse.x = (e.clientX - rect.left) * sx;
+    mouse.y = (e.clientY - rect.top) * sy;
 });
