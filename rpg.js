@@ -3,7 +3,9 @@
 window.addEventListener("error", (e) => alert(`msg: ${e.message}, ln: ${e.lineno}`));
 
 const config = {
-    cleanup: false
+    cleanup: false,
+    resolution: 1080,
+    quality: "med"
 };
 
 const append = (e) => document.body.appendChild(e);
@@ -299,7 +301,9 @@ uiBtns.style({
 uiBtns.tx = `<button id="team_btn">Team</button>`;
 const pickerUI = new UI();
 pickerUI.style({
-    "transform": "translate(50%, -50%)",
+    "top": "50%",
+    "left": "50%",
+    "transform": "translate(-50%, -50%)",
     "width": "40vw",
     "height": "40vh",
     "backgroundColor": "#bdbdbd",
@@ -328,6 +332,42 @@ teamSelectUI.style({
     "gap": "20px",
     "position": "fixed"
 });
+const settings = new UI();
+settings.style({
+    "left": "50%",
+    "top": "50%",
+    "transform": "translate(-50%, -50%)",
+    "display": "none",
+    "position": "fixed",
+    "flexDirection": "column",
+    "gap": "20px"
+});
+const settingsField = (text, extra) => {
+    const tc = text.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1));
+    const id = text.replace(/\s/g, "_");
+    return [`<div style="flex-direction: row"><p>${tc}: <span id="${id}">loading...</span></p>${extra}</div>`, id];
+}
+settings.tx = "<h1>Settings</h1>";
+const [fieldCleanupOnClose, fieldCleanupOnCloseId] = settingsField("cleanup on close", `<button id="toggle_cleanup_on_close">Toggle</button>`);
+settings.tx += fieldCleanupOnClose;
+const fieldCleanupOnCloseDisplay = getEl(fieldCleanupOnCloseId);
+const setFieldCleanupOnCloseDisplayVal = () => fieldCleanupOnCloseDisplay.textContent = config.cleanup;
+const toggleFieldCleanupOnClose = () => config.cleanup = !config.cleanup;
+setFieldCleanupOnCloseDisplayVal();
+onClick(getEl("toggle_cleanup_on_close"), () => {
+    toggleFieldCleanupOnClose();
+    setFieldCleanupOnCloseDisplayVal();
+});
+const [fieldResolution, fieldResolutionId] = settingsField("resolution", `<select id="resolution_opts"><option value="1080">1920x1080 (1080p)</option><option value="1440">2560x1440 (1440p)</option><option value="720">1280x720 (720p)</option><option value="360">640x360 (360p)</option></select>`);
+settings.tx += fieldResolution;
+const fieldResolutionDisplay = getEl(fieldResolutionId);
+const setFieldResolutionVal = () => fieldResolutionDisplay.textContent = config.resolution;
+const applyFieldResolution = () => config.resolution = Number(getEl("resolution_opts").value);
+setFieldResolutionVal();
+const [fieldQuality, fieldQualityId] = settingsField("quality", `<select id="quality_opts"><option value="qultrahigh">Ultra High</option><option value="qhigh">High</option><option value="qmed">Medium (recommended)</option><option value="qlow">Low</option><option value="qultralow">Ultra Low</option></select>`);
+const fieldQualityDisplay = getEl(fieldQualityId);
+const setFieldQualityVal =  () => fieldQualityDisplay.textContent = config.quality;
+const applyFieldQuality = () => config.quality = "";
 /**
  * The characters assigned onto the player's team.
  * @type {Char[]}
@@ -509,6 +549,7 @@ function render() {
 }
 render();
 function handleInputs() {
+    if(down("Escape")) settings.show("flex");
     for(let i = 1; i <= 9; i++) if(down(`Digit${i}`)) activeSkill = i-1;
     const shift = down("ShiftLeft") || down("ShiftRight");
     const spd = player.spd;
