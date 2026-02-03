@@ -1,4 +1,4 @@
-import { Scene } from "/phantom2d.js";
+// import { Scene } from "/phantom2d.js";
 
 const config = {
     cleanup: false
@@ -11,7 +11,15 @@ const keys = Object.keys.bind(Object);
 const onClick = (el, fn) => el.addEventListener("click", fn);
 const canvas = create("canvas");
 append(canvas);
-canvas.style.border = "10px solid red";
+Object.assign(canvas.style, {
+    "border": "5px solid red",
+    "width": "60vw",
+    "height": "60vh",
+    "margin": "0",
+    "padding": "0"
+});
+canvas.width = 2000;
+canvas.height = 2000;
 const ctx = canvas.getContext("2d");
 //const scene = new Scene(canvas, 1000, 1000, "100vw", "100vh");
 
@@ -117,8 +125,12 @@ class Char {
     constructor(name, desc, img, abls) {
         this.name = name;
         this.desc = desc;
-        this.img = img;
+        this.img = new Image();
+        this.src = img;
         this.abls = abls;
+        this.img.src = img;
+        this.img.width = 3;
+        this.img.height = 5;
     }
     use(skill, ...args) {
         this.abls[skill].use(...args);
@@ -139,18 +151,38 @@ class Skill {
     }
 }
 class BadGuy {
-    constructor(name, desc, img, { hurt = () => {}, die = () => {}, upd, attack }, { x = 0, y = 0, hp }) {
+    constructor(name, desc, img, { hurt = () => {}, die = () => {}, upd, attack }, { x = 0, y = 0, w, h, hp }) {
         this.name = name;
         this.desc = desc;
-        this.img = img;
+        this.img = new Image();
+        this.src = img;
         this.maxHp = hp;
         this.hp = this.maxHp;
         this.x = x;
         this.y = y;
+        this.w = w;
+        this.h = h;
         this.hurt = hurt;
         this.die = die;
         this.upd = upd;
         this.attack = attack;
+        this.img.src = img;
+        this.img.width = this.w;
+        this.img.height = this.h;
+    }
+}
+class Circle {
+    constructor(x, y, rad, color) {
+        this.x = x;
+        this.y = y;
+        this.rad = rad;
+        this.color = color;
+    }
+    render() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.rad, 0, Math.PI * 2, false);
+        ctx.fillStyle = this.color;
+        ctx.fill();
     }
 }
 const char = (name, desc, img, abls) => class extends Char {
@@ -159,12 +191,12 @@ const char = (name, desc, img, abls) => class extends Char {
         this.lvl = 1;
     }
 }
-const badguy = (name, desc, img, { hurt = () => {}, die = () => {}, upd, attack }, hp) => class extends BadGuy {
+const badguy = (name, desc, img, { hurt = () => {}, die = () => {}, upd, attack }, { w, h, hp }) => class extends BadGuy {
     constructor(x, y) {
-        super(name, desc, img, { hurt, die, upd, attack }, { x, y, hp });
+        super(name, desc, img, { hurt, die, upd, attack }, { x, y, w, h, hp });
     }
 }
-const card = (c) => `<div><img src="${c.img}"><h1>${c.name}</h1><p><i>${c.desc}</i></p><ul>${keys(c.abls).map(k => {
+const card = (c) => `<div><img src="${c.src}"><h1>${c.name}</h1><p><i>${c.desc}</i></p><ul>${keys(c.abls).map(k => {
     const s = c[k];
     return `<p><strong>${s.name}</strong></p><p><i>${s.desc}</i></p><p>CD: ${s.cd}</p>`;
 })}</ul></div>`;
@@ -172,15 +204,24 @@ const txbox = (img, spek, cont, extra = null) => `<div class="txbox"><img src="$
 const nextBtn = (txt) => `<br><button class="next-btn" id="next">${txt}</button>`;
 const applyNextHandle = (fn) => onClick(getEl("next"), fn);
 const Wizard = char("Wizard", "He may be old, but he has a cool hat.", "wizzy_the_wizard_happy.png", {
-    "fball": new Skill(() => alert("fireball"), "Fireball", "Launch a powerful fireball at an enemy.", 1),
+    "fball": new Skill(() => {
+        const { x, y } = player;
+        const a = team[activeChar];
+        if(!a) return;
+        const w = a.img.width;
+        const h = a.img.height;
+        geom.push(new Circle(x + w, y + h, 100, "red"));
+    }, "Fireball", "Launch a powerful fireball at an enemy.", 1),
     "test": new Skill(() => {}, "TEST", "test", 1)
 });
-const Clubber = badguy("Clubber", "He's stylish, he's angry and he's here to hit you.", "clubber_angry.png", { upd: () => {}, attack: () => {} }, 10);
-const Bower = badguy("Bower", "Nothing is going on inside his head, but he will shoot you.", "bower_angry.png", { upd: () => {}, attack: () => {} }, 10);
-const BigGuy = badguy("Big Guy", "A hulking beast of a man, no one dares mess with this titan.", "big_guy_angry.png", { upd: () => {}, attack: () => {} }, 100);
-const GraglonTheTerrible = badguy("Graglon The Terrible", "Angry, dangerous and ready to crush things.", "graglon_the_terrible_angry.png", { upd: () => {}, attack: () => {} }, 1000);
+const Clubber = badguy("Clubber", "He's stylish, he's angry and he's here to hit you.", "clubber_angry.png", { upd: (t) => { t.x++; }, attack: (t) => {} }, { w: 10, h: 30, hp: 10 });
+const Bower = badguy("Bower", "Nothing is going on inside his head, but he will shoot you.", "bower_angry.png", { upd: (t) => {}, attack: (t) => {} }, { w: 10, h: 30, hp: 10 });
+const BigGuy = badguy("Big Guy", "A hulking beast of a man, no one dares mess with this titan.", "big_guy_angry.png", { upd: (t) => {}, attack: (t) => {} }, { w: 20, h: 30, hp: 100 });
+const GraglonTheTerrible = badguy("Graglon The Terrible", "Angry, dangerous and ready to crush things.", "graglon_the_terrible_angry.png", { upd: (t) => {}, attack: (t) => {} }, { w: 50, h: 70, hp: 1000 });
 const getTeamIdx = (name) => team.indexOf(team.find(c => c.name == name));
 const charList = [Wizard];
+const scene = [];
+const geom = [];
 
 const titleScreen = new UI();
 titleScreen.tx = `<div class="ts-bg"><h1 class="title-screen-title">Really Bad RPG</h1><div style="margin-bottom: 20px"></div><button class="start" id="start-btn">Start</button></div>`;
@@ -236,7 +277,7 @@ var activeChar = 0;
 var activeSkill = 0;
 const inputs = {};
 const player = {
-    x: 0, y: 0, spd: 2
+    x: 0, y: 0, spd: 5
 };
 
 const tut = new UI();
@@ -321,6 +362,7 @@ const closeClubberPopup = () => {
     clubberPopup.tx = "";
     clubberPopup.hide();
     activeChar = 0;
+    scene.push(new Clubber(10, 10));
 }
 
 const teamBtn = getEl("team_btn");
@@ -330,7 +372,7 @@ const openTeamMenu = () => {
     for(let i = 0; i < 4; i++) {
         const t = team[i];
         if(!t) teamUI.tx += `<div class="team-slot empty"><p>Empty Slot</p><button class="team-slot-assign" id="empty-${i}">+</button></div>`;
-        else teamUI.tx += `<div><img src="${t.img}"><p>${t.name}</p></div>`;
+        else teamUI.tx += `<div><img src="${t.src}"><p>${t.name}</p></div>`;
     }
     teamUI.tx += `<button class="save-lineup" id="close">Save</button></div>`;
     for(let i = 0; i < 4; i++) if(!team[i]) onClick(getEl(`empty-${i}`), assignToSlot);
@@ -361,7 +403,7 @@ const assignToSlot = (e) => {
     }
     pickerUI.style({ "display": "grid" });
     const charInst = charList.map(c => new c());
-    pickerUI.tx = charInst.map(c => `<div><button id="${c.name}"><img src="${c.img}"><p>${c.name}</p></button></div>`).join("");
+    pickerUI.tx = charInst.map(c => `<div><button id="${c.name}"><img src="${c.src}"><p>${c.name}</p></button></div>`).join("");
     charInst.forEach(c => onClick(getEl(c.name), handleChoose));
 }
 onClick(teamBtn, openTeamMenu);
@@ -389,8 +431,17 @@ document.addEventListener("keyup", (e) => inputs[e.code] = false);
 function render() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     handleInputs();
-    ctx.fillStyle = "#5184f3";
-    ctx.fillRect(player.x, player.y, 10, 20);
+    const a = team[activeChar];
+    if(a) {
+        ctx.drawImage(a.img, player.x, player.y);
+    }
+    scene.forEach(e => {
+        e.upd(e);
+        ctx.drawImage(e.img, e.x, e.y);
+    });
+    geom.forEach(g => {
+        g.render();
+    });
     refreshSkillList();
     requestAnimationFrame(render);
 }
