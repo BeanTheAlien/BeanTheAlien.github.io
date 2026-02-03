@@ -177,7 +177,8 @@ const Wizard = char("Wizard", "He may be old, but he has a cool hat.", "wizzy_th
 });
 const Clubber = badguy("Clubber", "He's stylish, he's angry and he's here to hit you.", "clubber_angry.png", { upd: () => {}, attack: () => {} }, 10);
 const Bower = badguy("Bower", "Nothing is going on inside his head, but he will shoot you.", "bower_angry.png", { upd: () => {}, attack: () => {} }, 10);
-const BigGuy = badguy("Big Guy", "A hulking beast of a man, no one dares mess with this titan.", "big_guy_angry.png", { upd: () => {}, attack: () => {} }, 10);
+const BigGuy = badguy("Big Guy", "A hulking beast of a man, no one dares mess with this titan.", "big_guy_angry.png", { upd: () => {}, attack: () => {} }, 100);
+const GraglonTheTerrible = badguy("Graglon The Terrible", "Angry, dangerous and ready to crush things.", "graglon_the_terrible_angry.png", { upd: () => {}, attack: () => {} }, 1000);
 const getTeamIdx = (name) => team.indexOf(team.find(c => c.name == name));
 const charList = [Wizard];
 
