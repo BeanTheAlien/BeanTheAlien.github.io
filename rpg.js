@@ -2,7 +2,8 @@
 
 window.addEventListener("error", (e) => alert(`msg: ${e.message}, ln: ${e.lineno}`));
 
-const config = {
+const configStr = localStorage.getItem("config");
+const config = configStr != null ? JSON.parse(configStr) : {
     cleanup: false,
     resolution: 1080,
     quality: "med"
@@ -13,6 +14,7 @@ const create = document.createElement.bind(document);
 const getEl = document.getElementById.bind(document);
 const keys = Object.keys.bind(Object);
 const onClick = (el, fn) => el.addEventListener("click", fn);
+const perfNow = performance.now.bind(performance);
 const canvas = create("canvas");
 append(canvas);
 Object.assign(canvas.style, {
@@ -337,37 +339,67 @@ settings.style({
     "left": "50%",
     "top": "50%",
     "transform": "translate(-50%, -50%)",
-    "display": "none",
+    "display": "flex",
     "position": "fixed",
     "flexDirection": "column",
-    "gap": "20px"
+    "gap": "20px",
+    "backgroundColor": "#757575",
+    "padding": "50px"
 });
 const settingsField = (text, extra) => {
-    const tc = text.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1));
+    const tc = text.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
     const id = text.replace(/\s/g, "_");
     return [`<div style="flex-direction: row"><p>${tc}: <span id="${id}">loading...</span></p>${extra}</div>`, id];
 }
-settings.tx = "<h1>Settings</h1>";
+let settingsHtml = "<h1>Settings</h1>";
 const [fieldCleanupOnClose, fieldCleanupOnCloseId] = settingsField("cleanup on close", `<button id="toggle_cleanup_on_close">Toggle</button>`);
-settings.tx += fieldCleanupOnClose;
+settingsHtml += fieldCleanupOnClose;
+const [fieldResolution, fieldResolutionId] = settingsField("resolution", `<select id="resolution_opts"><option value="1080">1920x1080 (1080p)</option><option value="1440">2560x1440 (1440p)</option><option value="720">1280x720 (720p)</option><option value="360">640x360 (360p)</option></select>`);
+settingsHtml += fieldResolution;
+const [fieldQuality, fieldQualityId] = settingsField("quality", `<select id="quality_opts"><option value="qultrahigh">Ultra High</option><option value="qhigh">High</option><option value="qmed">Medium (recommended)</option><option value="qlow">Low</option><option value="qultralow">Ultra Low</option></select>`);
+settingsHtml += fieldQuality;
+settingsHtml += `<button id="settings-done">Done</button>`
+settings.tx = settingsHtml;
 const fieldCleanupOnCloseDisplay = getEl(fieldCleanupOnCloseId);
+const toggleCleanupOnClose = getEl("toggle_cleanup_on_close");
 const setFieldCleanupOnCloseDisplayVal = () => fieldCleanupOnCloseDisplay.textContent = config.cleanup;
 const toggleFieldCleanupOnClose = () => config.cleanup = !config.cleanup;
-setFieldCleanupOnCloseDisplayVal();
-onClick(getEl("toggle_cleanup_on_close"), () => {
+const fieldCleanupOnCloseNext = () => {
     toggleFieldCleanupOnClose();
     setFieldCleanupOnCloseDisplayVal();
-});
-const [fieldResolution, fieldResolutionId] = settingsField("resolution", `<select id="resolution_opts"><option value="1080">1920x1080 (1080p)</option><option value="1440">2560x1440 (1440p)</option><option value="720">1280x720 (720p)</option><option value="360">640x360 (360p)</option></select>`);
-settings.tx += fieldResolution;
+}
 const fieldResolutionDisplay = getEl(fieldResolutionId);
+const fieldResolutionSelect = getEl("resolution_opts");
 const setFieldResolutionVal = () => fieldResolutionDisplay.textContent = config.resolution;
-const applyFieldResolution = () => config.resolution = Number(getEl("resolution_opts").value);
-setFieldResolutionVal();
-const [fieldQuality, fieldQualityId] = settingsField("quality", `<select id="quality_opts"><option value="qultrahigh">Ultra High</option><option value="qhigh">High</option><option value="qmed">Medium (recommended)</option><option value="qlow">Low</option><option value="qultralow">Ultra Low</option></select>`);
+const applyFieldResolution = () => config.resolution = Number(fieldResolutionSelect.value);
+const fieldResolutionNext = () => {
+    applyFieldResolution();
+    setFieldResolutionVal();
+}
 const fieldQualityDisplay = getEl(fieldQualityId);
-const setFieldQualityVal =  () => fieldQualityDisplay.textContent = config.quality;
-const applyFieldQuality = () => config.quality = "";
+const fieldQualitySelect = getEl("quality_opts");
+const setFieldQualityVal =  () => fieldQualityDisplay.textContent = { "uhigh": "ultra high", "high": "high", "med": "medium", "low": "low", "ulow": "ultra low" }[config.quality];
+const applyFieldQuality = () => config.quality = { "qultrahigh": "uhigh", "qhigh": "high", "qmed": "med", "qlow": "low", "qultralow": "ulow" }[fieldQualitySelect.value];
+const fieldQualityNext = () => {
+    applyFieldQuality();
+    setFieldQualityVal();
+}
+onClick(toggleCleanupOnClose, fieldCleanupOnCloseNext);
+fieldResolutionSelect.addEventListener("change", fieldResolutionNext);
+fieldQualitySelect.addEventListener("change", fieldQualityNext);
+setFieldCleanupOnCloseDisplayVal();
+setFieldResolutionVal();
+setFieldQualityVal();
+const settingsScreenDone = () => {
+    console.log("Saving preferences...");
+    const pre = perfNow();
+    localStorage.setItem("config", JSON.stringify(config));
+    const pro = perfNow();
+    console.log(`Saved successfully. (in ${pre - pro}ms)`);
+    settings.hide();
+}
+onClick(getEl("settings-done"), settingsScreenDone);
+settings.hide();
 /**
  * The characters assigned onto the player's team.
  * @type {Char[]}
