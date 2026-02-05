@@ -444,10 +444,15 @@ setFieldSFXVolVal();
 setFieldMusicVolVal();
 const createPicker = async () => {
     try {
-        const [fileHandle] = await window.showOpenFilePicker();
+        const [fileHandle] = await window.showOpenFilePicker({
+            "excludeAcceptAllOption": true,
+            "types": [{ "accept": { "application/json": [".json"] } }]
+        });
         const file = await fileHandle.getFile();
     } catch(e) {
-        //
+        if(e.name == "AbortError") {
+            alert("Failed to load file: action aborted.");
+        }
     }
 }
 const genJSONFile = () => {
