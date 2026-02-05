@@ -3,10 +3,14 @@
 window.addEventListener("error", (e) => alert(`msg: ${e.message}, ln: ${e.lineno}`));
 
 const configStr = localStorage.getItem("config");
+if(configStr == null) console.log("Config not present, loading defaults instead.");
 const config = configStr != null ? JSON.parse(configStr) : {
     cleanup: false,
     resolution: 1080,
-    quality: "med"
+    quality: "med",
+    master: 100,
+    sfx: 100,
+    music: 100
 };
 
 const append = (e) => document.body.appendChild(e);
@@ -266,7 +270,17 @@ const Wizard = char("Wizard", "He may be old, but he has a cool hat.", "wizzy_th
         geom.push(new Fireball(x + w / 2, y + h / 2, 100));
     }, "Fireball", "Launch a powerful fireball at an enemy.", 0.5)
 });
-const Clubber = badguy("Clubber", "He's stylish, he's angry and he's here to hit you.", "clubber_angry.png", { upd: (t) => { t.x++; }, attack: (t) => {} }, { w: 10, h: 30, hp: 10 });
+const Clubber = badguy("Clubber", "He's stylish, he's angry and he's here to hit you.", "clubber_angry.png", { upd: (t) => {
+    const r = 100;
+    const s = 5;
+    if(Math.hypot(player.x - t.x, player.y - t.y) <= Math.pow(r, 2)) {
+        t.x += player.x > t.x ? s : player.x < t.x ? -(s) : 0;
+        t.y += player.y > t.y ? s : player.y < t.y ? -(s) : 0;
+    } else {
+        t.x++;
+        t.y++;
+    }
+}, attack: (t) => {} }, { w: 10, h: 30, hp: 10 });
 const Bower = badguy("Bower", "Nothing is going on inside his head, but he will shoot you.", "bower_angry.png", { upd: (t) => {}, attack: (t) => {} }, { w: 10, h: 30, hp: 10 });
 const BigGuy = badguy("Big Guy", "A hulking beast of a man, no one dares mess with this titan.", "big_guy_angry.png", { upd: (t) => {}, attack: (t) => {} }, { w: 20, h: 30, hp: 100 });
 const GraglonTheTerrible = badguy("Graglon The Terrible", "Angry, dangerous and ready to crush things.", "graglon_the_terrible_angry.png", { upd: (t) => {}, attack: (t) => {} }, { w: 50, h: 70, hp: 1000 });
@@ -358,7 +372,15 @@ const [fieldResolution, fieldResolutionId] = settingsField("resolution", `<selec
 settingsHtml += fieldResolution;
 const [fieldQuality, fieldQualityId] = settingsField("quality", `<select id="quality_opts"><option value="qultrahigh">Ultra High</option><option value="qhigh">High</option><option value="qmed">Medium (recommended)</option><option value="qlow">Low</option><option value="qultralow">Ultra Low</option></select>`);
 settingsHtml += fieldQuality;
-settingsHtml += `<button id="settings-done">Done</button>`
+const [fieldMasterVol, fieldMasterVolId] = settingsField("master volume", `<input type="range" min="0" max="100" value="100" id="master_vol_slider">`);
+settingsHtml += fieldMasterVol;
+const [fieldSFXVol, fieldSFXVolId] = settingsField("sound effects volume", `<input type="range" min="0" max="100" value="100" id="sfx_vol_slider">`);
+settingsHtml += fieldSFXVol;
+const [fieldMusicVol, fieldMusicVolId] = settingsField("music volume", `<input type="range" min="0" max="100" value="100" id="music_vol_slider">`);
+settingsHtml += fieldMusicVol;
+settingsHtml += `<button id="import-game">Import</button>`;
+settingsHtml += `<button id="export-game">Export</button>`;
+settingsHtml += `<button id="settings-done">Done</button>`;
 settings.tx = settingsHtml;
 const fieldCleanupOnCloseDisplay = getEl(fieldCleanupOnCloseId);
 const toggleCleanupOnClose = getEl("toggle_cleanup_on_close");
@@ -384,12 +406,70 @@ const fieldQualityNext = () => {
     applyFieldQuality();
     setFieldQualityVal();
 }
+const fieldMasterVolDisplay = getEl(fieldMasterVolId);
+const fieldMasterVolSlider = getEl("master_vol_slider");
+const setFieldMasterVolVal = () => fieldMasterVolDisplay.textContent = config.master;
+const applyFieldMasterVol = () => config.master = fieldMasterVolSlider.value;
+const fieldMasterVolNext = () => {
+    applyFieldMasterVol();
+    setFieldMasterVolVal();
+}
+const fieldSFXVolDisplay = getEl(fieldSFXVolId);
+const fieldSFXVolSlider = getEl("sfx_vol_slider");
+const setFieldSFXVolVal = () => fieldSFXVolDisplay.textContent = config.sfx;
+const applyFieldSFXVol = () => config.sfx = fieldSFXVolSlider.value;
+const fieldSFXVolNext = () => {
+    applyFieldSFXVol();
+    setFieldSFXVolVal();
+}
+const fieldMusicVolDisplay = getEl(fieldMusicVolId);
+const fieldMusicVolSlider = getEl("music_vol_slider");
+const setFieldMusicVolVal = () => fieldMusicVolDisplay.textContent = config.music;
+const applyFieldMusicVol = () => config.music = fieldMusicVolSlider.value;
+const fieldMusicVolNext = () => {
+    applyFieldMusicVol();
+    setFieldMusicVolVal();
+}
 onClick(toggleCleanupOnClose, fieldCleanupOnCloseNext);
 fieldResolutionSelect.addEventListener("change", fieldResolutionNext);
 fieldQualitySelect.addEventListener("change", fieldQualityNext);
+fieldMasterVolSlider.addEventListener("change", fieldMasterVolNext);
+fieldSFXVolSlider.addEventListener("change", fieldSFXVolNext);
+fieldMusicVolSlider.addEventListener("change", fieldMusicVolNext);
 setFieldCleanupOnCloseDisplayVal();
 setFieldResolutionVal();
 setFieldQualityVal();
+setFieldMasterVolVal();
+setFieldSFXVolVal();
+setFieldMusicVolVal();
+const createPicker = async () => {
+    try {
+        const [fileHandle] = await window.showOpenFilePicker();
+        const file = await fileHandle.getFile();
+    } catch(e) {
+        //
+    }
+}
+const genJSONFile = () => {
+    const pre = perfNow();
+    console.log("Generating export save...");
+    const json = JSON.stringify({}, null, 4);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = create("a");
+    a.href = url;
+    a.download = "really-bad-rpg-export.json";
+    append(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    const pro = perfNow();
+    console.log(`Created export save. (in ${pre - pro}ms)`);
+}
+const importBtn = getEl("import-game");
+const exportBtn = getEl("export-game");
+onClick(importBtn, createPicker);
+onClick(exportBtn, genJSONFile);
 const settingsScreenDone = () => {
     console.log("Saving preferences...");
     const pre = perfNow();
@@ -412,6 +492,7 @@ const player = {
     x: 0, y: 0, spd: 5
 };
 const mouse = { x: 0, y: 0 };
+const getChar = () => team[activeChar];
 
 const tut = new UI();
 const tutOverlayUI = new UI();
