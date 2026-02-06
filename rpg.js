@@ -2,8 +2,15 @@
 
 window.addEventListener("error", (e) => alert(`msg: ${e.message}, ln: ${e.lineno}`));
 
+class InvalidNameError extends Erorr {
+    constructor(charName) {
+        super(`Character '${charName}' does not exist.`);
+        this.name = "InvalidNameError";
+    }
+}
+
 const configStr = localStorage.getItem("config");
-if(configStr == null) console.log("Config not present, loading defaults instead.");
+if(configStr == null) console.warn("Config not present, loading defaults instead.");
 const config = configStr != null ? JSON.parse(configStr) : {
     cleanup: false,
     resolution: 1080,
@@ -459,13 +466,29 @@ const createPicker = async () => {
     }
 }
 const dataImport = async () => {
+    const pre = perfNow();
+    console.log("Loading picker...");
     const jsonRaw = await createPicker();
+    console.log("Generating content...");
     const json = JSON.parse(jsonRaw);
     // critical player keys:
     // x, y, activechar, activeskill
     // critical team values:
     // the char name (that will be mapped to re-generate)
+    // note: charList exists, search from charList to re-generate
     player.x = json.x;
+    player.y = json.y;
+    for(const t of json.team) {
+        // find the matching character; throw if not exists
+        const char = charList.find(c => c.name == t);
+        if(char) {
+            team.push(char);
+        } else {
+            throw new InvalidNameError(t);
+        }
+    }
+    const pro = perfNow();
+    console.log(`Loaded save. (in ${pre - pro}ms)`);
 }
 const genJSONFile = () => {
     const pre = perfNow();
