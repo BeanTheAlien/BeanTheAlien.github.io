@@ -458,10 +458,22 @@ const createPicker = async () => {
         else alert(`Load fail: ${e.name}`);
     }
 }
+const dataImport = async () => {
+    const jsonRaw = await createPicker();
+    const json = JSON.parse(jsonRaw);
+    // critical player keys:
+    // x, y, activechar, activeskill
+    // critical team values:
+    // the char name (that will be mapped to re-generate)
+    player.x = json.x;
+}
 const genJSONFile = () => {
     const pre = perfNow();
     console.log("Generating export save...");
-    const json = JSON.stringify({}, null, 4);
+    const json = JSON.stringify({
+        "x": player.x, "y": player.y, "activechar": activeChar, "activeskill": activeSkill,
+        "team": team.map(c => c.name)
+    }, null, 4);
     const blob = new Blob([json], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = create("a");
