@@ -443,16 +443,19 @@ setFieldMasterVolVal();
 setFieldSFXVolVal();
 setFieldMusicVolVal();
 const createPicker = async () => {
+    if(!window.showOpenFilePicker) return alert("Your browser does not support the File System API.");
     try {
         const [fileHandle] = await window.showOpenFilePicker({
             "excludeAcceptAllOption": true,
             "types": [{ "accept": { "application/json": [".json"] } }]
         });
         const file = await fileHandle.getFile();
+        return file;
     } catch(e) {
         if(e.name == "AbortError") {
-            alert("Failed to load file: action aborted.");
+            alert("Load fail: aborted.");
         }
+        else alert(`Load fail: ${e.name}`);
     }
 }
 const genJSONFile = () => {
