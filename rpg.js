@@ -2,7 +2,7 @@
 
 window.addEventListener("error", (e) => alert(`msg: ${e.message}, ln: ${e.lineno}`));
 
-class InvalidNameError extends Erorr {
+class InvalidNameError extends Error {
     constructor(charName) {
         super(`Character '${charName}' does not exist.`);
         this.name = "InvalidNameError";
@@ -207,7 +207,8 @@ class Geom {
     destroy() {
         geom.splice(geom.indexOf(this), 1);
     }
-    isCol() {}
+    isCol(o) {}
+    col(o) {}
 }
 class Circle extends Geom {
     constructor(x, y, rad, color) {
@@ -221,19 +222,17 @@ class Circle extends Geom {
         ctx.fill();
     }
     isCol(o) {
-        if(!o.img.width && !o.rad) return;
+        if(!(o instanceof Char || o instanceof Circle)) return;
+        const t = o instanceof Char ? 0 : 1;
         const w1 = this.rad;
         const h1 = this.rad;
         const x1 = this.x;
         const y1 = this.y;
-        const w2 = o.img.width || o.rad;
-        const h2 = o.img.height || o.rad;
+        const w2 = t == 0 ? o.img.width : o.rad;
+        const h2 = t == 0 ? o.img.height : o.rad;
         const x2 = o.x;
         const y2 = o.y;
         return x2 < x1 + w1 && x2 + w2 > x1 && y2 < y1 + h1 && y2 + h2 > y1;
-    }
-    findCol() {
-        return scene.find(b => this.col(b)) || geom.find(g => this.col(g));
     }
 }
 class Fireball extends Circle {
@@ -247,6 +246,9 @@ class Fireball extends Circle {
         super.upd();
         this.x += this.spd * Math.cos(this.dir);
         this.y += this.spd * Math.sin(this.dir);
+    }
+    col() {
+        this.destroy();
     }
 }
 const char = (name, desc, img, abls) => class extends Char {
@@ -488,7 +490,7 @@ const dataImport = async () => {
         }
     }
     const pro = perfNow();
-    console.log(`Loaded save. (in ${pre - pro}ms)`);
+    console.log(`Loaded save. (in ${pro - pre}ms)`);
 }
 const genJSONFile = () => {
     const pre = perfNow();
@@ -507,7 +509,7 @@ const genJSONFile = () => {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     const pro = perfNow();
-    console.log(`Created export save. (in ${pre - pro}ms)`);
+    console.log(`Created export save. (in ${pro - pre}ms)`);
 }
 const importBtn = getEl("import-game");
 const exportBtn = getEl("export-game");
@@ -518,7 +520,7 @@ const settingsScreenDone = () => {
     const pre = perfNow();
     localStorage.setItem("config", JSON.stringify(config));
     const pro = perfNow();
-    console.log(`Saved successfully. (in ${pre - pro}ms)`);
+    console.log(`Saved successfully. (in ${pro - pre}ms)`);
     settings.hide();
 }
 onClick(getEl("settings-done"), settingsScreenDone);
@@ -699,6 +701,12 @@ function render() {
     geom.forEach(g => {
         g.upd();
         g.render();
+    });
+    geom.forEach(g1 => {
+        geom.forEach(g2 => {
+            if(g1 == g2) return;
+            if(g1.isCol(g2)) g1.col(g2);
+        });
     });
     refreshSkillList();
     requestAnimationFrame(render);
