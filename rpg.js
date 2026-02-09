@@ -390,6 +390,13 @@ settings.style({
     "backgroundColor": "#757575",
     "padding": "50px"
 });
+const shopIcon = new UI();
+shopIcon.style({
+    "left": "50px",
+    "bottom": "50px",
+    "position": "fixed"
+});
+shopIcon.tx = `<img src="shop_icon.png" width="80px" height="70px">`;
 const settingsField = (text, extra) => {
     const tc = text.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
     const id = text.replace(/\s/g, "_");
