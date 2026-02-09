@@ -42,86 +42,209 @@ canvas.height = 2000;
 const ctx = canvas.getContext("2d");
 //const scene = new Scene(canvas, 1000, 1000, "100vw", "100vh");
 
+/**
+ * A useful class for creating UI elements.
+ * @class
+ */
 class UI {
+    /**
+     * The constructor for UI elements.
+     */
     constructor() {
+        /**
+         * The innerHTML.
+         * @type {string}
+         * @prop
+         */
         this.txt = "";
+        /**
+         * The actual element.
+         * @type {HTMLDivElement}
+         * @prop
+         */
         this.el = create("div");
         append(this.el);
     }
+    /**
+     * GET the innerHTML.
+     * @returns {string} The current innerHTML.
+     */
     get tx() {
         return this.txt;
     }
+    /**
+     * SET the innerHTML.
+     * @prop {string} txt - The new innerHTML.
+     */
     set tx(txt) {
         this.txt = txt;
         this.refresh();
     }
+    /**
+     * Applies styles to the element.
+     * @param {CSSStyleDeclaration} s - The new styles to apply.
+     */
     style(s) {
         Object.assign(this.el.style, s);
     }
+    /**
+     * Refreshs the innerHTML content of the element.
+     */
     refresh() {
         this.el.innerHTML = this.txt;
     }
+    /**
+     * Sets the display property of this element.
+     * @param {"block" | "default" | "flex" | "grid" | "none"} style - The new display style.
+     */
     show(style) {
         this.style({ "display": style });
     }
+    /**
+     * Hides this element.
+     */
     hide() {
         this.style({ "display": "none" });
     }
+    /**
+     * Adds classes to the classlist.
+     * @param  {...string} cl - The new class(es) to be added.
+     */
     addClass(...cl) {
         this.el.classList.add(...cl);
     }
+    /**
+     * Removes classes from the classlist.
+     * @param  {...string} cl - The class(es) to be removed.
+     */
     rmClass(...cl) {
         this.el.classList.remove(...cl);
     }
+    /**
+     * Assigns a property on this element's style.
+     * @param {string} prop - The property name.
+     * @param {string} val - The new property value.
+     */
     setProp(prop, val) {
         this.el.style.setProperty(prop, val);
     }
 }
+/**
+ * Used to create long-lasting audio pieces.
+ * @class
+ */
 class Sound {
+    /**
+     * The constructor for Sound elements.
+     * @param {string} src - The source for the audio.
+     * @param {"wav" | "mpeg" | "mp4" | "aac" | "aacp" | "ogg" | "webm" | "x-caf" | "flac"} mime - The MIME type of the audio.
+     */
     constructor(src, mime) {
+        /**
+         * The audio element.
+         * @type {HTMLAudioElement}
+         * @prop
+         */
         this.el = create("audio");
         this.el.src = src;
         this.el.type = `audio/${mime}`;
         append(this.aud);
     }
+    /**
+     * Plays this audio.
+     */
     start() {
         this.el.play();
     }
+    /**
+     * Pauses this audio.
+     */
     stop() {
         this.el.pause();
     }
+    /**
+     * Seeks a new head time.
+     * @param {int} h - The new head time.
+     */
     seek(h) {
         this.el.currentTime = h;
     }
+    /**
+     * Sets the head time to 0 and re-plays it.
+     */
     restart() {
         this.stop();
         this.seek(0);
         this.start();
     }
+    /**
+     * Returns the current volume.
+     * @returns {int} The volume.
+     */
     get vol() {
         return this.el.volume;
     }
+    /**
+     * Sets the current volume.
+     * @prop {int} n - The new volume to be applied.
+     */
     set vol(n) {
         this.el.volume = n;
     }
 }
+/**
+ * A useful class for creating short sound effects.
+ * @class
+ */
 class SFX {
+    /**
+     * The constructor for SFX elements.
+     * @param {string} src - The source of the SFX's audio.
+     */
     constructor(src) {
+        /**
+         * The actual AudioContext.
+         * @type {AudioContext}
+         * @prop
+         */
         this.aud = new AudioContext();
         this.aud.src = src;
+        /**
+         * The Oscillator for this audio.
+         * @type {OscillatorNode}
+         * @prop
+         */
         this.osci = this.aud.createOscillator();
+        /**
+         * The gain controller for this audio.
+         * @type {GainNode}
+         * @prop
+         */
         this.gain = this.aud.createGain();
         this.osci.connect(this.gain).connect(this.aud.destination);
     }
+    /**
+     * Continues playback.
+     */
     start() {
         this.aud.resume();
     }
+    /**
+     * Stops playback.
+     */
     stop() {
         this.aud.suspend();
     }
+    /**
+     * Returns this gain's volume.
+     * @returns {int} The volume.
+     */
     get vol() {
         return this.gain.gain.value;
     }
+    /**
+     * Sets this gain's volume.
+     */
     set vol(n) {
         this.gain.gain.value = n;
     }
@@ -265,6 +388,7 @@ class ShopItem {
         return this.cost <= gold;
     }
     buy() {
+        if(!this.canBuy()) return;
         gold -= this.cost;
         this.onBuy();
     }
@@ -426,9 +550,10 @@ const showShopUI = () => {
         resIdx.push(idx);
     }
     const outItems = [shopItems[resIdx[0]], shopItems[resIdx[1]], shopItems[resIdx[2]]];
-    shopUI.tx = `<div style="display: flex"><img src="shop_icon.png" style="width: 40vw; height: 40vw; left: 50%; top: 50%;" style="position: fixed">${outItems.map(s => `<img src="${s.img}" style="bottom: 5%; margin-right: 50px; width: 50px; height: 50px;">`).join("")}</div><button id="close_shop">Close</button>`;
+    shopUI.tx = `<div style="display: flex; flex-direction: column;"><img src="shop_icon.png" style="width: 40vw; height: 40vw; left: 50%; top: 50%;" style="position: fixed"><div style="flex-direction: row">${outItems.map(s => `<img src="${s.img}" id="shop_item_${s.name}" style="bottom: 5%; margin-right: 50px; width: 50px; height: 50px;">`).join("")}</div></div><button id="close_shop">Close</button>`;
     shopUI.show("block");
     onClick(getEl("close_shop"), hideShopUI);
+    outItems.forEach(s => onClick(getEl(`shop_item_${s.name}`, s.buy)));
 }
 const hideShopUI = () => {
     shopUI.tx = "";

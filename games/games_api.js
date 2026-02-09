@@ -73,6 +73,18 @@ class Runtime {
         this.delta++;
     }
 }
+/**
+ * A simple game canvas.
+ * @class
+ */
+class GameCanvas {
+    /**
+     * The constructor for game canvases.
+     */
+    constructor() {
+        this.canvas = document.createElement("canvas");
+    }
+}
 class Game {
     constructor(fn, rate) {
         this.runtime = new Runtime(fn, rate);
