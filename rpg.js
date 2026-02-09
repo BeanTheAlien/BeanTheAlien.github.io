@@ -26,6 +26,12 @@ const append = (e) => document.body.appendChild(e);
 const create = document.createElement.bind(document);
 const getEl = document.getElementById.bind(document);
 const keys = Object.keys.bind(Object);
+/**
+ * Applies a click listener.
+ * @param {HTMLElement} el - The element.
+ * @param {function} fn - The callback function.
+ * @returns {void}
+ */
 const onClick = (el, fn) => el.addEventListener("click", fn);
 const perfNow = performance.now.bind(performance);
 const canvas = create("canvas");
@@ -95,7 +101,7 @@ class UI {
     }
     /**
      * Sets the display property of this element.
-     * @param {"block" | "default" | "flex" | "grid" | "none"} style - The new display style.
+     * @param {"block" | "default" | "flex" | "grid" | "compact" | "inherit" | "inital" | "inline" | "inline-block" | "inline-flex" | "inline-grid" | "inline-table" | "marker" | "run-in" | "table" | "table-caption" | "table-cell" | "table-column" | "table-column-group" | "table-footer-group" | "table-header-group" | "table-row" | "table-row-group" | "none"} style - The new display style.
      */
     show(style) {
         this.style({ "display": style });
@@ -137,7 +143,7 @@ class Sound {
     /**
      * The constructor for Sound elements.
      * @param {string} src - The source for the audio.
-     * @param {"wav" | "mpeg" | "mp4" | "aac" | "aacp" | "ogg" | "webm" | "x-caf" | "flac"} mime - The MIME type of the audio.
+     * @param {"wav" | "mpeg" | "mp4" | "webm" | "ogg" | "aac" | "aacp" | "x-caf" | "flac"} mime - The MIME type of the audio.
      */
     constructor(src, mime) {
         /**
@@ -186,7 +192,7 @@ class Sound {
     }
     /**
      * Sets the current volume.
-     * @prop {int} n - The new volume to be applied.
+     * @param {int} n - The new volume to be applied.
      */
     set vol(n) {
         this.el.volume = n;
@@ -244,31 +250,97 @@ class SFX {
     }
     /**
      * Sets this gain's volume.
+     * @param {int} n - The new volume to be applied.
      */
     set vol(n) {
         this.gain.gain.value = n;
     }
+    /**
+     * Cleanup for this sound effect.
+     * 
+     * Closes the `AudioContext` and sets the `OscillatorNode` and
+     * `GainNode` to `null` to be trash collected.
+     */
     kill() {
         this.aud.close();
         this.osci = null;
         this.gain = null;
     }
 }
+/**
+ * A simple utility class for generating paths.
+ * @class
+ */
 class PathBase {
+    /**
+     * The constructor for `PathBase`.
+     * @param {string} base - The pre-pended content.
+     * @param {string} end - The post-pended content (the file extension).
+     */
     constructor(base, end) {
+        /**
+         * The pre-pended content.
+         * @type {string}
+         * @prop
+         */
         this.base = base;
+        /**
+         * The post-pended content (the file extension).
+         * @type {string}
+         * @prop
+         */
         this.end = end;
     }
+    /**
+     * Generates a path.
+     * @param {string} path - The path.
+     * @returns {string} The generated path.
+     */
     gen(path) {
         return `${this.base}${path}.${this.end}`;
     }
 }
+/**
+ * A class to represent a game character.
+ */
 class Char {
+    /**
+     * The constructor for characters.
+     * @param {string} name - The name of the character.
+     * @param {string} desc - The description of the character.
+     * @param {string} img - The path to the character's display image.
+     * @param {Map<string, Skill>} abls - The abilities (skills) of the character.
+     */
     constructor(name, desc, img, abls) {
+        /**
+         * The name of the character.
+         * @type {string}
+         * @prop
+         */
         this.name = name;
+        /**
+         * The description of the character.
+         * @type {string}
+         * @prop
+         */
         this.desc = desc;
+        /**
+         * The character's image.
+         * @type {HTMLImageElement}
+         * @prop
+         */
         this.img = new Image();
+        /**
+         * The source to the character's image.
+         * @type {string}
+         * @prop
+         */
         this.src = img;
+        /**
+         * The abilities (skills) of the character.
+         * @type {Map<string, Skill>}
+         * @prop
+         */
         this.abls = abls;
         this.img.src = img;
         this.img.width = 3;
