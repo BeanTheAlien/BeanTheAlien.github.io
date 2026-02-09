@@ -1,6 +1,6 @@
 // import { Scene } from "/phantom2d.js";
 
-window.addEventListener("error", (e) => alert(`msg: ${e.message}, ln: ${e.lineno}`));
+//window.addEventListener("error", (e) => alert(`msg: ${e.message}, ln: ${e.lineno}`));
 
 const params = new URLSearchParams(window.location.search);
 
@@ -622,7 +622,7 @@ const showShopUI = () => {
         resIdx.push(idx);
     }
     const outItems = [shopItems[resIdx[0]], shopItems[resIdx[1]], shopItems[resIdx[2]]];
-    shopUI.tx = `<div style="display: flex; flex-direction: column;"><img src="shop_icon.png" style="width: 40vw; height: 40vw; left: 50%; top: 50%;" style="position: fixed"><div style="flex-direction: row">${outItems.map(s => `<img src="${s.img}" id="shop_item_${s.name}" style="bottom: 5%; margin-right: 50px; width: 50px; height: 50px;">`).join("")}</div></div><button id="close_shop">Close</button>`;
+    shopUI.tx = `<div style="display: flex; flex-direction: column;"><img src="shop_icon.png" style="width: 15vw; height: 15vw; left: 50vw; top: 50vh;" style="position: fixed"><div style="flex-direction: row">${outItems.map(s => `<img src="${s.img}" id="shop_item_${s.name}" style="bottom: 5%; margin-right: 50px; width: 50px; height: 50px;">`).join("")}</div></div><button id="close_shop">Close</button>`;
     shopUI.show("block");
     onClick(getEl("close_shop"), hideShopUI);
     outItems.forEach(s => onClick(getEl(`shop_item_${s.name}`, s.buy)));
@@ -835,13 +835,6 @@ const nextBtnClick = () => {
     i++;
     tutUpd();
 }
-if(!params.has("skip") || params.get("skip") == "false") tutUpd();
-else {
-    tut.hide();
-    team.push(new Wizard());
-    refreshTeamSelect();
-    refreshSkillList();
-}
 const tutUICircle = (el) => {
     const rect = el.getBoundingClientRect();
     tutOverlayUI.setProp("--x", rect.left + rect.width / 2 + "px");
@@ -948,6 +941,14 @@ const refreshSkillList = () => {
     const a = team[activeChar];
     if(!a) return;
     skillMenuUI.tx = keys(a.abls).map((k, i) => `<p ${i == activeSkill ? `class="active-skill"` : ""}>${a.abls[k].name}</p>`).join("");
+}
+if(!params.has("skip") || params.get("skip") == "false") {
+    tutUpd();
+} else {
+    tut.hide();
+    team.push(new Wizard());
+    refreshTeamSelect();
+    refreshSkillList();
 }
 
 canvas.addEventListener("click", () => {
