@@ -1,6 +1,6 @@
 // import { Scene } from "/phantom2d.js";
 
-//window.addEventListener("error", (e) => alert(`msg: ${e.message}, ln: ${e.lineno}`));
+window.addEventListener("error", (e) => alert(`msg: ${e.message}, ln: ${e.lineno}`));
 
 class InvalidNameError extends Error {
     constructor(charName) {
@@ -278,11 +278,7 @@ const badguy = (name, desc, img, { hurt = () => {}, die = () => {}, upd, attack 
         super(name, desc, img, { hurt, die, upd, attack }, { x, y, w, h, hp });
     }
 }
-const shopitem = (name, desc, img, cost, onbuy) => class extends ShopItem {
-    constructor() {
-        super(name, desc, img, cost, onbuy);
-    }
-}
+const shopitem = (name, desc, img, cost, onbuy) => new ShopItem(name, desc, img, cost, onbuy);
 const card = (c) => `<div><img src="${c.src}"><h1>${c.name}</h1><p><i>${c.desc}</i></p><ul>${keys(c.abls).map(k => {
     const s = c[k];
     return `<p><strong>${s.name}</strong></p><p><i>${s.desc}</i></p><p>CD: ${s.cd}</p>`;
@@ -314,7 +310,14 @@ const Clubber = badguy("Clubber", "He's stylish, he's angry and he's here to hit
 const Bower = badguy("Bower", "Nothing is going on inside his head, but he will shoot you.", "bower_angry.png", { upd: (t) => {}, attack: (t) => {} }, { w: 10, h: 30, hp: 10 });
 const BigGuy = badguy("Big Guy", "A hulking beast of a man, no one dares mess with this titan.", "big_guy_angry.png", { upd: (t) => {}, attack: (t) => {} }, { w: 20, h: 30, hp: 100 });
 const GraglonTheTerrible = badguy("Graglon The Terrible", "Angry, dangerous and ready to crush things.", "graglon_the_terrible_angry.png", { upd: (t) => {}, attack: (t) => {} }, { w: 50, h: 70, hp: 1000 });
+const TestItem = shopitem("test", "hello", "missingtexture.png", 10000, () => {});
+const TestItem2 = shopitem("tes2", "hjjee", "missingtexture.png", 10000000, () => {});
+const TestItem3 = shopitem("test3", "he", "missingtexture.png", 1000, () => {});
 const getTeamIdx = (name) => team.indexOf(team.find(c => c.name == name));
+/**
+ * A list of all the avalible characters.
+ * @type {Char[]}
+ */
 const charList = [Wizard];
 /**
  * The components of the scene.
@@ -326,6 +329,11 @@ const scene = [];
  * @type {Geom[]}
  */
 const geom = [];
+/**
+ * All the shop items.
+ * @type {ShopItem[]}
+ */
+const shopItems = [TestItem, TestItem2, TestItem3];
 
 const titleScreen = new UI();
 titleScreen.tx = `<div class="ts-bg"><h1 class="title-screen-title">Really Bad RPG</h1><div style="margin-bottom: 20px"></div><button class="start" id="start-btn">Start</button></div>`;
@@ -397,6 +405,30 @@ shopIcon.style({
     "position": "fixed"
 });
 shopIcon.tx = `<img src="shop_icon.png" width="80px" height="70px">`;
+const shopUI = new UI();
+shopUI.style({
+    "position": "fixed",
+    "left": "0",
+    "top": "0",
+    "width": "100vw",
+    "height": "100vh",
+    "display": "none"
+});
+const showShopUI = () => {
+    const ran = () => Math.floor(Math.random() * shopItems.length);
+    let idx;
+    const resIdx = [];
+    while(resIdx.length < 3) {
+        idx = ran();
+        if(resIdx.includes(idx)) continue;
+        resIdx.push(idx);
+    }
+    const outItems = [shopItems[resIdx[0]], shopItems[resIdx[1]], shopItems[resIdx[2]]];
+    alert(shopItems[resIdx[0]].img);
+    shopUI.tx = `<div style="display: flex"><img src="shop_icon.png" style="width: 60vw; height: 70vw; left: 50%; top: 50%;" style="position: fixed">${outItems.map(s => `<img src="${s.img}" style="bottom: 5%">`).join("")}</div><button id="close_shop">Close</button>`;
+    shopUI.show("block");
+}
+onClick(shopIcon.el, showShopUI);
 const settingsField = (text, extra) => {
     const tc = text.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
     const id = text.replace(/\s/g, "_");
