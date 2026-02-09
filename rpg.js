@@ -424,9 +424,9 @@ const showShopUI = () => {
         resIdx.push(idx);
     }
     const outItems = [shopItems[resIdx[0]], shopItems[resIdx[1]], shopItems[resIdx[2]]];
-    alert(shopItems[resIdx[0]].img);
-    shopUI.tx = `<div style="display: flex"><img src="shop_icon.png" style="width: 60vw; height: 70vw; left: 50%; top: 50%;" style="position: fixed">${outItems.map(s => `<img src="${s.img}" style="bottom: 5%">`).join("")}</div><button id="close_shop">Close</button>`;
+    shopUI.tx = `<div style="display: flex"><img src="shop_icon.png" style="width: 40vw; height: 40vw; left: 50%; top: 50%;" style="position: fixed">${outItems.map(s => `<img src="${s.img}" style="bottom: 5%; margin-right: 50px;">`).join("")}</div><button id="close_shop">Close</button>`;
     shopUI.show("block");
+    onClick(getEl("close_shop"), () => {})
 }
 onClick(shopIcon.el, showShopUI);
 const settingsField = (text, extra) => {
