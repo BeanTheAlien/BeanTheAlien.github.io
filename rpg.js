@@ -2,6 +2,8 @@
 
 window.addEventListener("error", (e) => alert(`msg: ${e.message}, ln: ${e.lineno}`));
 
+const params = new URLSearchParams(window.location.search);
+
 class InvalidNameError extends Error {
     constructor(charName) {
         super(`Character '${charName}' does not exist.`);
@@ -636,7 +638,13 @@ const nextBtnClick = () => {
     i++;
     tutUpd();
 }
-tutUpd();
+if(!params.has("skip") || params.get("skip") == "false") tutUpd();
+else {
+    tut.hide();
+    team.push(new Wizard());
+    refreshTeamSelect();
+    refreshSkillList();
+}
 const tutUICircle = (el) => {
     const rect = el.getBoundingClientRect();
     tutOverlayUI.setProp("--x", rect.left + rect.width / 2 + "px");
