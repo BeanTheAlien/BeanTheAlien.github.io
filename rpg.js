@@ -1,6 +1,6 @@
 // import { Scene } from "/phantom2d.js";
 
-window.addEventListener("error", (e) => alert(`msg: ${e.message}, ln: ${e.lineno}`));
+//window.addEventListener("error", (e) => alert(`msg: ${e.message}, ln: ${e.lineno}`));
 
 class InvalidNameError extends Error {
     constructor(charName) {
@@ -251,6 +251,22 @@ class Fireball extends Circle {
         this.destroy();
     }
 }
+class ShopItem {
+    constructor(name, desc, img, cost, onBuy) {
+        this.name = name;
+        this.desc = desc;
+        this.img = img;
+        this.cost = cost;
+        this.onBuy = onBuy;
+    }
+    canBuy() {
+        return this.cost <= gold;
+    }
+    buy() {
+        gold -= this.cost;
+        this.onBuy();
+    }
+}
 const char = (name, desc, img, abls) => class extends Char {
     constructor() {
         super(name, desc, img, abls);
@@ -260,6 +276,11 @@ const char = (name, desc, img, abls) => class extends Char {
 const badguy = (name, desc, img, { hurt = () => {}, die = () => {}, upd, attack }, { w, h, hp }) => class extends BadGuy {
     constructor(x, y) {
         super(name, desc, img, { hurt, die, upd, attack }, { x, y, w, h, hp });
+    }
+}
+const shopitem = (name, desc, img, cost, onbuy) => class extends ShopItem {
+    constructor() {
+        super(name, desc, img, cost, onbuy);
     }
 }
 const card = (c) => `<div><img src="${c.src}"><h1>${c.name}</h1><p><i>${c.desc}</i></p><ul>${keys(c.abls).map(k => {
@@ -272,7 +293,7 @@ const applyNextHandle = (fn) => onClick(getEl("next"), fn);
 const Wizard = char("Wizard", "He may be old, but he has a cool hat.", "wizzy_the_wizard_happy.png", {
     "fball": new Skill(() => {
         const { x, y } = player;
-        const a = team[activeChar];
+        const a = getChar();
         if(!a) return;
         const w = a.img.width;
         const h = a.img.height;
@@ -478,6 +499,8 @@ const dataImport = async () => {
     // critical team values:
     // the char name (that will be mapped to re-generate)
     // note: charList exists, search from charList to re-generate
+    // critical misc keys:
+    // gold
     player.x = json.x;
     player.y = json.y;
     for(const t of json.team) {
@@ -489,6 +512,7 @@ const dataImport = async () => {
             throw new InvalidNameError(t);
         }
     }
+    gold = json.gold;
     const pro = perfNow();
     console.log(`Loaded save. (in ${pro - pre}ms)`);
 }
@@ -497,7 +521,7 @@ const genJSONFile = () => {
     console.log("Generating export save...");
     const json = JSON.stringify({
         "x": player.x, "y": player.y, "activechar": activeChar, "activeskill": activeSkill,
-        "team": team.map(c => c.name)
+        "team": team.map(c => c.name), "gold": gold
     }, null, 4);
     const blob = new Blob([json], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -537,6 +561,7 @@ const player = {
     x: 0, y: 0, spd: 5
 };
 const mouse = { x: 0, y: 0 };
+var gold = 0;
 const getChar = () => team[activeChar];
 
 const tut = new UI();
