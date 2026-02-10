@@ -13,6 +13,10 @@ class InvalidNameError extends Error {
 
 const configStr = localStorage.getItem("config");
 if(configStr == null) console.warn("Config not present, loading defaults instead.");
+/**
+ * The players configured settings.
+ * @type {{ cleanup: boolean, resolution: int, quality: string, master: int, sfx: int, music: int }}
+ */
 const config = configStr != null ? JSON.parse(configStr) : {
     cleanup: false,
     resolution: 1080,
