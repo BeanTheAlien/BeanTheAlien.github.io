@@ -732,7 +732,7 @@ const createPicker = async () => {
             "types": [{ "accept": { "application/json": [".json"] } }]
         });
         const file = await fileHandle.getFile();
-        return file;
+        return await file.text();
     } catch(e) {
         if(e.name == "AbortError") {
             alert("Load fail: aborted.");
@@ -744,6 +744,8 @@ const dataImport = async () => {
     const pre = perfNow();
     console.log("Loading picker...");
     const jsonRaw = await createPicker();
+    const pro1 = perfNow();
+    console.log(`Got input file. (in ${pro1 - pre}ms)`);
     console.log("Generating content...");
     const json = JSON.parse(jsonRaw);
     // critical player keys:
@@ -757,7 +759,11 @@ const dataImport = async () => {
     player.y = json.y;
     for(const t of json.team) {
         // find the matching character; throw if not exists
-        const char = charList.find(c => c.name == t);
+        // create new instances and just use name property
+        // test trim for better support
+        // char will be Char | undefined
+        const inst = charList.map(c => new c());
+        const char = inst.find(c => c.name.trim() == t.trim());
         if(char) {
             team.push(char);
         } else {
@@ -789,7 +795,7 @@ const genJSONFile = () => {
 }
 const importBtn = getEl("import-game");
 const exportBtn = getEl("export-game");
-onClick(importBtn, createPicker);
+onClick(importBtn, dataImport);
 onClick(exportBtn, genJSONFile);
 const settingsScreenDone = () => {
     console.log("Saving preferences...");
