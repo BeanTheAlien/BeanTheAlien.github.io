@@ -15,7 +15,7 @@ const configStr = localStorage.getItem("config");
 if(configStr == null) console.warn("Config not present, loading defaults instead.");
 /**
  * The players configured settings.
- * @type {{ cleanup: boolean, resolution: int, quality: string, master: int, sfx: int, music: int }}
+ * @type {{ cleanup: boolean, resolution: 1080 | 1440 | 720 | 360, quality: "uhigh" | "high" | "med" | "low" | "ulow", master: int, sfx: int, music: int }}
  */
 const config = configStr != null ? JSON.parse(configStr) : {
     cleanup: false,
@@ -350,14 +350,45 @@ class Char {
         this.img.width = 3;
         this.img.height = 5;
     }
+    /**
+     * Uses this character's skill.
+     * @param {string} skill - The skill to use (in name).
+     * @param  {...any} args - The arguments to pass to the skill.
+     */
     use(skill, ...args) {
         this.abls[skill].use(...args);
     }
 }
+/**
+ * A skill for characters.
+ * @class
+ */
 class Skill {
+    /**
+     * The constructor for skills.
+     * @param {function} act - The skills execution action.
+     * @param {string} name - The name of the skill.
+     * @param {string} desc - The description of the skill.
+     * @param {int} cd - The cooldown of the skill.
+     */
     constructor(act, name, desc, cd) {
+        /**
+         * The skills execution action.
+         * @type {function}
+         * @prop
+         */
         this.act = act;
+        /**
+         * The name of the skill.
+         * @type {string}
+         * @prop
+         */
         this.name = name;
+        /**
+         * The description of the skill.
+         * @type {string}
+         * @prop
+         */
         this.desc = desc;
         this.cd = cd;
         this.ready = true;
