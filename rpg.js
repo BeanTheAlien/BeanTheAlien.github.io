@@ -390,8 +390,23 @@ class Skill {
          * @prop
          */
         this.desc = desc;
+        /**
+         * The cooldown of the skill.
+         * @type {int}
+         * @prop
+         */
         this.cd = cd;
+        /**
+         * Whether the skill is ready to be used or not, as desginated by the cooldown (post-usage).
+         * @type {boolean}
+         * @prop
+         */
         this.ready = true;
+        /**
+         * The interval to set this skill to be ready.
+         * @type {number}
+         * @prop
+         */
         this.itv = setInterval(() => this.ready = true, this.cd * 1000);
     }
     use(...args) {
