@@ -508,12 +508,13 @@ const Clubber = badguy("Clubber", "He's stylish, he's angry and he's here to hit
 const Bower = badguy("Bower", "Nothing is going on inside his head, but he will shoot you.", "bower_angry.png", { upd: (t) => {}, attack: (t) => {} }, { w: 10, h: 30, hp: 10 });
 const BigGuy = badguy("Big Guy", "A hulking beast of a man, no one dares mess with this titan.", "big_guy_angry.png", { upd: (t) => {}, attack: (t) => {} }, { w: 20, h: 30, hp: 100 });
 const GraglonTheTerrible = badguy("Graglon The Terrible", "Angry, dangerous and ready to crush things.", "graglon_the_terrible_angry.png", { upd: (t) => {}, attack: (t) => {} }, { w: 50, h: 70, hp: 1000 });
-const TestItem = shopitem("test", "hello", "missingtexture.png", 0, () => {});
-const TestItem2 = shopitem("tes2", "hjjee", "missingtexture.png", 0, () => {});
-const TestItem3 = shopitem("test3", "he", "missingtexture.png", 0, () => {});
 const BiggerBalls = shopitem("Bigger Balls", "Make your balls bigger. And 19,48% more lethal.", "bigger_balls_upg.png", 100, () => {});
 const WarmerFire = shopitem("Warmer Fire", "Make your fires 22% warmer. Use responsibly.", "warm_fire_upg.png", 100, () => {});
-const PhoenixsWrath = shopitem("Phoenix's Wrath", "It's a bird! It's a plane! It's a Phoenix made of molten lava! Now with 182% more killing power.", "phoenixs_wrath_upg.png", 1000, () => {});
+const PhoenixsWrath = shopitem("Phoenix's Wrath", "It's a bird! It's a plane! It's a Phoenix made of molten lava!", "phoenixs_wrath_upg.png", 1000, () => {});
+const PurePlasma = shopitem("Pure Plasma", "Sucked souls are now purer. Now that's a lot of plasma.", "pure_plasma_upg.png", 100, () => {});
+const MoreTroops = shopitem("More Troops", "And what army?", "more_troops_upg.png", 100, () => {});
+const SharpSwords = shopitem("Sharp Swords", "Sharper and stabbier. Leaks blood of enemies more effectively.", "sharp_swords_upg.png", 100, () => {});
+const CovertOps = shopitem("Covert Ops", "A RED Spy is in the base?!", "covert_ops_upg.png", 2000, () => {});
 const getTeamIdx = (name) => team.indexOf(team.find(c => c.name == name));
 /**
  * A list of all the avalible characters.
@@ -534,7 +535,7 @@ const geom = [];
  * All the shop items.
  * @type {ShopItem[]}
  */
-const shopItems = [TestItem, TestItem2, TestItem3, BiggerBalls, WarmerFire, PhoenixsWrath];
+const shopItems = [BiggerBalls, WarmerFire, PhoenixsWrath, PurePlasma, MoreTroops, SharpSwords, CovertOps];
 
 const titleScreen = new UI();
 titleScreen.tx = `<div class="ts-bg"><h1 class="title-screen-title">Really Bad RPG</h1><div style="margin-bottom: 20px"></div><button class="start" id="start-btn">Start</button></div>`;
