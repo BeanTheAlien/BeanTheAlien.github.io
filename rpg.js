@@ -513,7 +513,7 @@ const WarmerFire = shopitem("Warmer Fire", "Make your fires 22% warmer. Use resp
 const PhoenixsWrath = shopitem("Phoenix's Wrath", "It's a bird! It's a plane! It's a Phoenix made of molten lava!", "phoenixs_wrath_upg.png", 1000, () => {});
 const PurePlasma = shopitem("Pure Plasma", "Sucked souls are now purer. Now that's a lot of plasma.", "pure_plasma_upg.png", 100, () => {});
 const MoreTroops = shopitem("More Troops", "And what army?", "more_troops_upg.png", 100, () => {});
-const SharpSwords = shopitem("Sharp Swords", "Sharper and stabbier. Leaks blood of enemies more effectively.", "sharp_swords_upg.png", 100, () => {});
+const SharpSwords = shopitem("Sharp Swords", "Sharper <i>and</i> stabbier. Leaks blood of enemies more effectively.", "sharp_swords_upg.png", 100, () => {});
 const CovertOps = shopitem("Covert Ops", "A RED Spy is in the base?!", "covert_ops_upg.png", 2000, () => {});
 const getTeamIdx = (name) => team.indexOf(team.find(c => c.name == name));
 /**
@@ -632,6 +632,8 @@ const showShopUI = () => {
     const purchases = (e) => {
         const x = outItems.find(i => i.name == e.target.id.split("shop_item_")[1]);
         const el = getEl(`shop_item_${x.name}`);
+        x.buy();
+        if(!x.canBuy()) return;
         el.style.display = "none";
         el.removeEventListener("click", purchases);
     }
@@ -949,7 +951,7 @@ const assignToSlot = (e) => {
 }
 onClick(teamBtn, openTeamMenu);
 const refreshTeamSelect = () => {
-    teamSelectUI.tx = team.map(c => `<div><button class="team-select" id="select-${c.name}"><p>${c.name}</p></button></div>`).join("");
+    teamSelectUI.tx = team.map(c => `<div><button class="team-select" id="select-${c.name}"><img src="${c.src}" style="border-radius: 50%; width: 70px; height: 70px"></button></div>`).join("");
     team.forEach(c => onClick(getEl(`select-${c.name}`), (e) => activeChar = getTeamIdx(e.currentTarget.id.split("select-")[1]) - 1));
     refreshSkillList();
 }
@@ -958,7 +960,7 @@ const refreshSkillList = () => {
     if(!a) return;
     skillMenuUI.tx = keys(a.abls).map((k, i) => `<p ${i == activeSkill ? `class="active-skill"` : ""}>${a.abls[k].name}</p>`).join("");
 }
-if(!params.has("skip") || params.get("skip") == "false") {
+if(!params.has("skip") || params.get("skip") != "true") {
     tutUpd();
 } else {
     tut.hide();
