@@ -674,7 +674,7 @@ const fieldCleanupOnCloseNext = () => {
 }
 const fieldResolutionDisplay = getEl(fieldResolutionId);
 const fieldResolutionSelect = getEl("resolution_opts");
-const setFieldResolutionVal = () => fieldResolutionDisplay.textContent = config.resolution;
+const setFieldResolutionVal = () => { fieldResolutionDisplay.textContent = config.resolution; fieldResolutionSelect.value = config.resolution; }
 const applyFieldResolution = () => config.resolution = Number(fieldResolutionSelect.value);
 const fieldResolutionNext = () => {
     applyFieldResolution();
@@ -682,7 +682,7 @@ const fieldResolutionNext = () => {
 }
 const fieldQualityDisplay = getEl(fieldQualityId);
 const fieldQualitySelect = getEl("quality_opts");
-const setFieldQualityVal =  () => fieldQualityDisplay.textContent = { "uhigh": "ultra high", "high": "high", "med": "medium", "low": "low", "ulow": "ultra low" }[config.quality];
+const setFieldQualityVal =  () => { fieldQualityDisplay.textContent = { "uhigh": "ultra high", "high": "high", "med": "medium", "low": "low", "ulow": "ultra low" }[config.quality]; fieldQualitySelect.value = { "uhigh": "qultrahigh", "high": "qhigh", "med": "qmed", "low": "qlow", "ulow": "qultralow" }[config.quality]; }
 const applyFieldQuality = () => config.quality = { "qultrahigh": "uhigh", "qhigh": "high", "qmed": "med", "qlow": "low", "qultralow": "ulow" }[fieldQualitySelect.value];
 const fieldQualityNext = () => {
     applyFieldQuality();
@@ -690,7 +690,7 @@ const fieldQualityNext = () => {
 }
 const fieldMasterVolDisplay = getEl(fieldMasterVolId);
 const fieldMasterVolSlider = getEl("master_vol_slider");
-const setFieldMasterVolVal = () => fieldMasterVolDisplay.textContent = config.master;
+const setFieldMasterVolVal = () => { fieldMasterVolDisplay.textContent = config.master; fieldMasterVolSlider.value = config.master; }
 const applyFieldMasterVol = () => config.master = fieldMasterVolSlider.value;
 const fieldMasterVolNext = () => {
     applyFieldMasterVol();
@@ -698,7 +698,7 @@ const fieldMasterVolNext = () => {
 }
 const fieldSFXVolDisplay = getEl(fieldSFXVolId);
 const fieldSFXVolSlider = getEl("sfx_vol_slider");
-const setFieldSFXVolVal = () => fieldSFXVolDisplay.textContent = config.sfx;
+const setFieldSFXVolVal = () => { fieldSFXVolDisplay.textContent = config.sfx; fieldSFXVolSlider.value = config.sfx; }
 const applyFieldSFXVol = () => config.sfx = fieldSFXVolSlider.value;
 const fieldSFXVolNext = () => {
     applyFieldSFXVol();
@@ -706,7 +706,7 @@ const fieldSFXVolNext = () => {
 }
 const fieldMusicVolDisplay = getEl(fieldMusicVolId);
 const fieldMusicVolSlider = getEl("music_vol_slider");
-const setFieldMusicVolVal = () => fieldMusicVolDisplay.textContent = config.music;
+const setFieldMusicVolVal = () => { fieldMusicVolDisplay.textContent = config.music; fieldMusicVolSlider.value = config.music; }
 const applyFieldMusicVol = () => config.music = fieldMusicVolSlider.value;
 const fieldMusicVolNext = () => {
     applyFieldMusicVol();
