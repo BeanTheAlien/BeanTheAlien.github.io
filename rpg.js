@@ -648,7 +648,11 @@ settings.style({
     "flexDirection": "column",
     "gap": "20px",
     "backgroundColor": "#757575",
-    "padding": "50px"
+    "padding": "40px",
+    "width": "600px",
+    "height": "900px",
+    "maxWidth": "90vw",
+    "boxSizing": "border-box"
 });
 const shopIcon = new UI();
 shopIcon.style({
@@ -697,8 +701,9 @@ onClick(shopIcon.el, showShopUI);
 const settingsField = (text, extra) => {
     const tc = text.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
     const id = text.replace(/\s/g, "_");
-    return [`<div style="flex-direction: row"><p>${tc}: <span id="${id}">loading...</span></p>${extra}</div>`, id];
+    return [`<div style="display: flex; flex-direction: row; align-items: center; gap: 12px"><p style="margin: 0">${tc}: <span id="${id}">loading...</span></p>${extra}</div>`, id];
 }
+const volSlider = (id) => `<input type="range" min="0" max="100" value="100" id="${id}" style="width: 200px">`;
 let settingsHtml = "<h1>Settings</h1>";
 const [fieldCleanupOnClose, fieldCleanupOnCloseId] = settingsField("cleanup on close", `<button id="toggle_cleanup_on_close">Toggle</button>`);
 settingsHtml += fieldCleanupOnClose;
@@ -706,11 +711,11 @@ const [fieldResolution, fieldResolutionId] = settingsField("resolution", `<selec
 settingsHtml += fieldResolution;
 const [fieldQuality, fieldQualityId] = settingsField("quality", `<select id="quality_opts"><option value="qultrahigh">Ultra High</option><option value="qhigh">High</option><option value="qmed">Medium (recommended)</option><option value="qlow">Low</option><option value="qultralow">Ultra Low</option></select>`);
 settingsHtml += fieldQuality;
-const [fieldMasterVol, fieldMasterVolId] = settingsField("master volume", `<input type="range" min="0" max="100" value="100" id="master_vol_slider">`);
+const [fieldMasterVol, fieldMasterVolId] = settingsField("master volume", `<input type="range" min="0" max="100" value="100" id="master_vol_slider" style="width: 200px">`);
 settingsHtml += fieldMasterVol;
-const [fieldSFXVol, fieldSFXVolId] = settingsField("sound effects volume", `<input type="range" min="0" max="100" value="100" id="sfx_vol_slider">`);
+const [fieldSFXVol, fieldSFXVolId] = settingsField("sound effects volume", `<input type="range" min="0" max="100" value="100" id="sfx_vol_slider" style="width: 200px">`);
 settingsHtml += fieldSFXVol;
-const [fieldMusicVol, fieldMusicVolId] = settingsField("music volume", `<input type="range" min="0" max="100" value="100" id="music_vol_slider">`);
+const [fieldMusicVol, fieldMusicVolId] = settingsField("music volume", `<input type="range" min="0" max="100" value="100" id="music_vol_slider" style="width: 200px">`);
 settingsHtml += fieldMusicVol;
 settingsHtml += `<button id="import-game">Import</button>`;
 settingsHtml += `<button id="export-game">Export</button>`;
@@ -960,7 +965,7 @@ const closeClubberPopup = () => {
 
 const teamBtn = getEl("team_btn");
 const openTeamMenu = () => {
-    uiBtns.style({ "display": "none" });
+    uiBtns.hide();
     teamUI.tx = "<div>";
     for(let i = 0; i < 4; i++) {
         const t = team[i];
@@ -978,7 +983,7 @@ const openTeamMenu = () => {
     // }
 }
 const closeTeamMenu = () => {
-    uiBtns.style({ "display": "flex" });
+    uiBtns.show("flex");
     teamUI.tx = "";
     teamSelectUI.show("flex");
     skillMenuUI.show("flex");
@@ -992,9 +997,9 @@ const assignToSlot = (e) => {
         team[assignTo] = real;
         closeTeamMenu();
         openTeamMenu();
-        pickerUI.style({ "display": "none" });
+        pickerUI.hide();
     }
-    pickerUI.style({ "display": "grid" });
+    pickerUI.show("grid");
     const charInst = charList.map(c => new c());
     pickerUI.tx = charInst.map(c => `<div><button id="${c.name}"><img src="${c.src}"><p>${c.name}</p></button></div>`).join("");
     charInst.forEach(c => onClick(getEl(c.name), handleChoose));
