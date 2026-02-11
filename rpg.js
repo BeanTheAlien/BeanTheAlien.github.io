@@ -704,18 +704,19 @@ const settingsField = (text, extra) => {
     return [`<div style="display: flex; flex-direction: row; align-items: center; gap: 12px"><p style="margin: 0">${tc}: <span id="${id}">loading...</span></p>${extra}</div>`, id];
 }
 const volSlider = (id) => `<input type="range" min="0" max="100" value="100" id="${id}" style="width: 200px">`;
+const selectField = (id, opts) => `<select id="${id}">${opts.map(o => `<option value="${o[0]}">${o[1]}</option>`)}</select>`;
 let settingsHtml = "<h1>Settings</h1>";
 const [fieldCleanupOnClose, fieldCleanupOnCloseId] = settingsField("cleanup on close", `<button id="toggle_cleanup_on_close">Toggle</button>`);
 settingsHtml += fieldCleanupOnClose;
-const [fieldResolution, fieldResolutionId] = settingsField("resolution", `<select id="resolution_opts"><option value="1080">1920x1080 (1080p)</option><option value="1440">2560x1440 (1440p)</option><option value="720">1280x720 (720p)</option><option value="360">640x360 (360p)</option></select>`);
+const [fieldResolution, fieldResolutionId] = settingsField("resolution", selectField("resolution_opts", [["1080", "1920x1080 (1080p)"], ["1440", "2560x1440 (1440p)"], ["720", "1280x720 (720p)"], ["360", "640x360 (360p)"]]));
 settingsHtml += fieldResolution;
-const [fieldQuality, fieldQualityId] = settingsField("quality", `<select id="quality_opts"><option value="qultrahigh">Ultra High</option><option value="qhigh">High</option><option value="qmed">Medium (recommended)</option><option value="qlow">Low</option><option value="qultralow">Ultra Low</option></select>`);
+const [fieldQuality, fieldQualityId] = settingsField("quality", selectField("quality_opts", [["qultrahigh", "Ultra High"], ["qhigh", "High"], ["qmed", "Medium (recommended"], ["qlow", "Low"], ["qultralow", "Ultra Low"]]));
 settingsHtml += fieldQuality;
-const [fieldMasterVol, fieldMasterVolId] = settingsField("master volume", `<input type="range" min="0" max="100" value="100" id="master_vol_slider" style="width: 200px">`);
+const [fieldMasterVol, fieldMasterVolId] = settingsField("master volume", volSlider("master_vol_slider"));
 settingsHtml += fieldMasterVol;
-const [fieldSFXVol, fieldSFXVolId] = settingsField("sound effects volume", `<input type="range" min="0" max="100" value="100" id="sfx_vol_slider" style="width: 200px">`);
+const [fieldSFXVol, fieldSFXVolId] = settingsField("sound effects volume", volSlider("sfx_vol_slider"));
 settingsHtml += fieldSFXVol;
-const [fieldMusicVol, fieldMusicVolId] = settingsField("music volume", `<input type="range" min="0" max="100" value="100" id="music_vol_slider" style="width: 200px">`);
+const [fieldMusicVol, fieldMusicVolId] = settingsField("music volume", volSlider("music_vol_slider"));
 settingsHtml += fieldMusicVol;
 settingsHtml += `<button id="import-game">Import</button>`;
 settingsHtml += `<button id="export-game">Export</button>`;
