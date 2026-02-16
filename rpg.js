@@ -84,7 +84,7 @@ class UI {
     }
     /**
      * SET the innerHTML.
-     * @prop {string} txt - The new innerHTML.
+     * @param {string} txt - The new innerHTML.
      */
     set tx(txt) {
         this.txt = txt;
