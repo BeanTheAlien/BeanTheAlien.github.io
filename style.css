@@ -5,18 +5,20 @@
     display: flex;
     justify-content: space-evenly;
 }
-.cbtn {
+button {
     background-color: #205ed1;
     border-radius: 10px;
     cursor: pointer;
     color: white;
     border: 3px solid #001a70;
     padding: 3px 6px;
-    margin-top: 5px;
     transition: background-color 200ms ease-in-out;
 }
-.cbtn:hover {
+button:hover {
     background-color: #3f7ef1;
+}
+.cbtn {
+    margin-top: 5px;
 }
 .score1 { position: relative; }
 .score2 {
