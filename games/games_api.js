@@ -88,5 +88,6 @@ class GameCanvas {
 class Game {
     constructor(fn, rate) {
         this.runtime = new Runtime(fn, rate);
+        this.canvas = new GameCanvas();
     }
 }

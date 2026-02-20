@@ -6,9 +6,17 @@
     justify-content: space-evenly;
 }
 .cbtn {
-    background-color: red;
+    background-color: #205ed1;
     border-radius: 10px;
     cursor: pointer;
+    color: white;
+    border: 3px solid #001a70;
+    padding: 3px 6px;
+    margin-top: 5px;
+    transition: background-color 200ms ease-in-out;
+}
+.cbtn:hover {
+    background-color: #3f7ef1;
 }
 .score1 { position: relative; }
 .score2 {
@@ -21,6 +29,8 @@
 body {
     text-align: center;
     font-family: verdana;
+    background-color: #111111;
+    color: white;
 }
 .pbtn {
     background-color: rgb(250, 250, 250);
