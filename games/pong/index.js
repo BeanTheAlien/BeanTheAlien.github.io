@@ -1,3 +1,5 @@
+import { chance } from "../../utils.js";
+
 const pre = performance.now();
 const load = await import("../load.js");
 const p2d = await load.load();
@@ -54,6 +56,8 @@ var ball = new Ball();
 var score = 0;
 var delta = 0;
 const ctx = c.getContext("2d");
+const pong = new Image();
+pong.src = "ball.png";
 var runtime = null;
 function game() {
     ball.upd();
@@ -64,8 +68,8 @@ function game() {
     ctx.beginPath();
     ctx.rect(100, player.y, 20, 100);
     ctx.rect(700, enemy.y, 20, 100);
-    ctx.rect(ball.x, ball.y, 10, 10);
     ctx.fill();
+    ctx.drawImage(pong, ball.x, ball.y, 10, 10);
     if(ball.x <= 120 && ball.x + 10 >= 100 && ball.y >= player.y && ball.y <= player.y + 100) {
         ball.vx *= -1.05;
         ball.vy *= 1.05;
