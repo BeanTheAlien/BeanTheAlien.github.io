@@ -14,10 +14,10 @@ class Player {
         this.height = Math.round(c.height / 2);
         this.grav = 0.09;
         this.gspd = 0;
-        this.x = 15;
+        this.x = 70;
         this.y = 30;
-        this.w = 20;
-        this.h = 20;
+        this.w = 40;
+        this.h = 30;
     }
     upd() {
         this.gspd += this.grav;
@@ -42,6 +42,10 @@ var deltasr = 500;
 var gap = 150;
 var score = 0;
 const ctx = c.getContext("2d");
+const bg = new Image();
+bg.src = "bg.jpg";
+const bird = new Image();
+bird.src = "bird.png";
 
 var runtime = null;
 
@@ -58,6 +62,7 @@ function game() {
         if(deltasr < 100) deltasr = 100;
     }
     ctx.clearRect(0, 0, c.width, c.height);
+    ctx.drawImage(bg, 0, 0, c.width, c.height + 3);
     ctx.fillStyle = "green";
     ctx.beginPath();
     pipes.forEach(pipe => {
@@ -86,10 +91,7 @@ function game() {
         }
     });
     ctx.fill();
-    ctx.fillStyle = "yellow";
-    ctx.beginPath();
-    ctx.rect(player.x, player.y, player.w, player.h);
-    ctx.fill();
+    ctx.drawImage(bird, player.x, player.y, player.w, player.h);
     delta++;
 }
 function setup() {
