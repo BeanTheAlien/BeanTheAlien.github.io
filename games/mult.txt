@@ -1,0 +1,49 @@
+SERVER
+SEE https://socket.io/
+const express = require('express');
+const http = require('http');
+const { Server } = require("socket.io");
+
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server);
+
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/index.html');
+});
+
+io.on('connection', (socket) => {
+  console.log('a user connected');
+
+  socket.on('disconnect', () => {
+    console.log('user disconnected');
+  });
+});
+
+server.listen(3000, () => {
+  console.log('listening on *:3000');
+});
+
+CLIENT
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Socket.IO Test</title>
+</head>
+<body>
+    <h1>Welcome to Socket.IO!</h1>
+    
+    <!-- Load the Socket.IO client library from a CDN -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    
+    <script>
+        // Connect to the server. The URL is deduced from the window location.
+        var socket = io(); 
+
+        // Listen for a connection event from the server (optional, but confirms connection)
+        socket.on('connect', () => {
+            console.log('Connected to server!');
+        });
+    </script>
+</body>
+</html>
