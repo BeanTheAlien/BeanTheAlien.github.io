@@ -8,7 +8,7 @@ console.log(`Loaded Phantom2D in ${(pro-pre).toFixed(2)}ms.`);
 const c = document.createElement("canvas");
 c.style.border = "2px solid black";
 document.body.appendChild(c);
-const tileSize = 5;
+const tileSize = 15;
 const cols = 50; // 1000/10
 const rows = 50; // 1000/10
 c.width = cols * tileSize;
@@ -20,6 +20,8 @@ var score = 0;
 var delta = 0;
 var apl = new sqr(random(cols), random(rows));
 const ctx = c.getContext("2d");
+const apfel = new Image();
+apfel.src = "apfel.jpg";
 var runtime = null;
 function drawRect(x, y, colour) {
     ctx.fillStyle = colour;
@@ -47,8 +49,9 @@ function game() {
     }
     // Draw
     ctx.clearRect(0, 0, c.width, c.height);
+    ctx.drawImage(apfel, apl.x * tileSize, apl.y * tileSize, tileSize, tileSize);
     // Draw apple
-    drawRect(apl.x, apl.y, "#ff0000");
+    // drawRect(apl.x, apl.y, "#ff0000");
     // Draw snake
     player.forEach(p => drawRect(p.x, p.y, "#26c400"));
     delta++;
