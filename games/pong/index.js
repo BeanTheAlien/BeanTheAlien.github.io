@@ -5,12 +5,8 @@ const load = await import("../load.js");
 const p2d = await load.load();
 const pro = performance.now();
 console.log(`Loaded Phantom2D in ${(pro-pre).toFixed(2)}ms.`);
-const c = document.createElement("canvas");
-c.style.border = "2px solid black";
-c.style.backgroundColor = "black";
-c.width = 800;
-c.height = 600;
-document.body.appendChild(c);
+const c = load.init(800, 600);
+const ctx = load.ctx(c);
 class Player {
     constructor() {
         this.y = 300;
@@ -55,7 +51,6 @@ var enemy = new Enemy();
 var ball = new Ball();
 var score = 0;
 var delta = 0;
-const ctx = c.getContext("2d");
 const pong = new Image();
 pong.src = "ball.png";
 var runtime = null;
@@ -64,6 +59,8 @@ function game() {
     player.upd();
     enemy.upd();
     ctx.clearRect(0, 0, c.width, c.height);
+    ctx.fillStyle = "black";
+    ctx.fillRect(0, 0, c.width, c.height);
     ctx.fillStyle = "white";
     ctx.beginPath();
     ctx.rect(100, player.y, 20, 100);

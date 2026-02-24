@@ -3,11 +3,8 @@ const load = await import("../load.js");
 const p2d = await load.load();
 const pro = performance.now();
 console.log(`Loaded Phantom2D in ${(pro-pre).toFixed(2)}ms.`);
-const c = document.createElement("canvas");
-c.style.border = "2px solid black";
-c.width = 800;
-c.height = 600;
-document.body.appendChild(c);
+const c = load.init(800, 600);
+const ctx = load.ctx(c);
 
 class Player {
     constructor() {
@@ -41,7 +38,6 @@ var delta = 0;
 var deltasr = 500;
 var gap = 200;
 var score = 0;
-const ctx = c.getContext("2d");
 const bg = new Image();
 bg.src = "bg.jpg";
 const bird = new Image();

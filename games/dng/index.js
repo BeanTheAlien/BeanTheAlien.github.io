@@ -3,12 +3,9 @@ const load = await import("../load.js");
 const p2d = await load.load();
 const pro = performance.now();
 console.log(`Loaded Phantom2D in ${(pro-pre).toFixed(2)}ms.`);
-const c = document.createElement("canvas");
-c.style.border = "2px solid black";
-document.body.appendChild(c);
 const tileSize = 10;
-c.width = 50 * tileSize;
-c.height = 50 * tileSize;
+const c = load.init(50 * tileSize, 50 * tileSize);
+const ctx = load.ctx(c);
 const overlay = document.createElement("div");
 const stats = document.createElement("div");
 stats.style.position = "relative";
@@ -297,7 +294,6 @@ var inshop = false;
 var keys = {};
 var delta = 0;
 var score = 0;
-const ctx = c.getContext("2d");
 
 var runtime = null;
 

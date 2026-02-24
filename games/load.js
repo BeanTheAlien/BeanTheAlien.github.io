@@ -67,4 +67,15 @@ function gameEnd(runtime, score, hsname) {
         else i++;
     }, 50);
 }
-export { load, gameEnd };
+function init(w = 0, h = 0) {
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    canvas.style.border = "2px solid black";
+    document.body.appendChild(canvas);
+    return canvas;
+}
+function ctx(canvas) {
+    return canvas.getContext("2d");
+}
+export { load, gameEnd, init, ctx };

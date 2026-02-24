@@ -5,21 +5,17 @@ const load = await import("../load.js");
 const p2d = await load.load();
 const pro = performance.now();
 console.log(`Loaded Phantom2D in ${(pro-pre).toFixed(2)}ms.`);
-const c = document.createElement("canvas");
-c.style.border = "2px solid black";
-document.body.appendChild(c);
 const tileSize = 15;
 const cols = 50; // 1000/10
 const rows = 50; // 1000/10
-c.width = cols * tileSize;
-c.height = rows * tileSize;
+const c = load.init(cols * tileSize, rows * tileSize);
+const ctx = load.ctx(c);
 class sqr { constructor(x, y) { this.x = x; this.y = y; } }
 var player = [new sqr(5, 25), new sqr(4, 25), new sqr(3, 25)];
 var dir = { x: 1, y: 0 };
 var score = 0;
 var delta = 0;
 var apl = new sqr(random(cols), random(rows));
-const ctx = c.getContext("2d");
 const apfel = new Image();
 apfel.src = "apfel.jpg";
 var runtime = null;
