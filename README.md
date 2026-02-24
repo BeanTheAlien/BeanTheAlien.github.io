@@ -1,7 +1,7 @@
 # BeanTheAlien.github.io
 i am a blueberry
 
-# Version 0.0.12
+# Version 0.1.0
 
 # Changelog
 ### 0.0.1
@@ -39,3 +39,5 @@ i am a blueberry
 - Ported Three projects to its own seperate are
 - The Three projects dont work
 - I cant figure out how to get the Three projects to work
+### 0.1.0
+- Moved content to seperate directories (24/02/2026)

@@ -318,17 +318,11 @@ function game() {
         ctx.rect(0, 0, c.width, c.height);
         ctx.fill();
         ctx.fillStyle = "green";
-        ctx.beginPath();
-        ctx.rect(player.x, player.y, player.w, player.h);
-        ctx.fill();
+        ctx.fillRect(player.x, player.y, player.w, player.h);
         ctx.fillStyle = "red";
-        ctx.beginPath();
-        enemies.forEach(e => ctx.rect(e.x, e.y, e.w, e.h));
-        ctx.fill();
+        enemies.forEach(e => ctx.fillRect(e.x, e.y, e.w, e.h));
         ctx.fillStyle = "yellow";
-        ctx.beginPath();
-        bullets.forEach(b => ctx.rect(b.x, b.y, b.w, b.h));
-        ctx.fill();
+        bullets.forEach(b => ctx.fillRect(b.x, b.y, b.w, b.h));
         delta++;
     } else {
         shop();
