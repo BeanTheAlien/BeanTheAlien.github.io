@@ -20,6 +20,7 @@
   "homepage": "https://github.com/BeanTheAlien/BeanTheAlien.github.io#readme",
   "dependencies": {
     "@beanthealien/phantomjs": "^1.0.0",
+    "@socket.io/cluster-adapter": "^0.3.0",
     "express": "^5.2.1",
     "socket.io": "^4.8.3"
   }
