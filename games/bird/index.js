@@ -39,7 +39,7 @@ var player = new Player();
 var pipes = [];
 var delta = 0;
 var deltasr = 500;
-var gap = 150;
+var gap = 200;
 var score = 0;
 const ctx = c.getContext("2d");
 const bg = new Image();
@@ -59,7 +59,9 @@ function game() {
     }
     if((delta % 4000) == 0) { // 20000 ms => 5 ms upd => 4000 ticks
         deltasr -= 25;
+        gap -= 10;
         if(deltasr < 100) deltasr = 100;
+        if(gap < 50) gap = 50;
     }
     ctx.clearRect(0, 0, c.width, c.height);
     ctx.drawImage(bg, 0, 0, c.width, c.height + 3);
