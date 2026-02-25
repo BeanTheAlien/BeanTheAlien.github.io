@@ -1,6 +1,6 @@
 @font-face {
     font-family: "ComicSans";
-    src: url("Comic\ Sans\ MS.ttf") format("truetype");
+    src: local("Comic Sans MS.ttf"), url("Comic Sans MS.ttf") format("truetype");
 }
 .txbox {
     left: 30px;
@@ -114,6 +114,7 @@
     animation: swingrot 2s ease-in-out infinite alternate;
     transform-origin: top center;
     display: inline-block;
+    font-family: "ComicSans";
 }
 /*
 .swing-element {

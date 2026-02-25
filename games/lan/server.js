@@ -27,9 +27,9 @@ async function main() {
         res.sendFile(path.join(__dirname, "/index.html"));
     });
     io.on("connection", (socket) => {
-        console.log(`User connected. (at ${new Date().toISOString()})`);
+        console.log(`User ${socket.id} connected. (at ${new Date().toISOString()})`);
         socket.on("disconnect", () => {
-            console.log(`User disconnected. (at ${new Date().toISOString()})`);
+            console.log(`User ${socket.id} disconnected. (at ${new Date().toISOString()})`);
         });
         // socket.on(MESSAGE, HANDLE(DATA?))
         // io.to(PARTY)
