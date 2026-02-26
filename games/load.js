@@ -78,4 +78,22 @@ function init(w = 0, h = 0) {
 function ctx(canvas) {
     return canvas.getContext("2d");
 }
-export { load, gameEnd, init, ctx };
+/**
+ * Applies a full-screen click listener.
+ * @param {HTMLCanvasElement} canvas - The target canvas.
+ */
+function fScrn(canvas) {
+    canvas.addEventListener("click", (e) => {
+        canvas.requestFullscreen();
+    });
+}
+/**
+ * Applies a pointer lock click listener.
+ * @param {HTMLCanvasElement} canvas - The target canvas.
+ */
+function pLock(canvas) {
+    canvas.addEventListener("click", (e) => {
+        canvas.requestPointerLock();
+    });
+}
+export { load, gameEnd, init, ctx, fScrn, pLock };

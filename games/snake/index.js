@@ -10,6 +10,8 @@ const cols = 50; // 1000/10
 const rows = 50; // 1000/10
 const c = load.init(cols * tileSize, rows * tileSize);
 const ctx = load.ctx(c);
+load.pLock(c);
+load.fScrn(c);
 class sqr { constructor(x, y) { this.x = x; this.y = y; } }
 var player = [new sqr(5, 25), new sqr(4, 25), new sqr(3, 25)];
 var dir = { x: 1, y: 0 };

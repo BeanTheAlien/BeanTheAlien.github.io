@@ -43,8 +43,9 @@ async function main() {
     });
     // io.emit(MESSAGE, DATA) - send to all
     // socket.broadcast.emit(MESSAGE, DATA) - send to all but this socket
-    server.listen(process.env.PORT, () => {
-        console.log("Listening on 3000.");
+    const port = process.env.PORT;
+    server.listen(port, () => {
+        console.log(`Listening on ${port}.`);
     });
 }
 main();

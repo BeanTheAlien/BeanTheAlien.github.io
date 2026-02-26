@@ -7,6 +7,9 @@ const pro = performance.now();
 console.log(`Loaded Phantom2D in ${(pro-pre).toFixed(2)}ms.`);
 const c = load.init(800, 600);
 const ctx = load.ctx(c);
+load.pLock(c);
+load.fScrn(c);
+
 class Player {
     constructor() {
         this.y = 300;
