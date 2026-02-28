@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lose</title>
+    <link rel="stylesheet" href="losestyle.css">
+</head>
+<body>
+    <div class="ts-bg">
+        <h1 class="title-screen-title">MISSION STATUS: FAILED</h1>
+        <button class="start" id="again">Play Again</button>
+    </div>
+    <script>
+        document.getElementById("again").addEventListener("click", () => window.location.href = "index.html");
+        window.addEventListener("load", () => (new Audio("assets/space.wav")).play());
+    </script>
+</body>
+</html>

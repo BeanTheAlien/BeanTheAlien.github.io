@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="style.css">
+        <title>HTFW 2026</title>
+    </head>
+    <body>
+        <div id="container">
+            <header>
+                <h1 id="title"> World of Plastic </h1>
+            </header>
+            <progress id = "health" value="5" max="5"></progress>
+        </div>
+        <canvas id="c"></canvas>
+        <div id="bottom-bar">
+            <div style="display: flex; align-items: center;">
+                Money: <span id="money-counter">0</span>
+            </div>
+            <ol id="upgrades">
+                <upgrade>Upgrades:</upgrade>
+                <li class="upgrade">
+                    Arm Extender <span id="arm-extender-price">25</span>
+                    <button class="buy-button" id="arm-extender-button">Buy: <span id="arm-extender-counter">0</span></button>
+                </li>
+                <li class="upgrade">
+                    Speed <span id="speed-price">50</span>
+                    <button class="buy-button" id="speed-button">Buy: <span id="speed-counter">0</span></button>
+                </li>
+                <li class="upgrade">
+                    Damage <span id="damage-price">75</span>
+                    <button class="buy-button" id="damage-button">Buy: <span id="damage-counter">0</span></button>
+                </li>
+                <li class="upgrade">
+                    Strength <span id="strength-price">350</span>
+                    <button class="buy-button" id="strength-button">Buy: <span id="strength-counter">0</span></button>
+                </li>
+                <li class="upgrade">
+                    Plastic value <span id="plastic-value-price">200</span>
+                    <button class="buy-button" id="plastic-value-button">Buy: <span id="plastic-value-counter">0</span></button>
+                </li>
+                <li class="upgrade">
+                    Arm Speed <span id="arm-speed-price">250</span>
+                    <button class="buy-button" id="arm-speed-button">Buy: <span id="arm-speed-counter">0</span></button>
+                </li>
+            </ol>
+            <progress id="progress-bar" value="0" max="100"></progress>
+        </div>
+        <script src="index.js" type="module"></script>
+    </body>
+</html>

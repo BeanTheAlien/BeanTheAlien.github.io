@@ -1,0 +1,28 @@
+.ts-bg {
+    background-color: black;
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    z-index: 99999;
+    left: 0;
+    top: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+.start {
+    font-family: monospace;
+    font-size: 20px;
+    transition: font-size 0.3s ease;
+    background: none;
+    border: none;
+    color: #18e601;
+}
+.start:hover {
+    font-size: 25px;
+}
+.title-screen-title {
+    font-family: monospace;
+    color: #18e601;
+}

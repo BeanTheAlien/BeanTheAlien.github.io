@@ -1,0 +1,136 @@
+* {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            body {
+                font-family: Arial, sans-serif;
+                overflow: hidden;
+            }
+            #container {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                width: 100%;
+                height: 60px;
+                background: rgba(0, 0, 0, 0.7);
+                border-bottom: 3px solid #08f;
+                z-index: 100;
+            }
+            header {
+                height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            #title {
+                color: white;
+                font-size: 28px;
+                font-weight: bold;
+            }
+            #bottom-bar {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: rgba(0, 0, 0, 0.8);
+                color: white;
+                padding: 15px 20px;
+                font-size: 18px;
+                font-weight: bold;
+                z-index: 100;
+                border-top: 3px solid #08f;
+                display: flex;
+                align-items: center;
+                gap: 30px;
+                flex-wrap: wrap;
+            }
+            #money-counter {
+                color: #ffff00;
+                text-shadow: 0 0 10px #ffff00;
+                margin-left: 10px;
+            }
+            #upgrades {
+                display: flex;
+                list-style: none;
+                gap: 20px;
+                align-items: center;
+            }
+            #upgrades upgrade {
+                color: #08f;
+                text-transform: uppercase;
+                font-size: 16px;
+                letter-spacing: 1px;
+                margin-right: 10px;
+            }
+            .upgrade {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 8px 12px;
+                background: rgba(0, 136, 255, 0.1);
+                border: 1px solid #08f;
+                border-radius: 4px;
+                white-space: nowrap;
+            }
+            .upgrade span {
+                color: #ffff00;
+                font-weight: bold;
+            }
+            .buy-button {
+                padding: 2px 6px;
+                background: #08f;
+                color: black;
+                border: none;
+                border-radius: 3px;
+                cursor: pointer;
+                font-weight: bold;
+                font-size: 10px;
+                transition: background 0.2s;
+                line-height: 1;
+            }
+            .buy-button:hover {
+                background: #0af;
+            }
+            canvas {
+                display: block;
+                margin-top: 60px;
+                margin-bottom: 60px;
+            }
+            #progress-bar {
+                width: 150px;
+                height: 20px;
+                margin-left: 20px;
+            }
+            #progress-bar::-webkit-progress-bar {
+                background: rgba(0, 136, 255, 0.1);
+                border: 1px solid #08f;
+                border-radius: 3px;
+            }
+            #progress-bar::-webkit-progress-value {
+                background: linear-gradient(90deg, #f00, #ff4500);
+                border-radius: 2px;
+            }
+            #progress-bar::-moz-progress-bar {
+                background: linear-gradient(90deg, #f00, #ff4500);
+                border-radius: 2px;
+            }
+            #health {
+                width: 150px;
+                height: 20px;
+                margin-left: 20px;
+            }
+            #health::-webkit-progress-bar {
+                background: rgba(234, 23, 23, 0.62);
+                border: 1px solid #f00;
+                border-radius: 3px;
+            }
+            #health::-webkit-progress-value {
+                background: linear-gradient(90deg, #f00, #ff4500);
+                border-radius: 2px;
+            }
+            #health::-moz-progress-bar {
+                background: linear-gradient(90deg, #f00, #ff4500);
+                border-radius: 2px;
+            }
