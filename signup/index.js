@@ -1,7 +1,7 @@
 import { api } from "../api";
 
 const signup = document.getElementById("signup");
-signup.addEventListener("submit", async (e) => {
+signup.addEventListener("submit", (e) => {
     e.preventDefault();
     const username = document.getElementById("username").value;
     const password = document.getElementById("password").value;
