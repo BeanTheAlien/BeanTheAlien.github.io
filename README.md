@@ -41,3 +41,6 @@ This is the offical website for BeanTheAlien!
 - Moved content to seperate directories (24/02/2026)
 ### v0.2.0
 - Added signin and signup features.
+## v0.2.0.1
+- Started adding profile page.
+- Required email in signup.
