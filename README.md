@@ -1,7 +1,5 @@
 # BeanTheAlien.github.io
-i am a blueberry
-
-# Version 0.1.0
+This is the offical website for BeanTheAlien!
 
 # Changelog
 ### 0.0.1
@@ -41,3 +39,5 @@ i am a blueberry
 - I cant figure out how to get the Three projects to work
 ### 0.1.0
 - Moved content to seperate directories (24/02/2026)
+### v0.2.0
+- Added signin and signup features.

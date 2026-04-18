@@ -8,7 +8,7 @@ function handle(id) {
         const password = document.getElementById("password").value;
         await api.sendPost(id, { username, password });
         localStorage.setItem("username", username);
-        window.location.href = "../index.html";
+        //window.location.href = "../index.html";
     });
 }
 
