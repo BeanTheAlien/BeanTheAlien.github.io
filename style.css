@@ -97,3 +97,7 @@ body {
 .dropdown:hover .dropdown-content {
   display: block;
 }
+
+input {
+  background-color: #242424;
+}
