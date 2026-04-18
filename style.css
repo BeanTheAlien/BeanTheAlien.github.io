@@ -66,7 +66,7 @@ body {
 }
 
 .drop li .d-a:hover, .dropdown:hover .dropbtn {
-  background-color: #319fac;
+  background-color: #242424;
 }
 
 .drop li.dropdown {
@@ -76,7 +76,6 @@ body {
 .dropdown-content {
   display: none;
   position: absolute;
-  background-color: var(--dgrn);
   min-width: 160px;
   box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
   z-index: 1;
@@ -90,14 +89,11 @@ body {
   text-align: left;
 }
 
-.dropdown-content a:hover {
-  background-color: var(--lgrn);
-}
-
 .dropdown:hover .dropdown-content {
   display: block;
 }
 
 input {
   background-color: #242424;
+  color: white;
 }

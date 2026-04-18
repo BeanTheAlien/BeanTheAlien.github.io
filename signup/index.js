@@ -1,5 +1,5 @@
 import { handle } from "../userform.js";
-handle("signup");
+handle("signup", true);
 
 // const signup = document.getElementById("signup");
 // signup.addEventListener("submit", async (e) => {

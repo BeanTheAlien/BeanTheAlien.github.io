@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <title>Epic Website</title>
-    <link rel="icon" type="image/png" href="alien.png"/>
+    <link rel="icon" type="image/png" href="../alien.png"/>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width"/>
     <link rel="stylesheet" href="../style.css">
@@ -11,11 +11,16 @@
     <script src="../pagedefault.js" type="module"></script>
     <h1 class="title" id="title">Sign Up</h1>
     <form id="signup">
-      <input type="text" id="username" placeholder="Cool username...">
+      <input type="text" id="username" placeholder="Cool username..." required>
       <br>
-      <input type="password" id="password" placeholder="Cool password...">
+      <input type="email" id="email" placeholder="Cool email..." required>
+      <br>
+      <input type="password" id="password" placeholder="Cool password..." required>
       <br>
       <button id="subm" type="submit">Submit</button>
+      <br>
+      <input type="checkbox" id="check" name="check">
+      <label for="check">I would like to receive promotional and update emails.</label>
     </form>
     <br>
     <a href="/signin"><button>Sign In</button></a>

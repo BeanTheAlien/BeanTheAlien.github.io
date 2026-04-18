@@ -30,7 +30,7 @@ document.body.prepend(topbarContainer);
         <li class="dropdown">
             <a class="dropbtn d-a">Yo, ${localStorage.getItem("username")}</a>
             <div class="dropdown-content">
-            <a class="d-a" href="../index.html">TEST</a>
+            <a class="d-a" href="/profile">Profile</a>
             </div>
         </li>
         </ul>`;
