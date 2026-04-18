@@ -1,3 +1,5 @@
+import { api } from "./api.js";
+
 const mk = (text, link) => {
     const btn = document.createElement("button");
     btn.className = "cbtn";
@@ -18,4 +20,23 @@ const buttonGames = mk("Games", "../../games/");
 const buttonProjects = mk("Projects", "projects.html");
 const buttonResources = mk("Resources", "resources.html");
 add([buttonHome, buttonGames, buttonProjects, buttonResources]);
-document.body.appendChild(topbarContainer);
+document.body.prepend(topbarContainer);
+(async () => {
+    if((await (await api.sendPost("verify")).json()).r) {
+        const user = document.createElement("div");
+        user.className = "drop";
+        user.innerHTML = `
+        <ul>
+        <li class="dropdown">
+            <a class="dropbtn d-a">Yo, ${localStorage.getItem("username")}</a>
+            <div class="dropdown-content">
+            <a class="d-a" href="../index.html">TEST</a>
+            </div>
+        </li>
+        </ul>`;
+        add([user]);
+    } else {
+        const signin = mk("Sign In", "/signin");
+        add([signin]);
+    }
+})();

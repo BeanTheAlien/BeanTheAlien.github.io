@@ -1,10 +1,11 @@
-import { api } from "../api";
+import { handle } from "../userform.js";
+handle("signup");
 
-const signup = document.getElementById("signup");
-signup.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const username = document.getElementById("username").value;
-    const password = document.getElementById("password").value;
-    api.sendPost("signup", { username, password });
-    window.location.href = "../index.html";
-});
+// const signup = document.getElementById("signup");
+// signup.addEventListener("submit", async (e) => {
+//     e.preventDefault();
+//     const username = document.getElementById("username").value;
+//     const password = document.getElementById("password").value;
+//     await api.sendPost("signup", { username, password });
+//     window.location.href = "../index.html";
+// });

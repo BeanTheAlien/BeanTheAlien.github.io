@@ -45,3 +45,55 @@ body {
     text-align: center;
     font-size: 20px;
 }
+
+.drop {}
+.drop ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.drop li {
+  float: left;
+}
+
+.drop li .d-a, .dropbtn {
+  display: inline-block;
+  text-align: center;
+  padding: 14px 16px;
+  text-decoration: none;
+}
+
+.drop li .d-a:hover, .dropdown:hover .dropbtn {
+  background-color: #319fac;
+}
+
+.drop li.dropdown {
+  display: inline-block;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: var(--dgrn);
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+
+.dropdown-content a {
+  color: white;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+  text-align: left;
+}
+
+.dropdown-content a:hover {
+  background-color: var(--lgrn);
+}
+
+.dropdown:hover .dropdown-content {
+  display: block;
+}
