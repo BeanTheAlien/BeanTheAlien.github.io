@@ -25,15 +25,18 @@ document.body.prepend(topbarContainer);
     if((await (await api.sendPost("verify")).json()).r) {
         const user = document.createElement("div");
         user.className = "drop";
+        const username = (await (await api.sendPost("user")).json()).u.username;
+        const pfp = (await (await api.sendPost("getpfp")).json()).pfp.pfp ?? "missingcontent.png";
         user.innerHTML = `
-        <ul>
-        <li class="dropdown">
-            <a class="dropbtn d-a">Yo, ${localStorage.getItem("username")}</a>
-            <div class="dropdown-content">
-            <a class="d-a" href="/profile">Profile</a>
-            </div>
-        </li>
-        </ul>`;
+            <ul>
+                <li class="dropdown">
+                    <a class="dropbtn d-a">Yo, ${username}</a>
+                    <div class="dropdown-content">
+                    <a class="d-a" href="/profile">Profile</a>
+                    </div>
+                </li>
+            </ul>
+            <img src="${pfp}">`;
         add([user]);
     } else {
         const signin = mk("Sign In", "/signin");

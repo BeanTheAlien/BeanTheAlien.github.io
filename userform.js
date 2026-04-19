@@ -8,7 +8,6 @@ function handle(id, isSignup = false) {
         const password = document.getElementById("password").value;
         const base = { username, password };
         const r = await api.sendPost(id, !isSignup ? base : { ...base, email: document.getElementById("email").value, promotions: document.getElementById("check").value });
-        localStorage.setItem("username", username);
         if(r.ok) window.location.href = "../index.html";
     });
 }
