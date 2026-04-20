@@ -17,4 +17,7 @@ class API {
   }
 }
 const api = new API();
-export { api };
+async function getUser() {
+  return (await (await api.sendPost("getuser")).json()).u;
+}
+export { api, getUser };
