@@ -15,10 +15,10 @@ const add = (els) => {
 
 const topbarContainer = document.createElement("div");
 topbarContainer.className = "container";
-const buttonHome = mk("Home", "../../");
-const buttonGames = mk("Games", "../../games/");
-const buttonProjects = mk("Projects", "projects.html");
-const buttonResources = mk("Resources", "resources.html");
+const buttonHome = mk("Home", "/");
+const buttonGames = mk("Games", "/games/");
+const buttonProjects = mk("Projects", "/projects.html");
+const buttonResources = mk("Resources", "/resources.html");
 add([buttonHome, buttonGames, buttonProjects, buttonResources]);
 document.body.prepend(topbarContainer);
 (async () => {
@@ -26,7 +26,7 @@ document.body.prepend(topbarContainer);
         const user = document.createElement("div");
         user.className = "drop";
         const username = (await (await api.sendPost("user")).json()).u.username;
-        const pfp = (await (await api.sendPost("getpfp")).json()).pfp.pfp ?? "missingcontent.png";
+        const pfp = (await (await api.sendPost("getpfp")).json()).pfp.pfp ?? "/missingcontent.png";
         user.innerHTML = `
             <ul>
                 <li class="dropdown">

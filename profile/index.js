@@ -2,9 +2,11 @@ import { api } from "../api.js";
 
 const username = document.getElementById("username");
 const pfp = document.getElementById("pfp");
-username.innerText = (await (await api.sendPost("user")).json()).u.username;
-const pfpObj = (await (await api.sendPost("getpfp")).json()).pfp;
-if(pfpObj && pfpObj.pfp.length) pfp.src = pfpObj.pfp;
+const role = document.getElementById("role");
+const user = (await (await api.sendPost("user")).json()).u;
+username.innerText = user?.username;
+role.innerText = user?.role;
+await updPfp();
 pfp.addEventListener("click", async () => {
     const [handle] = await window.showOpenFilePicker({
         excludeAcceptAllOption: true,
@@ -31,4 +33,9 @@ pfp.addEventListener("click", async () => {
     const form = new FormData();
     form.append("file", file);
     await fetch("https://beanthealien-server.onrender.com/setpfp", { method: "POST", credentials: "include", body: form });
+    await updPfp();
 });
+async function updPfp() {
+    const p = ((await (await api.sendPost("getpfp")).json())).pfp?.pfp;
+    if(p?.length) pfp.src = p;
+}
