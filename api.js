@@ -1,6 +1,6 @@
 class API {
   constructor() {
-    this.root = "https://scintillating-tapioca-e93404.netlify.app/"; //"https://beanthealien-server.onrender.com/";
+    this.root = "https://beanthealien-server.onrender.com/";
   }
   sendGet(path) {
     return fetch(this.root + path);
