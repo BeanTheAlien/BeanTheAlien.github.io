@@ -22,7 +22,38 @@ type InformalMethod = "get" | "post" | FormalMethod;
  * ```
  */
 class Net {
+    /**
+     * The base URL to use.
+     * 
+     * @example Pointing the URL to different locations.
+     * ```
+     * import { Net } from "./net.js";
+     * const net = new Net();
+     * // point at BeanTheAlien Server
+     * net.url = "https://beanthealien-server.onrender.com/";
+     * // ...now point at Cool Math Games
+     * net.url = "https://coolmathgames.com/";
+     * // ...finally, point at BeanTheAlien
+     * net.url = "https://beanthealien.github.io/";
+     * ```
+     */
     url: string;
+    /**
+     * The default headers to use.
+     * 
+     * @example Setting default headers.
+     * ```
+     * import { Net } from "./net.js";
+     * const net = new Net();
+     * // use some default headers
+     * net.headers = {
+     *  "credentials": "include",
+     *  "headers": {
+     *      "Content-Type": "application/json"
+     *  }
+     * };
+     * ```
+     */
     headers: RequestInit;
     /**
      * Creates a net object.
