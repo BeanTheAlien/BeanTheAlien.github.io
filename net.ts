@@ -212,7 +212,7 @@ class Net {
     post(url: string | URL, headers?: RequestInit) {
         return fetch(this.formURL(url.toString()), this.formHeaders("POST", headers));
     }
-    #prepare(arg1?: InformalMethod | RequestInit, arg2?: InformalMethod | RequestInit): [InformalMethod, RequestInit] {
+    __prepare(arg1?: InformalMethod | RequestInit, arg2?: InformalMethod | RequestInit): [InformalMethod, RequestInit] {
         let method: InformalMethod = "POST"; // Default method
         let options: RequestInit = {};
 
@@ -226,8 +226,8 @@ class Net {
         }
         return [method, options];
     }
-    #send(url: string | URL, arg1?: InformalMethod | RequestInit, arg2?: InformalMethod | RequestInit) {
-        const [method, opts] = this.#prepare(arg1, arg2);
+    __send(url: string | URL, arg1?: InformalMethod | RequestInit, arg2?: InformalMethod | RequestInit) {
+        const [method, opts] = this.__prepare(arg1, arg2);
         return fetch(this.formURL(url.toString()), this.formHeaders(method.toString().toUpperCase() as FormalMethod, opts));
     }
     /**
@@ -333,7 +333,7 @@ class Net {
      */
     text(url: URL, method: InformalMethod, headers: RequestInit): Promise<string>;
     async text(url: string | URL, arg1?: InformalMethod | RequestInit, arg2?: InformalMethod | RequestInit): Promise<string> {
-        return (await this.#send(url, arg1, arg2)).text();
+        return (await this.__send(url, arg1, arg2)).text();
     }
     /**
      * Sends a POST request to the URL provided.
@@ -438,7 +438,7 @@ class Net {
      */
     json(url: URL, method: InformalMethod, headers: RequestInit): Promise<any>;
     async json(url: string | URL, arg1?: InformalMethod | RequestInit, arg2?: InformalMethod | RequestInit): Promise<any> {
-        return (await this.#send(url, arg1, arg2)).json();
+        return (await this.__send(url, arg1, arg2)).json();
     }
     /**
      * Sends a POST request to the URL provided.
@@ -543,7 +543,7 @@ class Net {
      */
     buf(url: URL, method: InformalMethod, headers: RequestInit): Promise<ArrayBuffer>;
     async buf(url: string | URL, arg1?: InformalMethod | RequestInit, arg2?: InformalMethod | RequestInit): Promise<ArrayBuffer> {
-        return (await this.#send(url, arg1, arg2)).arrayBuffer();
+        return (await this.__send(url, arg1, arg2)).arrayBuffer();
     }
     /**
      * Sends a POST request to the URL provided.
@@ -648,7 +648,7 @@ class Net {
      */
     formData(url: URL, method: InformalMethod, headers: RequestInit): Promise<FormData>;
     async formData(url: string | URL, arg1?: InformalMethod | RequestInit, arg2?: InformalMethod | RequestInit): Promise<FormData> {
-        return (await this.#send(url, arg1, arg2)).formData();
+        return (await this.__send(url, arg1, arg2)).formData();
     }
     /**
      * Sends a POST request to the URL provided.
@@ -753,7 +753,7 @@ class Net {
      */
     blob(url: URL, method: InformalMethod, headers: RequestInit): Promise<Blob>;
     async blob(url: string | URL, arg1?: InformalMethod | RequestInit, arg2?: InformalMethod | RequestInit): Promise<Blob> {
-        return (await this.#send(url, arg1, arg2)).blob();
+        return (await this.__send(url, arg1, arg2)).blob();
     }
     /**
      * Sends a POST request to the URL provided.
@@ -858,7 +858,400 @@ class Net {
      */
     bytes(url: URL, method: InformalMethod, headers: RequestInit): Promise<Uint8Array>;
     async bytes(url: string | URL, arg1?: InformalMethod | RequestInit, arg2?: InformalMethod | RequestInit): Promise<Uint8Array> {
-        return (await this.#send(url, arg1, arg2)).bytes();
+        return (await this.__send(url, arg1, arg2)).bytes();
     }
 }
-export { Net };
+type Key<T> = Extract<keyof T, string>;
+/**
+ * Created as part of the Net API for mapped-out routes.
+ * 
+ * Useful for when you already have routes setup.
+ * 
+ * @example Using `NetMap` with a server.
+ * ```
+ * import { NetMap } from "./net.js";
+ * // define some routes (sourced from BeanTheAlien Server)
+ * interface Routes {
+ *  getuser: { u: object };
+ * }
+ * // net object with mappings
+ * const net = new NetMap<Routes>("https://beanthealien-server.onrender.com/");
+ * // we can now see <"getuser", { u: object }> show up
+ * // (promises a result of { u: object } as well)
+ * const user = await net.json("getuser");
+ * // user is an object
+ * console.log(user);
+ * ```
+ */
+class NetMap<R extends AnyMap> extends Net {
+    constructor();
+    constructor(baseURL: Key<R>);
+    constructor(defaultHeaders: RequestInit);
+    constructor(defaultHeaders: AnyMap);
+    constructor(baseURL: Key<R>, defaultHeaders: RequestInit);
+    constructor(baseURL: Key<R>, defaultHeaders: AnyMap);
+    constructor(urlOrHeaders?: Key<R> | RequestInit | AnyMap, headers?: RequestInit | AnyMap) {
+        super(urlOrHeaders as any, headers as any);
+    }
+    /**
+     * Sends a GET request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * @param url The URL to request.
+     */
+    get<U extends Key<R>>(url: U): Promise<Response>;
+    /**
+     * Sends a GET request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * @param url The URL to request.
+     * @param headers The headers to include.
+     */
+    get<U extends Key<R>>(url: U, headers: RequestInit): Promise<Response>;
+    get<U extends Key<R>>(url: U, headers?: RequestInit) {
+        return fetch(this.formURL(url.toString()), this.formHeaders("GET", headers));
+    }
+    /**
+     * Sends a POST request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * @param url The URL to request.
+     */
+    post<U extends Key<R>>(url: U): Promise<Response>;
+    /**
+     * Sends a POST request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * @param url The URL to request.
+     * @param headers The headers to include.
+     */
+    post<U extends Key<R>>(url: U, headers: RequestInit): Promise<Response>;
+    post<U extends Key<R>>(url: U, headers?: RequestInit) {
+        return fetch(this.formURL(url.toString()), this.formHeaders("POST", headers));
+    }
+    /**
+     * Sends a POST request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * 
+     * Returns the response's text.
+     * @param url The URL to request.
+     */
+    text<U extends Key<R>>(url: U): Promise<string>;
+    /**
+     * Sends a POST request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * 
+     * Returns the response's text.
+     * @param url The URL to request.
+     * @param headers The headers to include.
+     */
+    text<U extends Key<R>>(url: U, headers: RequestInit): Promise<string>;
+    /**
+     * Sends a request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * 
+     * Returns the response's text.
+     * @param url The URL to request.
+     * @param method The method to use (GET/POST).
+     */
+    text<U extends Key<R>>(url: U, method: InformalMethod): Promise<string>;
+    /**
+     * Sends a request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * 
+     * Returns the response's text.
+     * @param url The URL to request.
+     * @param headers The headers to include.
+     * @param method The method to use (GET/POST).
+     */
+    text<U extends Key<R>>(url: U, headers: RequestInit, method: InformalMethod): Promise<string>;
+    /**
+     * Sends a request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * 
+     * Returns the response's text.
+     * @param url The URL to request.
+     * @param method The method to use (GET/POST).
+     * @param headers The headers to include.
+     */
+    text<U extends Key<R>>(url: U, method: InformalMethod, headers: RequestInit): Promise<string>;
+    async text<U extends Key<R>>(url: U, arg1?: InformalMethod | RequestInit, arg2?: InformalMethod | RequestInit): Promise<string> {
+        return super.text(url as any, arg1 as any, arg2 as any);
+    }
+    /**
+     * Sends a POST request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * 
+     * Returns the response's JSON.
+     * @param url The URL to request.
+     */
+    json<U extends Key<R>, O extends R[U]>(url: U): Promise<O>;
+    /**
+     * Sends a POST request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * 
+     * Returns the response's JSON.
+     * @param url The URL to request.
+     * @param headers The headers to include.
+     */
+    json<U extends Key<R>, O extends R[U]>(url: U, headers: RequestInit): Promise<O>;
+    /**
+     * Sends a request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * 
+     * Returns the response's JSON.
+     * @param url The URL to request.
+     * @param method The method to use (GET/POST).
+     */
+    json<U extends Key<R>, O extends R[U]>(url: U, method: InformalMethod): Promise<O>;
+    /**
+     * Sends a request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * 
+     * Returns the response's JSON.
+     * @param url The URL to request.
+     * @param headers The headers to include.
+     * @param method The method to use (GET/POST).
+     */
+    json<U extends Key<R>, O extends R[U]>(url: U, headers: RequestInit, method: InformalMethod): Promise<O>;
+    /**
+     * Sends a request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * 
+     * Returns the response's JSON.
+     * @param url The URL to request.
+     * @param method The method to use (GET/POST).
+     * @param headers The headers to include.
+     */
+    json<U extends Key<R>, O extends R[U]>(url: U, method: InformalMethod, headers: RequestInit): Promise<O>;
+    async json<U extends Key<R>, O extends R[U]>(url: U, arg1?: InformalMethod | RequestInit, arg2?: InformalMethod | RequestInit): Promise<O> {
+        return super.json(url as any, arg1 as any, arg2 as any);
+    }
+    /**
+     * Sends a POST request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * 
+     * Returns the response's `ArrayBuffer`.
+     * @param url The URL to request.
+     */
+    buf<U extends Key<R>>(url: U): Promise<ArrayBuffer>;
+    /**
+     * Sends a POST request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * 
+     * Returns the response's `ArrayBuffer`.
+     * @param url The URL to request.
+     * @param headers The headers to include.
+     */
+    buf<U extends Key<R>>(url: U, headers: RequestInit): Promise<ArrayBuffer>;
+    /**
+     * Sends a request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * 
+     * Returns the response's `ArrayBuffer`.
+     * @param url The URL to request.
+     * @param method The method to use (GET/POST).
+     */
+    buf<U extends Key<R>>(url: U, method: InformalMethod): Promise<ArrayBuffer>;
+    /**
+     * Sends a request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * 
+     * Returns the response's `ArrayBuffer`.
+     * @param url The URL to request.
+     * @param headers The headers to include.
+     * @param method The method to use (GET/POST).
+     */
+    buf<U extends Key<R>>(url: U, headers: RequestInit, method: InformalMethod): Promise<ArrayBuffer>;
+    /**
+     * Sends a request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * 
+     * Returns the response's `ArrayBuffer`.
+     * @param url The URL to request.
+     * @param method The method to use (GET/POST).
+     * @param headers The headers to include.
+     */
+    buf<U extends Key<R>>(url: U, method: InformalMethod, headers: RequestInit): Promise<ArrayBuffer>;
+    async buf<U extends Key<R>>(url: U, arg1?: InformalMethod | RequestInit, arg2?: InformalMethod | RequestInit): Promise<ArrayBuffer> {
+        return super.buf(url as any, arg1 as any, arg2 as any);
+    }
+    /**
+     * Sends a POST request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * 
+     * Returns the response's `FormData`.
+     * @param url The URL to request.
+     */
+    formData<U extends Key<R>>(url: U): Promise<FormData>;
+    /**
+     * Sends a POST request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * 
+     * Returns the response's `FormData`.
+     * @param url The URL to request.
+     * @param headers The headers to include.
+     */
+    formData<U extends Key<R>>(url: U, headers: RequestInit): Promise<FormData>;
+    /**
+     * Sends a request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * 
+     * Returns the response's `FormData`.
+     * @param url The URL to request.
+     * @param method The method to use (GET/POST).
+     */
+    formData<U extends Key<R>>(url: U, method: InformalMethod): Promise<FormData>;
+    /**
+     * Sends a request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * 
+     * Returns the response's `FormData`.
+     * @param url The URL to request.
+     * @param headers The headers to include.
+     * @param method The method to use (GET/POST).
+     */
+    formData<U extends Key<R>>(url: U, headers: RequestInit, method: InformalMethod): Promise<FormData>;
+    /**
+     * Sends a request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * 
+     * Returns the response's `FormData`.
+     * @param url The URL to request.
+     * @param method The method to use (GET/POST).
+     * @param headers The headers to include.
+     */
+    formData<U extends Key<R>>(url: U, method: InformalMethod, headers: RequestInit): Promise<FormData>;
+    async formData<U extends Key<R>>(url: U, arg1?: InformalMethod | RequestInit, arg2?: InformalMethod | RequestInit): Promise<FormData> {
+        return super.formData(url as any, arg1 as any, arg2 as any);
+    }
+    /**
+     * Sends a POST request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * 
+     * Returns the response's `Blob`.
+     * @param url The URL to request.
+     */
+    blob<U extends Key<R>>(url: U): Promise<Blob>;
+    /**
+     * Sends a POST request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * 
+     * Returns the response's `Blob`.
+     * @param url The URL to request.
+     * @param headers The headers to include.
+     */
+    blob<U extends Key<R>>(url: U, headers: RequestInit): Promise<Blob>;
+    /**
+     * Sends a request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * 
+     * Returns the response's `Blob`.
+     * @param url The URL to request.
+     * @param method The method to use (GET/POST).
+     */
+    blob<U extends Key<R>>(url: U, method: InformalMethod): Promise<Blob>;
+    /**
+     * Sends a request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * 
+     * Returns the response's `Blob`.
+     * @param url The URL to request.
+     * @param headers The headers to include.
+     * @param method The method to use (GET/POST).
+     */
+    blob<U extends Key<R>>(url: U, headers: RequestInit, method: InformalMethod): Promise<Blob>;
+    /**
+     * Sends a request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * 
+     * Returns the response's `FormData`.
+     * @param url The URL to request.
+     * @param method The method to use (GET/POST).
+     * @param headers The headers to include.
+     */
+    blob<U extends Key<R>>(url: U, method: InformalMethod, headers: RequestInit): Promise<Blob>;
+    async blob<U extends Key<R>>(url: U, arg1?: InformalMethod | RequestInit, arg2?: InformalMethod | RequestInit): Promise<Blob> {
+        return super.blob(url as any, arg1 as any, arg2 as any);
+    }
+    /**
+     * Sends a POST request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * 
+     * Returns the response's `Uint8Array`.
+     * @param url The URL to request.
+     */
+    bytes<U extends Key<R>>(url: U): Promise<Uint8Array>;
+    /**
+     * Sends a POST request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * 
+     * Returns the response's `Uint8Array`.
+     * @param url The URL to request.
+     * @param headers The headers to include.
+     */
+    bytes<U extends Key<R>>(url: string, headers: RequestInit): Promise<Uint8Array>;
+    /**
+     * Sends a request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * 
+     * Returns the response's `Uint8Array`.
+     * @param url The URL to request.
+     * @param method The method to use (GET/POST).
+     */
+    bytes<U extends Key<R>>(url: string, method: InformalMethod): Promise<Uint8Array>;
+    /**
+     * Sends a request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * 
+     * Returns the response's `Uint8Array`.
+     * @param url The URL to request.
+     * @param headers The headers to include.
+     * @param method The method to use (GET/POST).
+     */
+    bytes<U extends Key<R>>(url: U, headers: RequestInit, method: InformalMethod): Promise<Uint8Array>;
+    /**
+     * Sends a request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * 
+     * Returns the response's `Uint8Array`.
+     * @param url The URL to request.
+     * @param method The method to use (GET/POST).
+     * @param headers The headers to include.
+     */
+    bytes<U extends Key<R>>(url: U, method: InformalMethod, headers: RequestInit): Promise<Uint8Array>;
+    async bytes<U extends Key<R>>(url: U, arg1?: InformalMethod | RequestInit, arg2?: InformalMethod | RequestInit): Promise<Uint8Array> {
+        return super.bytes(url as any, arg1 as any, arg2 as any);
+    }
+}
+export { Net, NetMap };
