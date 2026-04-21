@@ -1255,7 +1255,6 @@ class NetMap<R extends AnyMap> extends Net {
     }
 }
 
-type NetMapItem = AnyMap | [any, AnyMap];
 type Simple<R> = { [K in keyof R]: R[K] extends any[] ? never : R[K] extends AnyMap ? K : never }[keyof R] & string;
 type Tuple<R> = { [K in keyof R]: R[K] extends [any, AnyMap] ? K : never }[keyof R] & string;
 type Result<R, K extends keyof R> = R[K] extends [any, infer Res] ? Res : R[K];
@@ -1411,7 +1410,7 @@ class AdvancedNetMap<R extends AnyMap> extends NetMap<R> {
      * @param headers The headers to include.
      */
     json<U extends Tuple<R>>(url: U, body: Payload<R, U>, method: InformalMethod, headers: RequestInit): Promise<Result<R, U>>;
-    async json(url: string, arg1?: any, arg2?: any, arg3?: any): Promise<any> {
+    async json<U extends Key<R>>(url: U, arg1?: any, arg2?: any, arg3?: any): Promise<any> {
         // If the second argument is NOT a string (method) and NOT a standard RequestInit,
         // we treat it as the 'body' and move the other args down.
         const isTupleRoute = typeof arg1 != "string" && !(arg1?.headers || arg1?.signal);
@@ -1420,7 +1419,7 @@ class AdvancedNetMap<R extends AnyMap> extends NetMap<R> {
             const headersOrMethod = arg2 || {};
             const methodOrHeaders = arg3;
             // Merge body into RequestInit
-            const options: RequestInit = typeof headersOrMethod === 'object' 
+            const options: RequestInit = typeof headersOrMethod == "object" 
                 ? { ...headersOrMethod, body: JSON.stringify(body) }
                 : { body: JSON.stringify(body) };
                 
@@ -1431,4 +1430,11 @@ class AdvancedNetMap<R extends AnyMap> extends NetMap<R> {
         return super.json(url as any, arg1, arg2);
     }
 }
+// interface Route {
+//     hello: "world";
+//     foo: string;
+//     john: [{ cheese: string }, number];
+// }
+// const net = new AdvancedNetMap<Route>();
+// net.json("john", { cheese: "hello" })
 export { Net, NetMap };
