@@ -1254,4 +1254,181 @@ class NetMap<R extends AnyMap> extends Net {
         return super.bytes(url as any, arg1 as any, arg2 as any);
     }
 }
+
+type NetMapItem = AnyMap | [any, AnyMap];
+type Simple<R> = { [K in keyof R]: R[K] extends any[] ? never : R[K] extends AnyMap ? K : never }[keyof R] & string;
+type Tuple<R> = { [K in keyof R]: R[K] extends [any, AnyMap] ? K : never }[keyof R] & string;
+type Result<R, K extends keyof R> = R[K] extends [any, infer Res] ? Res : R[K];
+type Payload<R, K extends keyof R> = R[K] extends [infer Pay, any] ? Pay : never;
+/**
+ * class AdvancedNetMap<R extends AnyMap> extends NetMap<R> {
+    
+    // OVERLOAD 1: Simple Routes (No body allowed)
+    async json<U extends SimpleKeys<R>>(
+        url: U, 
+        arg1?: InformalMethod | RequestInit, 
+        arg2?: InformalMethod | RequestInit
+    ): Promise<GetResult<R, U>>;
+
+    // OVERLOAD 2: Tuple Routes (Body REQUIRED as 2nd argument)
+    async json<U extends TupleKeys<R>>(
+        url: U, 
+        body: GetPayload<R, U>, 
+        arg1?: InformalMethod | RequestInit, 
+        arg2?: InformalMethod | RequestInit
+    ): Promise<GetResult<R, U>>;
+
+    // IMPLEMENTATION
+    async json(url: string, arg1?: any, arg2?: any, arg3?: any): Promise<any> {
+        // If the second argument is NOT a string (method) and NOT a standard RequestInit,
+        // we treat it as the 'body' and move the other args down.
+        const isTupleRoute = typeof arg1 !== 'string' && !(arg1?.headers || arg1?.signal);
+        
+        if (isTupleRoute) {
+            const body = arg1;
+            const headersOrMethod = arg2 || {};
+            const methodOrHeaders = arg3;
+
+            // Merge body into RequestInit
+            const options: RequestInit = typeof headersOrMethod === 'object' 
+                ? { ...headersOrMethod, body: JSON.stringify(body) }
+                : { body: JSON.stringify(body) };
+                
+            const method = typeof headersOrMethod === 'string' ? headersOrMethod : methodOrHeaders;
+
+            return super.json(url as any, options as any, method as any);
+        }
+
+        return super.json(url as any, arg1, arg2);
+    }
+}
+ */
+class AdvancedNetMap<R extends AnyMap> extends NetMap<R> {
+    /**
+     * Sends a POST request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * 
+     * Returns the response's JSON.
+     * @param url The URL to request.
+     */
+    json<U extends Simple<R>>(url: U): Promise<Result<R, U>>;
+    /**
+     * Sends a POST request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * 
+     * Returns the response's JSON.
+     * @param url The URL to request.
+     * @param body The body to include.
+     */
+    json<U extends Tuple<R>>(url: U, body: Payload<R, U>): Promise<Result<R, U>>;
+    /**
+     * Sends a POST request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * 
+     * Returns the response's JSON.
+     * @param url The URL to request.
+     * @param headers The headers to include.
+     */
+    json<U extends Simple<R>>(url: U, headers: RequestInit): Promise<Result<R, U>>;
+    /**
+     * Sends a request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * 
+     * Returns the response's JSON.
+     * @param url The URL to request.
+     * @param method The method to use (GET/POST).
+     */
+    json<U extends Simple<R>>(url: U, method: InformalMethod): Promise<Result<R, U>>;
+    /**
+     * Sends a POST request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * 
+     * Returns the response's JSON.
+     * @param url The URL to request.
+     * @param body The body to include.
+     * @param headers The headers to include.
+     */
+    json<U extends Tuple<R>>(url: U, body: Payload<R, U>, headers: RequestInit): Promise<Result<R, U>>;
+    /**
+     * Sends a POST request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * 
+     * Returns the response's JSON.
+     * @param url The URL to request.
+     * @param body The body to include.
+     * @param method The method to use (GET/POST).
+     */
+    json<U extends Tuple<R>>(url: U, body: Payload<R, U>, method: InformalMethod): Promise<Result<R, U>>;
+    /**
+     * Sends a request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * 
+     * Returns the response's JSON.
+     * @param url The URL to request.
+     * @param headers The headers to include.
+     * @param method The method to use (GET/POST).
+     */
+    json<U extends Simple<R>>(url: U, headers: RequestInit, method: InformalMethod): Promise<Result<R, U>>;
+    /**
+     * Sends a request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * 
+     * Returns the response's JSON.
+     * @param url The URL to request.
+     * @param method The method to use (GET/POST).
+     * @param headers The headers to include.
+     */
+    json<U extends Simple<R>>(url: U, method: InformalMethod, headers: RequestInit): Promise<Result<R, U>>;
+    /**
+     * Sends a request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * 
+     * Returns the response's JSON.
+     * @param url The URL to request.
+     * @param body The body to include.
+     * @param headers The headers to include.
+     * @param method The method to use (GET/POST).
+     */
+    json<U extends Tuple<R>>(url: U, body: Payload<R, U>, headers: RequestInit, method: InformalMethod): Promise<Result<R, U>>;
+    /**
+     * Sends a request to the URL provided.
+     * 
+     * Uses the syntax `${baseURL}${url}`.
+     * 
+     * Returns the response's JSON.
+     * @param url The URL to request.
+     * @param body The body to include.
+     * @param method The method to use (GET/POST).
+     * @param headers The headers to include.
+     */
+    json<U extends Tuple<R>>(url: U, body: Payload<R, U>, method: InformalMethod, headers: RequestInit): Promise<Result<R, U>>;
+    async json(url: string, arg1?: any, arg2?: any, arg3?: any): Promise<any> {
+        // If the second argument is NOT a string (method) and NOT a standard RequestInit,
+        // we treat it as the 'body' and move the other args down.
+        const isTupleRoute = typeof arg1 != "string" && !(arg1?.headers || arg1?.signal);
+        if(isTupleRoute) {
+            const body = arg1;
+            const headersOrMethod = arg2 || {};
+            const methodOrHeaders = arg3;
+            // Merge body into RequestInit
+            const options: RequestInit = typeof headersOrMethod === 'object' 
+                ? { ...headersOrMethod, body: JSON.stringify(body) }
+                : { body: JSON.stringify(body) };
+                
+            const method = typeof headersOrMethod == "string" ? headersOrMethod : methodOrHeaders;
+
+            return super.json(url as any, options as any, method as any);
+        }
+        return super.json(url as any, arg1, arg2);
+    }
+}
 export { Net, NetMap };

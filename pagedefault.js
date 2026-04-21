@@ -17,7 +17,7 @@ const topbarContainer = document.createElement("div");
 topbarContainer.className = "container";
 const buttonHome = mk("Home", "/");
 const buttonGames = mk("Games", "/games/");
-const buttonProjects = mk("Projects", "/projects.html");
+const buttonProjects = mk("Projects", "/projects/");
 const buttonResources = mk("Resources", "/resources.html");
 add([buttonHome, buttonGames, buttonProjects, buttonResources]);
 document.body.prepend(topbarContainer);
