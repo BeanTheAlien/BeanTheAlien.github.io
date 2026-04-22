@@ -1,9 +1,3 @@
-var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (receiver, state, kind, f) {
-    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
-    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
-    return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
-};
-var _HealthComp_instances, _HealthComp_consume;
 /**
  * Various utilities.
  * @since v0.0.0
@@ -155,6 +149,7 @@ class OutOfBoundsError extends Error {
  * @since v0.0.0
  */
 class Store {
+    store;
     constructor() {
         this.store = new Map();
     }
@@ -224,6 +219,7 @@ class Store {
  * @since v0.0.0
  */
 class PhantomEvent {
+    name;
     constructor(name) {
         this.name = name;
     }
@@ -275,6 +271,7 @@ class PhantomHealthCompHealEvent extends PhantomEvent {
  * @since v0.0.0
  */
 class Comp {
+    ent;
     constructor(ent) {
         this.ent = ent;
     }
@@ -300,11 +297,14 @@ class Comp {
  * @since v0.0.0
  */
 class HealthComp extends Comp {
+    hp;
+    mhp;
+    onHurt;
+    onDie;
+    onHeal;
     constructor(ent, opts) {
-        var _a;
         super(ent);
-        _HealthComp_instances.add(this);
-        this.hp = (_a = opts.hp) !== null && _a !== void 0 ? _a : 0;
+        this.hp = opts.hp ?? 0;
         this.mhp = opts.mhp;
         this.onHurt = opts.onHurt;
         this.onDie = opts.onDie;
@@ -317,7 +317,7 @@ class HealthComp extends Comp {
      */
     hurt(dmg) {
         this.hp -= dmg;
-        __classPrivateFieldGet(this, _HealthComp_instances, "m", _HealthComp_consume).call(this, this.onHurt, "hurt", new PhantomHealthCompHurtEvent());
+        this.#consume(this.onHurt, "hurt", new PhantomHealthCompHurtEvent());
         if (this.hp <= 0)
             this.die();
     }
@@ -326,7 +326,7 @@ class HealthComp extends Comp {
      * @since v0.0.0
      */
     die() {
-        __classPrivateFieldGet(this, _HealthComp_instances, "m", _HealthComp_consume).call(this, this.onDie, "die", new PhantomHealthCompDieEvent());
+        this.#consume(this.onDie, "die", new PhantomHealthCompDieEvent());
     }
     /**
      * Heals this entity.
@@ -337,20 +337,31 @@ class HealthComp extends Comp {
         this.hp += hp;
         if (this.mhp)
             this.hp = Math.min(this.hp, this.mhp);
-        __classPrivateFieldGet(this, _HealthComp_instances, "m", _HealthComp_consume).call(this, this.onHeal, "heal", new PhantomHealthCompHealEvent());
+        this.#consume(this.onHeal, "heal", new PhantomHealthCompHealEvent());
+    }
+    /**
+     * If the handle exists, use the handle.
+     *
+     * Else, consume the event.
+     * @param fn The handle.
+     * @param k The event type.
+     * @param e The event.
+     * @since v0.0.0
+     */
+    #consume(fn, k, e) {
+        if (fn)
+            fn(e);
+        else
+            this.consume(k, e);
     }
 }
-_HealthComp_instances = new WeakSet(), _HealthComp_consume = function _HealthComp_consume(fn, k, e) {
-    if (fn)
-        fn(e);
-    else
-        this.consume(k, e);
-};
 /**
  * A simple inventory system.
  * @since v0.0.0
  */
 class InvComp extends Comp {
+    size;
+    inv;
     constructor(ent, opts) {
         super(ent);
         this.size = opts.size;
@@ -417,10 +428,12 @@ class InvComp extends Comp {
  * @since v0.0.0
  */
 class SpriteComp extends Comp {
+    frames;
+    scene;
+    idx;
     constructor(ent, opts) {
-        var _a;
         super(ent);
-        this.frames = ((_a = opts.frames) !== null && _a !== void 0 ? _a : []).map(Img.from);
+        this.frames = (opts.frames ?? []).map(Img.from);
         this.scene = opts.scene;
         this.idx = 0;
     }
@@ -462,6 +475,7 @@ const PhantomCompRecord = {
  * @since v0.0.0
  */
 class SceneComp {
+    scene;
     constructor(scene) {
         this.scene = scene;
     }
@@ -471,10 +485,11 @@ class SceneComp {
  * @since v0.0.0
  */
 class SceneTilesComp extends SceneComp {
+    size;
+    nth;
     constructor(scene, opts) {
-        var _a;
         super(scene);
-        this.size = (_a = opts.size) !== null && _a !== void 0 ? _a : 0;
+        this.size = opts.size ?? 0;
         this.nth = opts.nth;
     }
 }
@@ -530,17 +545,58 @@ for (const [k, v] of Object.entries(KeyCodeMap)) {
  * @since v0.0.0
  */
 class Phantom2dEntity {
+    /**
+     * Fired when this object collides with another.
+     * @since v0.0.0
+     */
+    collide;
+    /**
+     * A special function that is called during `update`.
+     * @since v0.0.0
+     */
+    upd;
+    /**
+     * The x-coordinate.
+     * @since v0.0.0
+     */
+    x;
+    /**
+     * The y-coordinate.
+     * @since v0.0.0
+     */
+    y;
+    /**
+     * The rotation, in radians.
+     * @since v0.0.0
+     */
+    rot;
+    /**
+     * The displayed width, in pixels.
+     * @since v0.0.0
+     */
+    width;
+    /**
+     * The displayed height, in pixels.
+     * @since v0.0.0
+     */
+    height;
+    /**
+     * The display color.
+     * @since v0.0.0
+     */
+    color;
+    evStore;
+    comps;
     constructor(opts) {
-        var _a, _b, _c, _d, _e, _f, _g, _h;
-        this.collide = (_a = opts.collide) !== null && _a !== void 0 ? _a : ((o) => { });
-        this.upd = (_b = opts.upd) !== null && _b !== void 0 ? _b : NoFunc;
-        this.x = (_c = opts.x) !== null && _c !== void 0 ? _c : 0;
-        this.y = (_d = opts.y) !== null && _d !== void 0 ? _d : 0;
-        this.rot = (_e = opts.rot) !== null && _e !== void 0 ? _e : 0;
-        this.width = (_f = opts.width) !== null && _f !== void 0 ? _f : 0;
-        this.height = (_g = opts.height) !== null && _g !== void 0 ? _g : 0;
+        this.collide = opts.collide ?? ((o) => { });
+        this.upd = opts.upd ?? NoFunc;
+        this.x = opts.x ?? 0;
+        this.y = opts.y ?? 0;
+        this.rot = opts.rot ?? 0;
+        this.width = opts.width ?? 0;
+        this.height = opts.height ?? 0;
         this.evStore = new Store();
-        this.color = (_h = opts.color) !== null && _h !== void 0 ? _h : "#fff";
+        this.color = opts.color ?? "#fff";
         if (opts.custom)
             for (const [k, v] of Object.entries(opts.custom)) {
                 this[k] = v;
@@ -877,6 +933,8 @@ class StaticObject extends Phantom2dEntity {
  * @since v0.0.0
  */
 class PhysicsObject extends Phantom2dEntity {
+    strength;
+    gravspd;
     constructor(opts) {
         super(opts);
         this.strength = opts.strength;
@@ -898,6 +956,14 @@ class PhysicsObject extends Phantom2dEntity {
  * @since v0.0.0
  */
 class MovingObject extends Phantom2dEntity {
+    dirX;
+    dirY;
+    extLeft;
+    extRight;
+    extBtm;
+    extTop;
+    spd;
+    bouncy;
     constructor(opts) {
         super(opts);
         this.dirX = opts.dirX;
@@ -951,6 +1017,12 @@ class MovingObject extends Phantom2dEntity {
  * @since v0.0.0
  */
 class BulletObject extends Phantom2dEntity {
+    extLeft;
+    extRight;
+    extBtm;
+    extTop;
+    spd;
+    scene;
     constructor(opts) {
         super(opts);
         this.rot = opts.rot;
@@ -988,6 +1060,7 @@ class BulletObject extends Phantom2dEntity {
  * @since v0.0.0
  */
 class Character extends Phantom2dEntity {
+    gspd;
     constructor(opts) {
         super(opts);
         this.gspd = 0;
@@ -1009,10 +1082,11 @@ class Character extends Phantom2dEntity {
  * @since v0.0.0
  */
 class PlayableCharacter extends Character {
+    binds;
+    keys;
     constructor(opts) {
-        var _a;
         super(opts);
-        this.binds = (_a = opts.binds) !== null && _a !== void 0 ? _a : new Store();
+        this.binds = opts.binds ?? new Store();
         this.keys = new Store();
         window.addEventListener("keydown", (e) => {
             this.keys.set(e.code, true);
@@ -1052,6 +1126,8 @@ class PlayableCharacter extends Character {
  * @since v0.0.0
  */
 class Vector {
+    x;
+    y;
     constructor(x, y) {
         this.x = x;
         this.y = y;
@@ -1066,6 +1142,10 @@ class Vector {
  * @since v0.0.0
  */
 class Pixel {
+    r;
+    g;
+    b;
+    a;
     constructor(pxl) {
         this.r = pxl.r;
         this.g = pxl.g;
@@ -1088,6 +1168,9 @@ class Pixel {
  * @since v0.0.0
  */
 class Sound {
+    src;
+    mime;
+    aud;
     constructor(opts) {
         this.src = opts.src;
         this.mime = opts.mime;
@@ -1120,6 +1203,7 @@ class Sound {
  * @since v0.0.0
  */
 class Img {
+    img;
     constructor(src) {
         this.img = new Image();
         this.img.src = src;
@@ -1133,6 +1217,7 @@ class Img {
  * @since v0.0.0
  */
 class Items {
+    items;
     constructor() {
         this.items = [];
     }
@@ -1169,15 +1254,22 @@ class Items {
  * @since v0.0.0
  */
 class Scene {
+    canvas;
+    ctx;
+    items;
+    evStore;
+    lvlStore;
+    mousePos;
+    runtime;
+    comps;
     constructor(opts) {
-        var _a, _b, _c, _d;
         if (!opts.canvas)
             throw new NoCanvasError();
         this.canvas = opts.canvas instanceof HTMLCanvasElement ? opts.canvas : opts.canvas;
-        this.canvas.width = (_a = opts.w) !== null && _a !== void 0 ? _a : 0;
-        this.canvas.height = (_b = opts.h) !== null && _b !== void 0 ? _b : 0;
-        this.canvas.style.width = (_c = opts.cssW) !== null && _c !== void 0 ? _c : "0px";
-        this.canvas.style.height = (_d = opts.cssH) !== null && _d !== void 0 ? _d : "0px";
+        this.canvas.width = opts.w ?? 0;
+        this.canvas.height = opts.h ?? 0;
+        this.canvas.style.width = opts.cssW ?? "0px";
+        this.canvas.style.height = opts.cssH ?? "0px";
         const ctx = this.canvas.getContext("2d");
         if (!ctx)
             throw new NoContextError();
@@ -1237,7 +1329,7 @@ class Scene {
     }
     off(name, handle) {
         if (handle)
-            this.canvas.removeEventListener(name, handle !== null && handle !== void 0 ? handle : this.evStore.get(name));
+            this.canvas.removeEventListener(name, handle ?? this.evStore.get(name));
         this.evStore.del(name);
     }
     getImgData(pos) {
@@ -1382,6 +1474,7 @@ class Scene {
  * @since v0.0.0
  */
 class Level {
+    items;
     constructor() {
         this.items = new Items();
     }
@@ -1413,6 +1506,9 @@ class Level {
  * @since v0.0.0
  */
 class Save {
+    file;
+    mime;
+    ext;
     constructor(opts) {
         this.file = opts.file;
         this.mime = opts.mime;
@@ -1451,6 +1547,7 @@ class SaveJSON extends Save {
  * @since v0.0.0
  */
 class Preset {
+    atts;
     constructor(ent) {
         this.atts = {};
         Object.assign(this.atts, ent);
@@ -1468,6 +1565,10 @@ class Preset {
  * @since v0.0.0
  */
 class Raycast {
+    origin;
+    angle;
+    dist;
+    scene;
     constructor(opts) {
         this.origin = opts.origin;
         this.angle = opts.angle;
@@ -1492,6 +1593,9 @@ class Raycast {
  * @since v0.0.0
  */
 class RaycastIntersecton {
+    dist;
+    obj;
+    point;
     constructor(dist, obj, point) {
         this.dist = dist;
         this.obj = obj;
@@ -1505,6 +1609,8 @@ class RaycastIntersecton {
  * @since v0.0.0
  */
 class Runtime {
+    processId;
+    delta;
     constructor() {
         this.processId = -1;
         this.delta = 0;
@@ -1531,6 +1637,7 @@ class Runtime {
  * @since v0.0.0
  */
 class Geom {
+    name;
     constructor(name) {
         this.name = name;
     }

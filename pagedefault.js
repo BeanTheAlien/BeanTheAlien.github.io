@@ -1,4 +1,4 @@
-import { api } from "./api.js";
+import { net } from "./sv.js";
 
 const mk = (text, link) => {
     const btn = document.createElement("button");
@@ -22,11 +22,11 @@ const buttonResources = mk("Resources", "/resources.html");
 add([buttonHome, buttonGames, buttonProjects, buttonResources]);
 document.body.prepend(topbarContainer);
 (async () => {
-    if((await (await api.sendPost("verify")).json()).r) {
+    if((await net.json("verify")).r) {
         const user = document.createElement("div");
         user.className = "drop";
-        const username = (await (await api.sendPost("user")).json()).u.username;
-        const pfp = (await (await api.sendPost("getpfp")).json()).pfp.pfp ?? "/missingcontent.png";
+        const username = (await net.json("user")).u.username;
+        const pfp = (await net.json("getpfp"))?.pfp.pfp ?? "/missingcontent.png";
         user.innerHTML = `
             <ul>
                 <li class="dropdown">

@@ -1,5 +1,5 @@
-import { getUser } from "../../api.js";
+import { net } from "../sv.js";
 async function admin() {
-    if(getUser().role != "admin") window.location.href = "/";
+    if((await net.json("user"))?.u.role != "admin") window.location.href = "/";
 }
 export { admin };

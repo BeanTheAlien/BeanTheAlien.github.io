@@ -6,7 +6,10 @@ interface Pass {
     password: string;
 }
 interface Creds extends Username, Pass {}
-interface User extends Creds {
+interface Role {
+    role: "user" | "admin";
+}
+interface User extends Creds, Role {
     email: string;
     promotions: boolean;
 }
@@ -26,14 +29,18 @@ interface Routes {
     verify: Result | (Result & { unm?: string });
     verifytk: Result;
     wakeup: never;
-    user: User | undefined;
+    user: { u: User } | undefined;
     sendemail: [{ from: string, to: string, subject: string, html: string }, Suc | SucMsg];
-    getpfp: string | undefined;
+    getpfp: { pfp: string } | undefined;
     setpfp: [FormData, Suc | SucMsg];
     cookies: { c: string };
-    admin_changerole: [{ role: string } & Username, Suc | SucMsg];
-    admin_delete: [Username, Suc | SucMsg];
-    admin_users: { u: User[] };
 }
-const net = new AdvancedNetMap<Routes>("https://beanthealien-server.onrender.com/");
-export { net };
+interface AdminRoutes {
+    changerole: [Role & Username, Suc | SucMsg];
+    delete: [Username, Suc | SucMsg];
+    users: { u: User[] };
+}
+const url = "https://beanthealien-server.onrender.com/";
+const net = new AdvancedNetMap<Routes>(url);
+const adminNet = new AdvancedNetMap<AdminRoutes>(url + "admin/");
+export { net, adminNet };
