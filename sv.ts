@@ -23,13 +23,17 @@ interface Result {
 interface Routes {
     signup: [User, SucMsg];
     signin: [Creds, SucMsg];
-    verify: Result | Result & { unm?: string };
+    verify: Result | (Result & { unm?: string });
     verifytk: Result;
     wakeup: never;
     user: User | undefined;
-    sendemail: [{ from: string, to: string, subject: string, html: string }, never];
+    sendemail: [{ from: string, to: string, subject: string, html: string }, Suc | SucMsg];
     getpfp: string | undefined;
     setpfp: [FormData, Suc | SucMsg];
+    cookies: { c: string };
+    admin_changerole: [{ role: string } & Username, Suc | SucMsg];
+    admin_delete: [Username, Suc | SucMsg];
+    admin_users: { u: User[] };
 }
 const net = new AdvancedNetMap<Routes>("https://beanthealien-server.onrender.com/");
 export { net };
