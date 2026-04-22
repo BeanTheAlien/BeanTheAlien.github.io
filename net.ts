@@ -885,6 +885,8 @@ type Key<T> = Extract<keyof T, string>;
  */
 class NetMap<R extends AnyMap> extends Net {
     constructor();
+    constructor(baseURL: string);
+    constructor(baseURL: URL);
     constructor(baseURL: Key<R>);
     constructor(defaultHeaders: RequestInit);
     constructor(defaultHeaders: AnyMap);
