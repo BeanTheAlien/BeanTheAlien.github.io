@@ -44,3 +44,7 @@ This is the offical website for BeanTheAlien!
 ## v0.2.0.1
 - Started adding profile page.
 - Required email in signup.
+## v0.2.1
+- Update \<br\> statements to be \<div class="space"\>.
+- Fix "Sign Up" to be "Sign In" on `signin/`.
+- Fix "Sign In" to be "Sign Up" on `signup/`.

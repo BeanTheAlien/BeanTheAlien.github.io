@@ -1,9 +1,10 @@
 import { api } from "../api.js";
+import { net } from "../sv.js";
 
 const username = document.getElementById("username");
 const pfp = document.getElementById("pfp");
 const role = document.getElementById("role");
-const user = (await (await api.sendPost("user")).json()).u;
+const user = (await net.json("user")).u;
 username.innerText = user?.username;
 role.innerText = user?.role;
 await updPfp();
@@ -39,3 +40,6 @@ async function updPfp() {
     const p = ((await (await api.sendPost("getpfp")).json())).pfp?.pfp;
     if(p?.length) pfp.src = p;
 }
+// document.getElementById("del").addEventListener("click", (e) => {
+//     //
+// });
