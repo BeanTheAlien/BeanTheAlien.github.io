@@ -25,14 +25,19 @@ document.body.prepend(topbarContainer);
     if((await net.json("verify")).r) {
         const user = document.createElement("div");
         user.className = "drop";
-        const username = (await net.json("user")).u.username;
+        const u = (await net.json("user")).u;
+        const username = u.username;
         const pfp = (await net.json("getpfp"))?.pfp.pfp ?? "/missingcontent.png";
+        const isAdmin = u.role == "admin";
         user.innerHTML = `
             <ul>
                 <li class="dropdown">
                     <a class="dropbtn d-a">Yo, ${username}</a>
                     <div class="dropdown-content">
                     <a class="d-a" href="/profile">Profile</a>
+                    ${isAdmin ? `
+                        <br><a class="d-a" href="/admin/usermanager">User Manager</a>
+                    ` : ""}
                     </div>
                 </li>
             </ul>

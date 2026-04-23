@@ -1,0 +1,12 @@
+.u-disp {
+    background-color: #004715;
+    border-radius: 5px;
+    padding: 10px;
+    max-width: 300px;
+}
+#users {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
