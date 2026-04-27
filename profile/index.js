@@ -15,7 +15,6 @@ pfp.addEventListener("click", async () => {
     });
     const file = await handle.getFile();
     const max = 1024 * 1024;
-    if(file.size > max) return alert(`File size exceeds limit of 1 MB! (size: ${file.size}, over: ${file.size - max})`);
     const compress = async () => {
         const url = URL.createObjectURL(file);
         const img = document.createElement("img");
@@ -31,8 +30,10 @@ pfp.addEventListener("click", async () => {
             canvas.toBlob(r, "image/webp", 0.7);
         });
     }
+    const compr = await compress();
+    if(compr.size > max) return alert(`File size exceeds limit of 1 MB! (size: ${file.size}, over: ${file.size - max})`);
     const form = new FormData();
-    form.append("file", file);
+    form.append("file", compr);
     await fetch("https://beanthealien-server.onrender.com/setpfp", { method: "POST", credentials: "include", body: form });
     await updPfp();
 });
