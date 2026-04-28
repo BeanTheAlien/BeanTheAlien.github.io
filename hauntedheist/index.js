@@ -1,0 +1,1 @@
+["about", "link"].forEach(i => document.getElementById(i).addEventListener("click", () => window.location.href = `/hauntedheist/${i}/`));

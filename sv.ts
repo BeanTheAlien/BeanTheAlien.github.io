@@ -12,6 +12,7 @@ interface Role {
 interface User extends Creds, Role {
     email: string;
     promotions: boolean;
+    steam_id: string | null;
 }
 interface Suc {
     success: boolean;
