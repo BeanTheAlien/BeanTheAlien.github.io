@@ -13,6 +13,7 @@ interface User extends Creds, Role {
     email: string;
     promotions: boolean;
     steam_id: string | null;
+    uuid: string;
 }
 interface Suc {
     success: boolean;
