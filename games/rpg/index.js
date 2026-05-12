@@ -534,9 +534,9 @@ const card = (c) => `<div><img src="${c.src}"><h1>${c.name}</h1><p><i>${c.desc}<
 const txbox = (img, spek, cont, extra = null) => `<div class="txbox"><img src="${img}"><div class="inner"><div class="box"><p class="tx title">${spek}</p><p class="tx">${cont}</p></div>${extra ?? ""}</div></div>`;
 const nextBtn = (txt) => `<br><button class="next-btn" id="next">${txt}</button>`;
 const applyNextHandle = (fn) => onClick(getEl("next"), fn);
-const HeroBase = new PathBase("assets/hero/", "png");
-const EnemyBase = new PathBase("assets/enemy/", "png");
-const UpgBase = new PathBase("assets/upg", "png");
+const HeroBase = new PathBase("./assets/hero/", "png");
+const EnemyBase = new PathBase("./assets/enemy/", "png");
+const UpgBase = new PathBase("./assets/upg/", "png");
 const Wizard = char("Wizard", "He may be old, but he has a cool hat.", HeroBase.gen("wizzy/wizzy_the_wizard_happy"), {
     "fball": new Skill(() => {
         const { x, y } = player;
@@ -683,7 +683,7 @@ const showShopUI = () => {
         resIdx.push(idx);
     }
     const outItems = [shopItems[resIdx[0]], shopItems[resIdx[1]], shopItems[resIdx[2]]];
-    shopUI.tx = `<div style="display: flex; flex-direction: column;"><img src="shop_icon.png" style="width: 15vw; height: 15vw; left: 50vw; top: 50vh;" style="position: fixed"><div style="flex-direction: row">${outItems.map(s => `<img src="${s.img}" id="shop_item_${s.name}" style="bottom: 5%; margin-right: 50px; width: 100px; height: 100px;">`).join("")}</div></div><button id="close_shop">Close</button>`;
+    shopUI.tx = `<div style="display: flex; flex-direction: column;"><img src="assets/shop_icon.png" style="width: 15vw; height: 15vw; left: 50vw; top: 50vh;" style="position: fixed"><div style="flex-direction: row">${outItems.map(s => `<img src="${s.img}" id="shop_item_${s.name}" style="bottom: 5%; margin-right: 50px; width: 100px; height: 100px;">`).join("")}</div></div><button id="close_shop">Close</button>`;
     shopUI.show("block");
     onClick(getEl("close_shop"), hideShopUI);
     const purchases = (e) => {
