@@ -84,7 +84,7 @@ function game() {
         load.gameEnd(runtime, score, "pong-hs");
     } else if(ball.x >= c.width) {
         score++;
-        enemy.spd += 0.5;
+        enemy.spd += 0.65;
         ball = new Ball();
     }
     delta++;
