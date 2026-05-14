@@ -1,4 +1,4 @@
-import { AdvancedNetMap } from "./net";
+import { AdvancedNetMap } from "./net.js";
 interface Username {
     username: string;
 }

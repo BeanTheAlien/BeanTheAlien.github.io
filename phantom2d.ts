@@ -9,6 +9,11 @@ class Util {
     static clamp(n: number, min: number, max: number): number {
         return Math.min(Math.max(n, min), max);
     }
+    /**
+     * Returns a string, given a value that may or may not be one.
+     * @param o Something to be stringified.
+     * @returns A string.
+     */
     static strOf(o: any): string {
         return typeof o == "string" ? o : Util.str(o);
     }
@@ -115,7 +120,7 @@ type PhantomEventType = Key<PhantomEventMap>;
  * Takes one argument, the event.
  * @since v0.0.0
  */
-type PhantomEventHandle = (e: PhantomEvent) => void;
+type PhantomEventHandle<E extends PhantomEvent = PhantomEvent> = (e: E) => void;
 /**
  * An audio MIME type. With or without the `audio/` prepension.
  * @since v0.0.0
@@ -430,6 +435,7 @@ interface EntityOptions {
      * @since v0.0.0
      */
     y?: number;
+    z?: number;
     /**
      * The rotation (in radians).
      * @since v0.0.0
@@ -1425,6 +1431,7 @@ class Entity {
      * @since v0.0.0
      */
     y: number;
+    z: number;
     /**
      * The rotation, in radians.
      * @since v0.0.0
@@ -1464,6 +1471,7 @@ class Entity {
         this.upd = opts?.upd ?? NoFunc;
         this.x = opts?.x ?? Entity.defaults.get("x") ?? 0;
         this.y = opts?.y ?? Entity.defaults.get("y") ?? 0;
+        this.z = opts?.z ?? Entity.defaults.get("z") ?? 0;
         this.rot = opts?.rot ?? Entity.defaults.get("rot") ?? 0;
         this.width = opts?.width ?? Entity.defaults.get("width") ?? 0;
         this.height = opts?.height ?? Entity.defaults.get("height") ?? 0;
@@ -1492,10 +1500,12 @@ class Entity {
      * @since v0.0.0
      */
     setPos(x: number, y: number): void;
-    setPos(x: number | Vector, y?: number) {
+    setPos(x: number, y: number, z: number): void;
+    setPos(x: number | Vector, y?: number, z?: number) {
         if(typeof x == "number" && typeof y == "number") {
             this.x = x;
             this.y = y;
+            if(z) this.z = z;
         } else if(x instanceof Vector) {
             this.x = x.x;
             this.y = x.y;
@@ -1597,7 +1607,7 @@ class Entity {
      * @since v0.0.0
      */
     getPos(): Vector {
-        return new Vector(this.x, this.y);
+        return new Vector(this.x, this.y, this.z);
     }
     /**
      * Returns the x-coordinate.
@@ -1615,6 +1625,9 @@ class Entity {
     getPosY(): number {
         return this.y;
     }
+    getPosZ(): number {
+        return this.z;
+    }
     /**
      * Sets this x-coordinate.
      * @param x The new x.
@@ -1631,14 +1644,17 @@ class Entity {
     setPosY(y: number) {
         this.y = y;
     }
+    setPosZ(z: number) {
+        this.z = z;
+    }
     /**
      * Applies a listener for an event.
      * @param event The event type.
      * @param handle The handle.
      * @since v0.0.0
      */
-    on(event: PhantomEventType, handle: PhantomEventHandle) {
-        this.evMng.on(event, handle);
+    on<E extends PhantomEventType, H extends PhantomEventMap[E]>(event: E, handle: PhantomEventHandle<H>) {
+        this.evMng.on(event, handle as PhantomEventHandle);
     }
     /**
      * Removes a listener for an event.
@@ -1646,8 +1662,8 @@ class Entity {
      * @param handle The event handle (or nothing, to remove all handles).
      * @since v0.0.0
      */
-    off(event: PhantomEventType, handle?: PhantomEventHandle) {
-        this.evMng.off(event, handle);
+    off<E extends PhantomEventType, H extends PhantomEventMap[E]>(event: E, handle?: PhantomEventHandle<H>) {
+        this.evMng.off(event, handle as PhantomEventHandle | undefined);
     }
     /**
      * Consumes an event.
@@ -2023,7 +2039,7 @@ class BulletObject extends Entity {
     extLeft: number; extRight: number; extBtm: number; extTop: number;
     spd: number;
     scene: Scene;
-    onDest?: PhantomEventHandle;
+    onDest?: PhantomEventHandle<PhantomDestroyedEvent>;
     tol: number;
     decay: number;
     initSpd: number;
@@ -2045,7 +2061,7 @@ class BulletObject extends Entity {
         // decay the speed by using exponential decay formula
         // y = a(1-r)^t
         // a = inital; r = decay rate; t = time
-        this.spd = this.initSpd * (Math.pow(1 - this.decay, this.scene.delta));
+        this.spd *= Math.pow(1 - this.decay, this.scene.delta);
         const fVec = this.getFVec();
         fVec.scale(this.spd);
         this.x += fVec.x;
@@ -2056,11 +2072,18 @@ class BulletObject extends Entity {
         const y = this.scrY();
         const w = this.scene.width;
         const h = this.scene.height;
-        if(x - this.tol < w || x + this.tol > w || y + this.tol > h || y - this.tol < h) {
-            // self-destruct if its not
-            this.scene.rm(this);
-            if(this.onDest) this.onDest(new PhantomDestroyedEvent());
+        if (
+            x + this.tol < 0 ||
+            x - this.tol > w ||
+            y + this.tol < 0 ||
+            y - this.tol > h
+        ) {
+            this.destroy();
         }
+    }
+    destroy() {
+        this.scene.rm(this);
+        if(this.onDest) this.onDest(new PhantomDestroyedEvent());
     }
     /**
      * Returns a new entity, based on options.
@@ -2274,62 +2297,79 @@ class Character extends Entity {
  * @since v0.0.0
  */
 class PlayableCharacter extends Character {
-    binds: Store<KeyCode, Function>;
-    keys: Store<string, boolean>;
-    bindCD: Store<KeyCode, PCExecCDPair>;
+    key: KeyInputs;
+    // binds: Store<KeyCode, Function>;
+    // keys: Store<string, boolean>;
+    // bindCD: Store<KeyCode, PCExecCDPair>;
     constructor(opts: PlayableCharacterOptions) {
         super(opts);
-        this.binds = opts.binds ?? new Store();
-        this.keys = new Store();
-        this.bindCD = new Store();
-        window.addEventListener("keydown", (e) => {
-            this.keys.set(e.code, true);
-        });
-        window.addEventListener("keyup", (e) => {
-            this.keys.set(e.code, false);
-        });
+        this.key = new KeyInputs();
+        // this.binds = opts.binds ?? new Store();
+        // this.keys = new Store();
+        // this.bindCD = new Store();
+        // window.addEventListener("keydown", (e) => {
+        //     this.keys.set(e.code, true);
+        // });
+        // window.addEventListener("keyup", (e) => {
+        //     this.keys.set(e.code, false);
+        // });
     }
     bind(code: KeyCode, exec: Function): void;
     bind(code: KeyCode, exec: Function, cd: number): void;
     bind(code: KeyCode, exec: Function, cd?: number) {
+        //this.key.bind(code, exec, cd);
         if(cd == undefined) {
-            this.binds.set(code, exec);
+            this.key.bind(code, exec);
+            // this.binds.set(code, exec);
         } else {
-            this.bindCD.set(code, [exec, new Cooldown(cd)]);
+            this.key.bind(code, exec, cd);
+            // this.bindCD.set(code, [exec, new Cooldown(cd)]);
         }
+    }
+    binds(...binds: Binding[]) {
+        this.key.binds(...binds);
     }
     unbind(code: KeyCode) {
-        this.binds.del(code);
-        this.bindCD.del(code);
+        this.key.unbind(code);
+        // this.binds.del(code);
+        // this.bindCD.del(code);
+    }
+    unbinds(...codes: KeyCode[]) {
+        this.key.unbinds(...codes);
     }
     isBind(code: KeyCode): boolean {
-        return this.binds.has(code);
+        return this.key.isBind(code);
+        // return this.binds.has(code);
     }
     isBindCD(code: KeyCode): boolean {
-        return this.bindCD.has(code);
+        return this.key.isBindCD(code);
+        // return this.bindCD.has(code);
     }
     bindOf(code: KeyCode): Function | undefined {
-        return this.binds.get(code);
+        return this.key.bindOf(code);
+        // return this.binds.get(code);
     }
     bindCDOf(code: KeyCode): PCExecCDPair | undefined {
-        return this.bindCD.get(code);
+        return this.key.bindCDOf(code);
+        // return this.bindCD.get(code);
     }
     update() {
-        for(const [k, v] of this.keys.items()) {
-            if(v) {
-                const _k = KeyCodeMapReverse[k] as KeyCode;
-                const exec = this.binds.get(_k);
-                const cdExec = this.bindCD.get(_k);
-                if(exec) {
-                    exec();
-                } else if(cdExec) {
-                    if(cdExec[1].ready) {
-                        cdExec[0]();
-                        cdExec[1].consume();
-                    }
-                }
-            }
-        }
+        // for(const [k, v] of this.keys.items()) {
+        //     if(v) {
+        //         const _k = KeyCodeMapReverse[k] as KeyCode;
+        //         const exec = this.binds.get(_k);
+        //         const cdExec = this.bindCD.get(_k);
+        //         if(exec) {
+        //             exec();
+        //         } else if(cdExec) {
+        //             if(cdExec[1].ready) {
+        //                 cdExec[0]();
+        //                 cdExec[1].consume();
+        //             }
+        //         }
+        //     }
+        // }
+        this.key.update();
         super.update();
     }
     /**
@@ -2356,6 +2396,82 @@ class PlayableCharacter extends Character {
     }
     static is(obj: any): obj is PlayableCharacter {
         return objIs(obj, PlayableCharacter);
+    }
+}
+type KeyBinds = Store<KeyCode, Function>;
+type KeyBindsCD = Store<KeyCode, PCExecCDPair>;
+type Binding = [KeyCode, Function] | [KeyCode, Function, number];
+class KeyInputs {
+    kbinds: KeyBinds;
+    keys: Store<string, boolean>;
+    bindCD: KeyBindsCD;
+    constructor(binds?: KeyBinds) {
+        this.kbinds = binds ?? new Store();
+        this.keys = new Store();
+        this.bindCD = new Store();
+        window.addEventListener("keydown", (e) => {
+            this.keys.set(e.code, true);
+        });
+        window.addEventListener("keyup", (e) => {
+            this.keys.set(e.code, false);
+        });
+    }
+    bind(code: KeyCode, exec: Function): void;
+    bind(code: KeyCode, exec: Function, cd: number): void;
+    bind(code: KeyCode, exec: Function, cd?: number) {
+        this.__createBinding(code, exec, cd);
+    }
+    binds(...binds: Binding[]) {
+        binds.forEach(b => this.__createBinding(b[0], b[1], b[2]));
+    }
+    __createBinding(code: KeyCode, exec: Function, cd?: number) {
+        if(cd == undefined) {
+            this.kbinds.set(code, exec);
+        } else {
+            this.bindCD.set(code, [exec, new Cooldown(cd)]);
+        }
+    }
+    unbind(code: KeyCode) {
+        this.kbinds.del(code);
+        this.bindCD.del(code);
+    }
+    unbinds(...codes: KeyCode[]) {
+        codes.forEach(c => this.unbind(c));
+    }
+    isBind(code: KeyCode): boolean {
+        return this.kbinds.has(code);
+    }
+    isBindCD(code: KeyCode): boolean {
+        return this.bindCD.has(code);
+    }
+    bindOf(code: KeyCode): Function | undefined {
+        return this.kbinds.get(code);
+    }
+    bindCDOf(code: KeyCode): PCExecCDPair | undefined {
+        return this.bindCD.get(code);
+    }
+    update() {
+        for(const [k, v] of this.keys.items()) {
+            if(v) {
+                const _k = KeyCodeMapReverse[k] as KeyCode;
+                const exec = this.kbinds.get(_k);
+                const cdExec = this.bindCD.get(_k);
+                if(exec) {
+                    exec();
+                } else if(cdExec) {
+                    if(cdExec[1].ready) {
+                        cdExec[0]();
+                        cdExec[1].consume();
+                    }
+                }
+            }
+        }
+    }
+    isDown(key: string) {
+        return !!this.keys.get(key);
+    }
+    isUp(key: string) {
+        return !this.isDown(key);
     }
 }
 interface AircraftOptions extends EntityOptions {
@@ -2443,10 +2559,14 @@ class Aircraft extends Entity {
  * @since v0.0.0
  */
 class Vector {
-    x: number; y: number;
-    constructor(x: number, y: number) {
-        this.x = x;
-        this.y = y;
+    x: number; y: number; z: number;
+    constructor();
+    constructor(x: number, y: number);
+    constructor(x: number, y: number, z: number);
+    constructor(x?: number, y?: number, z?: number) {
+        this.x = x ?? 0;
+        this.y = y ?? 0;
+        this.z = z ?? 1;
     }
     scale(fx: number, fy: number): void;
     scale(factor: number): void;
@@ -2455,13 +2575,7 @@ class Vector {
         this.y *= fy ?? fx;
     }
     static rotBtwn(a: Vector, b: Vector): number {
-        const a1 = Math.atan2(a.y, a.x);
-        const a2 = Math.atan2(b.y, b.x);
-        let dif = a2 - a1;
-        const pi2 = 2 * Math.PI;
-        if(dif > Math.PI) dif -= pi2;
-        else if(dif < -Math.PI) dif += pi2;
-        return dif;
+        return Math.atan2(b.y - a.y, b.x - a.x);
     }
     rotate(rad: number) {
         const cos = Math.cos(rad);
@@ -2478,9 +2592,90 @@ class Vector {
         const w = rectW; const h = rectH;
         return sx >= rx && sx <= rx + w && sy >= ry && sy <= ry + h;
     }
-    mag(): number {
+    get mag(): number {
         return Math.sqrt(this.x * this.x + this.y * this.y);
     }
+    lerp(scene: Scene, to: Vector): VectorLerpDevice;
+    lerp(scene: Scene, to: Vector, lerpMode: LerpDeviceLerpMode): VectorLerpDevice;
+    lerp(scene: Scene, to: Vector, lerpMode: LerpDeviceLerpMode = "once") {
+        return new VectorLerpDevice(scene, this, this, to, lerpMode);
+    }
+}
+type LerpDeviceLerpMode = "once" | "bounce";
+abstract class DualLerpDevice<P, T> {
+    scene: Scene;
+    alpha: number;
+    tg: P;
+    from: T;
+    to: T;
+    post: Function;
+    dir: number;
+    constructor(scene: Scene, tg: P, from: T, to: T, mode: LerpDeviceLerpMode = "once", rate = 1) {
+        this.scene = scene;
+        this.alpha = 0;
+        this.tg = tg;
+        this.from = from;
+        this.to = to;
+        this.dir = 1;
+        this.post = () => {
+            const d = this.scene.delta / rate;
+            if(this.dir == 1) this.alpha += d;
+            else this.alpha -= d;
+            if(this.alpha < 0 || this.alpha > 1) {
+                this.alpha = this.dir == 1 ? 1 : 0;
+                this.upd();
+                //this.end();
+                if(mode == "once") this.destroy();
+                else this.dir *= -1;
+                return;
+            }
+            this.upd();
+        }
+        this.scene.postAdd(this.post);
+    }
+    destroy() {
+        this.scene.postRm(this.post);
+    }
+    abstract upd(): void;
+    abstract end(): void;
+}
+abstract class LerpDevice<T> extends DualLerpDevice<T, T> {}
+type AngularPos2D = Entity | SceneUI;
+type Pos2D = Vector | AngularPos2D;
+class VectorBasedLerpDevice<P extends Pos2D> extends DualLerpDevice<P, Vector> {
+    upd() {
+        this.tg.x = lerp(this.from.x, this.to.x, this.alpha);
+        this.tg.y = lerp(this.from.y, this.to.y, this.alpha);
+    }
+    end() {
+        this.tg.x = this.to.x;
+        this.tg.y = this.to.y;
+    }
+}
+class VectorLerpDevice extends VectorBasedLerpDevice<Vector> {}
+class EntityLerpDevice extends VectorBasedLerpDevice<Entity> {}
+class SceneUILerpDevice extends VectorBasedLerpDevice<SceneUI> {}
+type AngularMeasurementName = "deg" | "rad";
+class AngleBasedLerpDevice<P extends AngularPos2D> extends DualLerpDevice<P, number> {
+    mode: AngularMeasurementName;
+    constructor(scene: Scene, tg: P, from: number, to: number, mode: AngularMeasurementName = "rad", lerpMode: LerpDeviceLerpMode = "once", rate = 1) {
+        super(scene, tg, from, to, lerpMode, rate);
+        this.mode = mode;
+    }
+    upd() {
+        this.tg.rot = lerp(this.mode == "rad" ? this.from : Angle.rad(this.from), this.mode == "rad" ? this.to : Angle.rad(this.to), this.alpha);
+    }
+    end() {
+        this.tg.rot = this.mode == "rad" ? this.to : Angle.rad(this.to);
+    }
+}
+class EntityRotationLerpDevice extends AngleBasedLerpDevice<Entity> {}
+class SceneUIRotationLerpDevice extends AngleBasedLerpDevice<SceneUI> {}
+class ProgressUIValueLerpDevice extends DualLerpDevice<ProgressUI, number> {
+    upd() {
+        this.tg.val = lerp(this.from, this.to, this.alpha);
+    }
+    end() {}
 }
 /**
  * A pixel.
@@ -2636,18 +2831,62 @@ class Items {
 }
 type FontSizeAbsolute = "xx-small" | "x-small" | "small" | "medium" | "large" | "x-large" | "xx-large" | "xxx-large";
 type FontSizeRelative = "larger" | "smaller";
+type RelativeSizeUnit<U extends string> = `${number}${U}`;
+type RelativeSizeUnitCap = RelativeSizeUnit<"cap">;
+type RelativeSizeUnitCh = RelativeSizeUnit<"ch">;
+type RelativeSizeUnitEm = RelativeSizeUnit<"em">;
+type RelativeSizeUnitEx = RelativeSizeUnit<"ex">;
+type RelativeSizeUnitIc = RelativeSizeUnit<"ic">;
+type RelativeSizeUnitLh = RelativeSizeUnit<"lh">;
+type RelativeSizeUnitRcap = RelativeSizeUnit<"rcap">;
+type RelativeSizeUnitRch = RelativeSizeUnit<"rch">;
+type RelativeSizeUnitRem = RelativeSizeUnit<"rem">;
+type RelativeSizeUnitRex = RelativeSizeUnit<"rex">;
+type RelativeSizeUnitRic = RelativeSizeUnit<"ric">;
+type RelativeSizeUnitRlh = RelativeSizeUnit<"rlh">;
+type RelativeSizeFont = RelativeSizeUnitCap | RelativeSizeUnitCh | RelativeSizeUnitEm |
+    RelativeSizeUnitEx | RelativeSizeUnitIc | RelativeSizeUnitLh |
+    RelativeSizeUnitRcap | RelativeSizeUnitRch | RelativeSizeUnitRem |
+    RelativeSizeUnitRex | RelativeSizeUnitRic | RelativeSizeUnitRlh;
+type RelativeViewportSizeUnitVh = RelativeSizeUnit<"vh">;
+type RelativeViewportSizeUnitVw = RelativeSizeUnit<"vw">;
+type RelativeViewportSizeUnitVmax = RelativeSizeUnit<"vmax">;
+type RelativeViewportSizeUnitVmin = RelativeSizeUnit<"vmin">;
+type RelativeViewportSizeUnitVb = RelativeSizeUnit<"vb">;
+type RelativeViewportSizeUnitVi = RelativeSizeUnit<"vi">;
+type RelativeSizeViewport = RelativeViewportSizeUnitVh | RelativeViewportSizeUnitVw | RelativeViewportSizeUnitVmax |
+    RelativeViewportSizeUnitVmin | RelativeViewportSizeUnitVb | RelativeViewportSizeUnitVi;
+type RelativeContainerSizeUnitCqw = RelativeSizeUnit<"cqw">;
+type RelativeContainerSizeUnitCqh = RelativeSizeUnit<"cqh">;
+type RelativeContainerSizeUnitCqi = RelativeSizeUnit<"cqi">;
+type RelativeContainerSizeUnitCqb = RelativeSizeUnit<"cqb">;
+type RelativeContainerSizeUnitCqmim = RelativeSizeUnit<"cqmin">;
+type RelativeContainerSizeUnitCqmax = RelativeSizeUnit<"cqmax">;
+type RelativeSizeContainer = RelativeContainerSizeUnitCqw | RelativeContainerSizeUnitCqh | RelativeContainerSizeUnitCqi |
+    RelativeContainerSizeUnitCqb | RelativeContainerSizeUnitCqmim | RelativeContainerSizeUnitCqmax;
+type AbsoluteSizeUnitPx = RelativeSizeUnit<"px">;
+type AbsoluteSizeUnitCm = RelativeSizeUnit<"cm">;
+type AbsoluteSizeUnitMm = RelativeSizeUnit<"mm">;
+type AbsoluteSizeUnitQ = RelativeSizeUnit<"Q">;
+type AbsoluteSizeUnitIn = RelativeSizeUnit<"in">;
+type AbsoluteSizeUnitPc = RelativeSizeUnit<"pc">;
+type AbsoluteSizeUnitPt = RelativeSizeUnit<"pt">;
+type AbsoluteSize = AbsoluteSizeUnitPx | AbsoluteSizeUnitCm | AbsoluteSizeUnitMm |
+    AbsoluteSizeUnitQ | AbsoluteSizeUnitIn | AbsoluteSizeUnitPc |
+    AbsoluteSizeUnitPt;
+type RelativeSize = RelativeSizeFont | RelativeSizeViewport | RelativeSizeContainer | AbsoluteSize;
 interface SceneFont {
     style?: "normal" | "italic" | "oblique";
     variant?: CanvasFontVariantCaps;
     weight?: "normal" | "bold" | "lighter" | "bolder" | number;
     stretch?: CanvasFontStretch;
     /**
-     * The size of the font. (in pixels)
+     * The size of the font.
      * 
      * A number will be converted to Npx.
      * @since v1.2.0
      */
-    size: FontSizeAbsolute | FontSizeRelative | number;
+    size: FontSizeAbsolute | FontSizeRelative | RelativeSize | number;
     lineHeight?: "normal" | number;
     family: string;
 }
@@ -2676,7 +2915,7 @@ class Scene {
     static unloadListenerCreated: boolean = false;
     canvas: HTMLCanvasElement;
     ctx: CanvasRenderingContext2D;
-    items: Items;
+    items: ItemBox<Entity>;
     evStore: Store<EventType, EventHandle[]>;
     lvlStore: Store<string, Level>;
     mousePos: Vector;
@@ -2687,6 +2926,8 @@ class Scene {
     ui: ItemBox<SceneUI>;
     fontControl: SceneFont;
     misc: ItemBox<Renderable>;
+    post: ItemBox<Function>;
+    dualRuntime: Runtime;
     constructor(opts: SceneOptions) {
         if(typeof opts.canvas == "string") {
             opts.canvas = document.getElementById(opts.canvas);
@@ -2701,7 +2942,7 @@ class Scene {
         const ctx = this.canvas.getContext("2d");
         if(!ctx) throw new NoContextError();
         this.ctx = ctx;
-        this.items = new Items();
+        this.items = new ItemBox();
         this.evStore = new Store();
         this.lvlStore = new Store();
         this.mousePos = new Vector(0, 0);
@@ -2717,6 +2958,8 @@ class Scene {
             family: "sans-serif"
         };
         this.misc = new ItemBox();
+        this.post = new ItemBox();
+        this.dualRuntime = new Runtime();
     }
     get width(): number {
         return this.canvas.width;
@@ -2745,8 +2988,20 @@ class Scene {
     add(...items: Entity[]) {
         this.items.add(...items);
     }
+    addIf(predicate: PredicateEntity, ...items: Entity[]) {
+        this.items.add(...items.filter(predicate));
+    }
+    addIfNotHas(...items: Entity[]) {
+        this.addIf(i => !this.has(i), ...items);
+    }
     addUI(...items: SceneUI[]) {
         this.ui.add(...items);
+    }
+    addUIIf(predicate: Predicate<SceneUI>, ...items: SceneUI[]) {
+        this.ui.add(...items.filter(predicate));
+    }
+    addUIIfNotHas(...items: SceneUI[]) {
+        this.addUIIf(u => !this.hasUI(u), ...items);
     }
     rm(...items: Entity[]) {
         this.items.rm(...items);
@@ -2761,7 +3016,7 @@ class Scene {
         return this.ui.has(...items);
     }
     idxOf(item: Entity): number {
-        return this.items.idxOf(item);
+        return this.items.stuff.indexOf(item);
     }
     idxOfUI(item: SceneUI): number {
         return this.ui.stuff.indexOf(item);
@@ -2772,11 +3027,11 @@ class Scene {
     filterUI(cb: Predicate<SceneUI>): SceneUI[] {
         return this.ui.filter(cb);
     }
-    on(name: EventType, handle: EventHandle) {
-        this.evMng.on(name, handle);
+    on<K extends EventType, E extends HTMLElementEventMap[K]>(name: K, handle: (event: E) => void) {
+        this.evMng.on(name, handle as EventHandle);
     }
-    off(name: EventType, handle?: EventHandle) {
-        this.evMng.off(name, handle);
+    off<K extends EventType, E extends HTMLElementEventMap[K]>(name: K, handle?: (event: E) => void) {
+        this.evMng.off(name, handle as EventHandle);
     }
     getImgData(pos: Vector): ImageData {
         return this.ctx.getImageData(pos.x, pos.y, 1, 1);
@@ -2861,12 +3116,12 @@ class Scene {
         this.testCols();
     }
     testCols() {
-        const len = this.items.items.length;
+        const len = this.items.stuff.length;
         for(let i = 0; i < len; i++) {
             for(let j = 0; j < len; j++) {
                 if(i == j) continue;
-                const a = this.items.at(i);
-                const b = this.items.at(j);
+                const a = this.items.stuff[i];
+                const b = this.items.stuff[j];
                 if(a && b) if(isCol(a, b)) a.collide(b);
             }
         }
@@ -2880,13 +3135,17 @@ class Scene {
         });
         // UI will be rendered in a fixed position
         this.ui.forEach(u => {
-            this.ctx.save();
-            const w2 = u.width / 2;
-            const h2 = u.height / 2;
-            this.ctx.translate(u.x + w2, u.y + h2);
-            this.ctx.rotate(u.rot);
-            this.rect(-w2, -h2, u.width, u.height, u.color);
-            this.ctx.restore();
+            // test if it should also render a rectangle (true, by default)
+            if(u.rendRect) {
+                this.ctx.save();
+                const w2 = u.width / 2;
+                const h2 = u.height / 2;
+                this.ctx.translate(u.x + w2, u.y + h2);
+                this.ctx.rotate(u.rot);
+                this.alpha = u.alpha;
+                this.rect(-w2, -h2, u.width, u.height, u.color);
+                this.ctx.restore();
+            }
             // for other rendering (other than a core rectangle)
             // call the UI's render method
             u.render();
@@ -2922,16 +3181,86 @@ class Scene {
         this.rect(nx, ny, w, h, color);
         this.ctx.restore();
     }
-    start(postUpd: Function = NoFunc) {
-        this.runtime.start(() => {
+    __appendPost(func?: Function) {
+        if(func) this.postAdd(func);
+    }
+    __getAbsoluteUpdater() {
+        return () => {
             this.update();
             this.clear();
-            postUpd();
+            this.__runPostFuncs();
+            this.__sortByLayer();
             this.render();
-        });
+        }
+    }
+    __getDualUpdaterPrimary() {
+        return () => {
+            this.update();
+            this.__runPostFuncs();
+        }
+    }
+    __getDualUpdaterSecondary() {
+        return () => {
+            this.clear();
+            this.__sortByLayer();
+            this.render();
+        }
+    }
+    __startRuntime(fn: Function, postUpd?: Function) {
+        this.__appendPost(postUpd);
+        this.runtime.start(fn);
+    }
+    start(postUpd?: Function) {
+        this.__startRuntime(this.__getAbsoluteUpdater(), postUpd);
+    }
+    __startDualSecondary() {
+        this.dualRuntime.start(this.__getDualUpdaterSecondary());
+    }
+    /**
+     * Starts a dual runtime process.
+     * 
+     * Initates the primary `runtime` with the updating function.
+     * 
+     * Runs a background process on `dualRuntime` to re-render.
+     * @param postUpd A post-update function.
+     */
+    startDual(postUpd?: Function) {
+        this.__startRuntime(this.__getDualUpdaterPrimary(), postUpd);
+        this.__startDualSecondary();
+    }
+    __fixedRuntime(fn: Function, intervalTiming: number, postUpd?: Function) {
+        this.__appendPost(postUpd);
+        this.runtime.fixed(fn, intervalTiming);
+    }
+    fixed(intervalTiming: number, postUpd?: Function) {
+        this.__fixedRuntime(this.__getAbsoluteUpdater(), intervalTiming, postUpd);
+    }
+    /**
+     * Runs a dual runtime process.
+     * 
+     * Starts an updating process on the fixed channel, as denoted by `intervalTiming`.
+     * 
+     * Runs a background re-rendering process process on `dualRuntime`.
+     * 
+     * Used to prevent the "laggy" effect that comes with a fixed update, per rendering not being able to update fast enough.
+     * 
+     * Runs the re-render process every frame.
+     * @param intervalTiming The update timing.
+     * @param postUpd A post-update function.
+     */
+    fixedDual(intervalTiming: number, postUpd?: Function) {
+        this.__fixedRuntime(this.__getDualUpdaterPrimary(), intervalTiming, postUpd);
+        this.__startDualSecondary();
+    }
+    __runPostFuncs() {
+        this.post.forEach(f => f());
     }
     stop() {
         this.runtime.stop();
+    }
+    stopDual() {
+        this.stop();
+        this.dualRuntime.stop();
     }
     save(file: string) {
         const s = new SaveJSON(file);
@@ -3053,7 +3382,9 @@ class Scene {
      * @returns The rotation from the entity to the mouse.
      */
     rotToMouse(ent: Entity): number {
-        return Vector.rotBtwn(ent.getPos(), this.mousePos);
+        const pos = ent.getPos();
+        const dir = new Vector(this.mousePos.x, this.mousePos.y);
+        return Math.atan2(dir.y - pos.y, dir.x - pos.x);
     }
     style(styles: CSSStyleDeclaration) {
         Object.assign(this.canvas.style, styles);
@@ -3209,6 +3540,32 @@ class Scene {
         this.color = color;
         this.ctx.fill();
     }
+    addMisc(...items: Renderable[]) {
+        this.misc.add(...items);
+    }
+    rmMisc(...items: Renderable[]) {
+        this.misc.rm(...items);
+    }
+    hasMisc(...items: Renderable[]) {
+        return this.misc.has(...items);
+    }
+    postAdd(fn: Function) {
+        this.post.add(fn);
+    }
+    postRm(fn: Function) {
+        this.post.rm(fn);
+    }
+    postHas(fn: Function) {
+        return this.post.has(fn);
+    }
+    __sortByLayer() {
+        this.items.stuff.sort((a, b) => a.z - b.z);
+    }
+    *loopLvls(): Generator<Level, void, unknown> {
+        for(const lvl of this.lvlStore.items()) {
+            yield lvl[1];
+        }
+    }
 }
 /**
  * A collection of items.
@@ -3217,9 +3574,9 @@ class Scene {
  * @since v0.0.0
  */
 class Level {
-    items: Items;
+    items: ItemBox<Entity>;
     constructor() {
-        this.items = new Items();
+        this.items = new ItemBox();
     }
     add(...items: Entity[]) {
         this.items.add(...items);
@@ -3231,7 +3588,7 @@ class Level {
         return this.items.has(...items);
     }
     idxOf(item: Entity): number {
-        return this.items.idxOf(item);
+        return this.items.stuff.indexOf(item);
     }
     filter(cb: Callback<unknown>): Entity[] {
         return this.items.filter(cb);
@@ -3306,7 +3663,7 @@ class SaveJSON extends Save {
  * @since v0.0.0
  */
 class Preset {
-    atts: { any?: any };
+    atts: { [x: string]: any };
     constructor(ent: Entity) {
         this.atts = {};
         Object.assign(this.atts, ent);
@@ -3318,28 +3675,68 @@ class Preset {
     apply(ent: Entity) {
         Object.assign(ent, this.atts);
     }
+    new() {
+        return new Entity(this.atts);
+    }
 }
-/**
- * A ray in the scene space.
- * @since v0.0.0
- */
-class Raycast {
-    origin: Vector; angle: number; dist: number; scene: Scene;
+class RaycastBase {
+    origin: Vector;
+    angle: number;
+    dist: number;
+    scene: Scene;
     constructor(opts: RaycastOptions) {
         this.origin = opts.origin;
         this.angle = opts.angle;
         this.dist = opts.dist;
         this.scene = opts.scene;
     }
-    cast(): RaycastIntersecton | null {
-        let res: RaycastIntersecton | null = null;
-        const dir = new Vector(Math.cos(this.angle), Math.sin(this.angle));
-        for(const i of this.scene.items.items) {
+    dir() {
+        return new Vector(Math.cos(this.angle), Math.sin(this.angle));
+    }
+    cast(onHit: (i: Entity, hit: number, dir: Vector) => void) {
+        const dir = this.dir();
+        for(const i of this.scene.items.stuff) {
             const hit = rayInterRect(this.origin, dir, i, this.scene);
             if(hit) {
-                if((res && hit < res.dist) || (res == null)) res = new RaycastIntersecton(hit, i, new Vector(this.origin.x + dir.x * hit, this.origin.y + dir.y * hit));
+                onHit(i, hit, dir);
             }
         }
+    }
+}
+interface MultiRaycastOptions extends RaycastOptions {
+    hits?: number;
+}
+class MultiRaycast extends RaycastBase {
+    hits: number;
+    constructor(opts: MultiRaycastOptions) {
+        super(opts);
+        this.hits = opts.hits ?? Infinity;
+    }
+    cast(): RaycastIntersecton[] {
+        let res: RaycastIntersecton[] = [];
+        let h = this.hits;
+        super.cast((i, hit, dir) => {
+            if(h > 0) {
+                res.push(new RaycastIntersecton(hit, i, new Vector(this.origin.x + dir.x * hit, this.origin.y + dir.y * hit)));
+            } else return res;
+            h--;
+        });
+        return res;
+    }
+}
+/**
+ * A ray in the scene space.
+ * @since v0.0.0
+ */
+class Raycast extends RaycastBase {
+    constructor(opts: RaycastOptions) {
+        super(opts);
+    }
+    cast(): RaycastIntersecton | null {
+        let res: RaycastIntersecton | null = null;
+        super.cast((i, hit, dir) => {
+            if((res && hit < res.dist) || (res == null)) res = new RaycastIntersecton(hit, i, new Vector(this.origin.x + dir.x * hit, this.origin.y + dir.y * hit));
+        });
         return res;
     }
 }
@@ -3364,6 +3761,53 @@ class DebugRay extends Raycast implements Renderable {
         this.scene.ray(this.origin, this.angle, this.dist, this.color);
     }
 }
+interface ConeRaycastOptions extends RaycastOptions {
+    r0: number;
+    r1: number;
+    step: number;
+}
+class ConeRaycast extends RaycastBase {
+    r0: number;
+    r1: number;
+    step: number;
+    constructor(opts: ConeRaycastOptions) {
+        super(opts);
+        this.r0 = opts.r0;
+        this.r1 = opts.r1;
+        this.step = opts.step;
+    }
+    cast() {
+        let res: RaycastIntersecton | null = null;
+        for(let i = this.r0; i < this.r1 + 1; i += this.step) {
+            if(res) return res;
+            this.angle = Angle.rad(i);
+            super.cast((i, hit, dir) => {
+                if((res && hit < res.dist) || (res == null)) res = new RaycastIntersecton(hit, i, new Vector(this.origin.x + dir.x * hit, this.origin.y + dir.y * hit));
+            });
+        }
+        return res;
+    }
+}
+interface DebugConeRayOptions extends ConeRaycastOptions, DebugRayOptions {}
+class ConeDebugRay extends DebugRay implements Renderable {
+    r0: number;
+    r1: number;
+    step: number;
+    constructor(opts: DebugConeRayOptions) {
+        super(opts);
+        this.r0 = opts.r0;
+        this.r1 = opts.r1;
+        this.step = opts.step;
+    }
+    update() {}
+    render() {
+        for(let i = this.r0; i < this.r1 + 1; i += this.step) {
+            this.angle = Angle.rad(i);
+            super.render();
+        }
+    }
+}
+
 /**
  * The intersection returned by a `Raycast` collision.
  * @since v0.0.0
@@ -3385,23 +3829,38 @@ class RaycastIntersecton {
  * @since v0.0.0
  */
 class Runtime {
-    processId: number; delta: number;
+    processId: number;
+    delta: number;
+    lastTime: number;
+    __isDefinitelyFixed: boolean;
     constructor() {
         this.processId = -1;
         this.delta = 0;
+        this.lastTime = 0;
+        this.__isDefinitelyFixed = false;
     }
     start(fn: Function) {
         if(this.processId != -1) throw new ExistingProcessError();
+        this.lastTime = performance.now();
         const out = () => {
+            const now = performance.now();
+            this.delta = (now - this.lastTime) / 1000; // seconds
+            this.lastTime = now;
             fn();
-            this.delta++;
             this.processId = requestAnimationFrame(out);
         }
         out();
     }
+    fixed(fn: Function, intervalTiming: number) {
+        if(this.processId != -1) throw new ExistingProcessError();
+        this.processId = setInterval(fn, intervalTiming);
+        this.__isDefinitelyFixed = true;
+    }
     stop() {
         if(this.processId == -1) throw new NoProcessError();
-        cancelAnimationFrame(this.processId);
+        if(!this.__isDefinitelyFixed) cancelAnimationFrame(this.processId);
+        else clearInterval(this.processId);
+        this.__isDefinitelyFixed = false;
         this.delta = 0;
         this.processId = -1;
     }
@@ -3749,17 +4208,17 @@ class SceneConfig extends Config<SceneConfigType> {
         super();
         this.onValueSet = (k, v) => {
             if(k == "unload" || k == "error") {
-                if(typeof v != "function") return console.warn("Invalid type passed as handle.");
+                if(typeof v != "function") throw new TypeError(`Handle '${v}' is not a function.`);
                 if(k == "unload") {
                     if(Scene.config.get("unload")) return console.warn("There is already an unload listener!");
-                    window.addEventListener("beforeunload", (e: BeforeUnloadEvent) => {
+                    window.addEventListener("beforeunload", (e) => {
                         e.preventDefault();
-                        e.returnValue = "";
+                        e.returnValue = true;
                         v();
                     });
                 } else if(k == "error") {
                     if(Scene.config.get("error")) return console.warn("There is already an error listener!");
-                    window.addEventListener("error", (e: ErrorEvent) => {
+                    window.addEventListener("error", (e) => {
                         v(e);
                     });
                 }
@@ -3801,6 +4260,7 @@ const EntityDefaultsMap = {
      * @since v1.0.11
      */
     y: primNum(),
+    z: primNum(),
     /**
      * Controls the rotation, in radians.
      * @since v1.0.11
@@ -3909,6 +4369,8 @@ type FilePickerHandleType = FileSystemFileHandle[];
  * @since v1.0.7
  */
 class FilePicker extends FilePickerBase<FilePickerPickType, FilePickerHandleType, FilePickerOptions, FilePickerFinalOptions> {
+    pick(opts: { mult: false } & FilePickerBaseOptions): Promise<string>;
+    pick(opts: { mult: true } & FilePickerBaseOptions): Promise<string[]>;
     async pick(opts: FilePickerOptions): Promise<FilePickerPickType> {
         const [...handles]: FilePickerHandleType = await this.handle(opts);
         if(handles.length == 1) {
@@ -4126,6 +4588,7 @@ interface SceneUIOptions {
     color?: string;
     rend?: Function;
     upd?: Function;
+    alpha?: number;
 }
 /**
  * The core class for UI elements.
@@ -4141,6 +4604,8 @@ class SceneUI {
     color: string;
     rend: Function;
     upd: Function;
+    alpha: number;
+    rendRect: boolean;
     /**
      * A list of the children to this UI element.
      * 
@@ -4159,6 +4624,8 @@ class SceneUI {
         this.rend = opts.rend ?? NoFunc;
         this.upd = opts.upd ?? NoFunc;
         this.child = new ChildUI();
+        this.alpha = opts.alpha ?? 1;
+        this.rendRect = true;
     }
     render() {
         this.rend();
@@ -4202,6 +4669,20 @@ class SceneUI {
     }
     hasChilds(...childs: SceneUI[]): boolean {
         return this.child.has(...childs);
+    }
+    pos() {
+        return new Vector(this.x, this.y);
+    }
+    lerp(scene: Scene, to: Vector): SceneUILerpDevice;
+    lerp(scene: Scene, to: Vector, lerpMode: LerpDeviceLerpMode): SceneUILerpDevice;
+    lerp(scene: Scene, to: Vector, lerpMode: LerpDeviceLerpMode = "once") {
+        return new SceneUILerpDevice(scene, this, this.pos(), to, lerpMode);
+    }
+    lerpRot(scene: Scene, to: number): SceneUIRotationLerpDevice;
+    lerpRot(scene: Scene, to: number, mode: AngularMeasurementName): SceneUIRotationLerpDevice;
+    lerpRot(scene: Scene, to: number, mode: AngularMeasurementName, lerpMode: LerpDeviceLerpMode): SceneUIRotationLerpDevice;
+    lerpRot(scene: Scene, to: number, mode: AngularMeasurementName = "rad", lerpMode: LerpDeviceLerpMode = "once") {
+        return new SceneUIRotationLerpDevice(scene, this, this.rot, to, mode, lerpMode);
     }
 }
 class ChildUI extends ItemBox<SceneUI> {}
@@ -4306,12 +4787,115 @@ class TextUI extends SceneUI {
         this.tx = opts.tx ?? "";
         this.font = opts.font;
         this.mw = opts.mw;
+        // text shouldnt render a rect
+        this.rendRect = false;
     }
     render() {
         this.scene.color = this.color;
         if(this.font) this.scene.font = this.font;
         this.scene.text(this.tx, this.x, this.y, this.mw);
         super.render();
+    }
+}
+interface MenuUIOptions extends SceneUIOptions {
+    binds?: KeyBinds;
+}
+class MenuUI extends SceneUI {
+    key: KeyInputs;
+    constructor(opts: MenuUIOptions) {
+        super(opts);
+        this.key = new KeyInputs(opts.binds);
+    }
+    bind(code: KeyCode, exec: Function): void;
+    bind(code: KeyCode, exec: Function, cd: number): void;
+    bind(code: KeyCode, exec: Function, cd?: number) {
+        //this.key.bind(code, exec, cd);
+        if(cd == undefined) {
+            this.key.bind(code, exec);
+            // this.binds.set(code, exec);
+        } else {
+            this.key.bind(code, exec, cd);
+            // this.bindCD.set(code, [exec, new Cooldown(cd)]);
+        }
+    }
+    binds(...binds: Binding[]) {
+        this.key.binds(...binds);
+    }
+    unbind(code: KeyCode) {
+        this.key.unbind(code);
+        // this.binds.del(code);
+        // this.bindCD.del(code);
+    }
+    unbinds(...codes: KeyCode[]) {
+        this.key.unbinds(...codes);
+    }
+    isBind(code: KeyCode): boolean {
+        return this.key.isBind(code);
+        // return this.binds.has(code);
+    }
+    isBindCD(code: KeyCode): boolean {
+        return this.key.isBindCD(code);
+        // return this.bindCD.has(code);
+    }
+    bindOf(code: KeyCode): Function | undefined {
+        return this.key.bindOf(code);
+        // return this.binds.get(code);
+    }
+    bindCDOf(code: KeyCode): PCExecCDPair | undefined {
+        return this.key.bindCDOf(code);
+        // return this.bindCD.get(code);
+    }
+    update() {
+        super.update();
+        this.key.update();
+    }
+}
+interface ImgUIOptions extends SceneUIOptions {
+    img: Img;
+}
+class ImgUI extends SceneUI {
+    img: Img;
+    constructor(opts: ImgUIOptions) {
+        super(opts);
+        this.img = opts.img;
+    }
+    render() {
+        this.scene.img(this.img, this.x, this.y, this.width, this.height);
+        super.render();
+    }
+}
+interface ProgressUIOptions extends SceneUIOptions {
+    val?: number;
+    pcolor: string;
+    scolor?: string;
+    chunks?: number;
+}
+class ProgressUI extends SceneUI {
+    val: number;
+    pcolor: string;
+    scolor?: string;
+    chunks: number;
+    constructor(opts: ProgressUIOptions) {
+        super(opts);
+        this.val = opts.val ?? 0;
+        this.pcolor = opts.pcolor;
+        this.scolor = opts.scolor;
+        this.chunks = opts.chunks ?? 1;
+    }
+    render() {
+        // width of each chunk
+        const chunkSize = this.width / this.chunks;
+        let v = this.val;
+        for(let i = 0; i < this.chunks; i++) {
+            this.scene.rect(this.x + chunkSize * i, this.y, chunkSize, this.height, v > 0 ? this.pcolor : this.scolor ?? "#fff");
+            v--;
+        }
+    }
+    lerpVal(scene: Scene, to: number): ProgressUIValueLerpDevice;
+    lerpVal(scene: Scene, to: number, mode: LerpDeviceLerpMode): ProgressUIValueLerpDevice;
+    lerpVal(scene: Scene, to: number, mode: LerpDeviceLerpMode, rate: number): ProgressUIValueLerpDevice;
+    lerpVal(scene: Scene, to: number, mode: LerpDeviceLerpMode = "once", rate = 1) {
+        return new ProgressUIValueLerpDevice(scene, this, this.val, to, mode, rate);
     }
 }
 
@@ -4356,8 +4940,7 @@ class Params {
     has(k: string): boolean;
     has(k: string, v: any): boolean;
     has(k: string, v?: any): boolean {
-        if(v) return this.params.has(k, Util.strOf(v));
-        else return this.params.has(k);
+        return this.params.has(k, Util.strOf(v));
     }
 }
 interface Renderable {
@@ -4407,6 +4990,68 @@ class External {
     }
     defImportScript(): string {
         return `import * as p2d from "${this.baseUrl()}+esm";`;
+    }
+}
+abstract class Weapon {
+    abstract fire(pos: Vector): void;
+}
+interface GunOptions {
+    mag: number;
+    ammo: number;
+    opts: BulletObjectOptions;
+    scene: Scene;
+    autoreload?: boolean;
+}
+abstract class Gun extends Weapon {
+    bul: number;
+    mag: number;
+    ammo: number;
+    opts: BulletObjectOptions;
+    scene: Scene;
+    autoreload: boolean;
+    constructor(opts: GunOptions) {
+        super();
+        this.mag = opts.mag;
+        this.ammo = opts.ammo;
+        this.bul = this.mag;
+        this.opts = opts.opts;
+        this.scene = opts.scene;
+        this.autoreload = opts.autoreload ?? false;
+    }
+    reload() {
+        const needed = this.mag - this.bul;
+        const used = Math.min(needed, this.ammo);
+        this.bul += used;
+        this.ammo -= used;
+    }
+    async shoot(pos: Vector, count: number, delay?: number): Promise<void> {
+        for(let i = 0; i < count; i++) {
+            if(this.bul <= 0) return;
+            this.fire(pos);
+            this.bul--;
+            if(delay) await wait(delay);
+        }
+    }
+    fire(pos: Vector) {
+        if(this.bul <= 0) {
+            if(this.autoreload) this.reload();
+            return;
+        }
+        const _opts = { ...this.opts };
+        _opts.x = pos.x;
+        _opts.y = pos.y;
+        _opts.scene = this.scene;
+        this.scene.add(new BulletObject(_opts));
+        this.bul--;
+        if(this.autoreload && this.bul <= 0) {
+            this.reload();
+        }
+    }
+}
+class Pistol extends Gun {}
+class Burst extends Gun {
+    fire(pos: Vector, count = 3, delay?: number) {
+        this.shoot(pos, count, delay);
     }
 }
 
@@ -4544,16 +5189,31 @@ function randItem<T>(arr: T[]): T {
 function lerp(start: number, end: number, amount: number): number {
     return start + (end - start) * amount;
 }
+function easeInQuad(t: number) {
+    return Math.pow(t, 2);
+}
+function easeOutQuad(t: number) {
+    return 1 - Math.pow(1 - t, 2);
+}
+function easeInOutQuad(t: number) {
+    return t < 0.5 ? 2 * Math.pow(t, 2) : 1 - Math.pow(-2 * t + 2, 2) / 2;
+}
+function easeSmoothStep(t: number) {
+    return t * t * (3 - 2 * t);
+}
 
 export {
     Entity, StaticObject, PhysicsObject, MovingObject, BulletObject,
     Scene, Character, PlayableCharacter, WallObject, FloorObject,
     Aircraft,
 
-    SceneUI, ButtonUI, TextUI,
+    Weapon, Gun, Pistol, Burst,
+
+    SceneUI, ButtonUI, TextUI, MenuUI, ImgUI, ProgressUI,
     
     Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, DebugRay,
-    Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag, External,
+    Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag, External, MultiRaycast,
+    ConeRaycast, ConeDebugRay,
 
     Config, SceneConfig, ImgConfig,
 
@@ -4566,6 +5226,11 @@ export {
 
     Trigger,
 
-    Itvl, FixedItvl
+    Itvl, FixedItvl,
+
+    KeyInputs,
+
+    LerpDevice, VectorBasedLerpDevice, VectorLerpDevice, EntityLerpDevice, SceneUILerpDevice,
+    EntityRotationLerpDevice, AngleBasedLerpDevice, SceneUIRotationLerpDevice
 };
-export type { Renderable };
+export type { Renderable, Constructor, AbstractConstructor, KeyCode };
