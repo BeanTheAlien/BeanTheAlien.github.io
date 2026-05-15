@@ -1,10 +1,10 @@
-import { Angle, BulletObject, Cooldown, Entity, Img, ImgUI, objIs, Scene } from "../../phantom2d.js";
+import { Angle, BulletObject, Constructor, Cooldown, Entity, Img, ImgUI, MenuUI, objIs, Scene, TextUI } from "../../phantom2d.js";
 
 window.onerror = alert;
 Img.config.set("root", "assets");
 const tileSize = 50;
 
-const scene = new Scene({ canvas: "pvz", w: 1000, h: 500 });
+const scene = new Scene({ canvas: "pvz", w: 1000, h: 900 });
 function onSpot<T extends Entity, E extends Entity>(source: T[], ent: E) {
     return source.some(x => x.x == ent.x && x.y == ent.y);
 }
@@ -14,7 +14,7 @@ function spot<T extends Entity, E extends Entity>(source: T[], ent: E) {
 abstract class Base extends Entity {
     img: Img;
     constructor(x: number, y: number, img: string, mhp: number) {
-        super({ x: (x - 1) * tileSize, y: (y - 1) * tileSize, width: tileSize / 2, height: tileSize / 2 });
+        super({ x: (x - 1) * tileSize + (tileSize / 4), y: (y - 1) * tileSize + (tileSize / 4), width: tileSize / 2, height: tileSize / 2 });
         this.img = new Img(img);
         this.use("health", { mhp, hp: mhp });
     }
@@ -27,9 +27,11 @@ abstract class Base extends Entity {
     abstract atk(): void;
 }
 abstract class Plant extends Base {
-    constructor(x: number, y: number, img: string, mhp: number) {
+    cd: Cooldown;
+    constructor(x: number, y: number, img: string, mhp: number, cdTime: number, initState = false) {
         super(x, y, img, mhp);
         this.comp("health").onDie = () => plants.splice(plants.indexOf(this), 1);
+        this.cd = new Cooldown(cdTime, initState);
         plants.push(this);
     }
 }
@@ -57,15 +59,25 @@ abstract class Zombie extends Base {
     }
 }
 class Peashooter extends Plant {
-    cd: Cooldown;
     constructor(x: number, y: number) {
-        super(x, y, "peashooter.png", 5);
-        this.cd = new Cooldown(5000, true);
+        super(x, y, "peashooter.png", 5, 5000, true);
     }
     atk() {
         if(this.cd.ready && zombs.some(z => z.y == this.y)) {
             this.cd.consume();
             new Pea(this.x + tileSize, this.y);
+        }
+    }
+}
+class Sunflower extends Plant {
+    constructor(x: number, y: number) {
+        super(x, y, "sunflower.png", 5, 7500, false);
+    }
+    atk() {
+        if(this.cd.ready) {
+            this.cd.consume();
+            sun += 25;
+            refresh();
         }
     }
 }
@@ -132,6 +144,7 @@ class FastZomb extends Zombie {
     }
 }
 
+var sun = 200;
 const plants: Plant[] = [];
 const zombs: Zombie[] = [];
 const peas: Pea[] = [];
@@ -142,9 +155,48 @@ new Peashooter(5, 5);
 new Zomb(10, 5);
 new FastZomb(10, 6);
 
+const plantMenu = new MenuUI({ y: 600, w: scene.width, scene });
+const sunTx = new TextUI({ scene, color: "#fff", y: 800 });
+function refresh() {
+    sunTx.tx = `Sun ${sun}`;
+}
+refresh();
+scene.fontSize = "24px";
+function plantMenuOpt(src: string, x = 0) {
+    return new ImgUI({ scene, img: new Img(src), w: 100, h: 175, x: x * 100 });
+}
+plantMenu.addChilds(
+    plantMenuOpt("menu1.png"),
+    plantMenuOpt("menu2.png", 2)
+);
+var plantingPlant: Constructor<Plant> | null = null;
+var plantingSun = 0;
+scene.on("click", (e) => {
+    if(!plantingPlant) return;
+    const v = scene.mouseAt(e);
+    if(v.y <= 500 && sun >= plantingSun) {
+        const sx = Math.floor(v.x / tileSize) + 1;
+        const sy = Math.floor(v.y / tileSize) + 1;
+        if(plants.some(p => p.x == sx && p.y == sy)) return;
+        new plantingPlant(sx, sy);
+        plantingPlant = null;
+        sun -= plantingSun;
+        refresh();
+    }
+});
+plantMenu.bind("1", () => {
+    plantingPlant = Peashooter;
+    plantingSun = 25;
+});
+plantMenu.bind("2", () => {
+    plantingPlant = Sunflower;
+    plantingSun = 25;
+});
+scene.addUI(plantMenu, sunTx);
+
 scene.start(() => {
     for(let i = 0; i <= scene.width; i += tileSize) {
-        for(let j = 0; j <= scene.height; j += tileSize) {
+        for(let j = 0; j <= 500; j += tileSize) {
             const r = i / tileSize;
             const c = j / tileSize;
             scene.rect(i, j, tileSize, tileSize, (r + c) % 2 == 0 ? "#2b9900" : "#268500");

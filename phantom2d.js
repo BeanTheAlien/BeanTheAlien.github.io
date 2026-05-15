@@ -3151,13 +3151,16 @@ class Cooldown {
     constructor(msOrState, msOrState2) {
         this.id = -1;
         this.ready = false;
-        if (msOrState && typeof msOrState == "number" && msOrState2 == undefined) {
+        // Use typeof check for the number
+        const hasMs = typeof msOrState === "number";
+        const hasState = typeof msOrState2 === "boolean";
+        if (hasMs && msOrState2 === undefined) {
             this.on(msOrState);
         }
-        else if (msOrState && typeof msOrState == "boolean" && msOrState2 == undefined) {
+        else if (typeof msOrState === "boolean" && msOrState2 === undefined) {
             this.ready = msOrState;
         }
-        else if (msOrState && typeof msOrState == "number" && msOrState2 && typeof msOrState2 == "boolean") {
+        else if (hasMs && hasState) {
             this.on(msOrState);
             this.ready = msOrState2;
         }
