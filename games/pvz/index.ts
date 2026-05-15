@@ -1,10 +1,16 @@
-import { Angle, BulletObject, Cooldown, Entity, Img, objIs, Scene } from "../../phantom2d.js";
+import { Angle, BulletObject, Cooldown, Entity, Img, ImgUI, objIs, Scene } from "../../phantom2d.js";
 
 window.onerror = alert;
 Img.config.set("root", "assets");
 const tileSize = 50;
 
 const scene = new Scene({ canvas: "pvz", w: 1000, h: 500 });
+function onSpot<T extends Entity, E extends Entity>(source: T[], ent: E) {
+    return source.some(x => x.x == ent.x && x.y == ent.y);
+}
+function spot<T extends Entity, E extends Entity>(source: T[], ent: E) {
+    return source.find(x => x.x == ent.x && x.y == ent.y);
+}
 abstract class Base extends Entity {
     img: Img;
     constructor(x: number, y: number, img: string, mhp: number) {
@@ -32,10 +38,12 @@ abstract class Zombie extends Base {
     mcd: Cooldown;
     cd: Cooldown;
     ma: boolean;
-    constructor(x: number, y: number, img: string, mhp: number, armor = 0) {
+    mspd: number;
+    constructor(x: number, y: number, img: string, mhp: number, mspd = 2500, armor = 0) {
         super(x, y, img, mhp);
         this.armor = armor;
-        this.mcd = new Cooldown(2500);
+        this.mspd = mspd;
+        this.mcd = new Cooldown(mspd);
         this.cd = new Cooldown(1000);
         this.ma = true;
         this.comp("health").onDie = () => zombs.splice(zombs.indexOf(this), 1);
@@ -74,8 +82,8 @@ class Pea extends Entity {
         if(this.cd.ready) {
             this.x += tileSize;
             this.cd.consume();
-            if(zombs.some(z => z.x == this.x && z.y == this.y)) {
-                const z = zombs.find(z => z.x == this.x && z.y == this.y) as Zombie;
+            if(onSpot(zombs, this)) {
+                const z = spot(zombs, this) as Zombie;
                  z.comp("health").hurt(1);
                 peas.splice(peas.indexOf(this), 1);
             }
@@ -87,15 +95,39 @@ class Zomb extends Zombie {
         super(x, y, "zomber.png", 1);
     }
     atk() {
-        if(plants.some(p => p.x == this.x)) {
+        if(onSpot(plants, this)) {
             this.ma = false;
             if(this.cd.ready) {
-                const p = plants.find(p => p.x == this.x) as Plant;
+                const p = spot(plants, this) as Plant;
                 p.comp("health").hurt(1);
                 this.cd.consume();
             }
         } else {
             this.ma = true;
+        }
+        if(this.x <= 0) {
+            alert("die");
+        }
+    }
+}
+class FastZomb extends Zombie {
+    constructor(x: number, y: number) {
+        super(x, y, "zomber.png", 1, 1000);
+    }
+    atk() {
+        if(onSpot(plants, this)) {
+            this.ma = false;
+            if(this.cd.ready) {
+                const p = spot(plants, this) as Plant;
+                p.comp("health").hurt(1);
+                this.cd.consume();
+            }
+        } else {
+            this.ma = true;
+        }
+        if(this.x < 0) {
+            scene.addUI(brains);
+            scene.stop();
         }
     }
 }
@@ -104,8 +136,11 @@ const plants: Plant[] = [];
 const zombs: Zombie[] = [];
 const peas: Pea[] = [];
 
+const brains = new ImgUI({ scene, w: scene.width, h: scene.height, img: new Img("brains.png") });
+
 new Peashooter(5, 5);
 new Zomb(10, 5);
+new FastZomb(10, 6);
 
 scene.start(() => {
     for(let i = 0; i <= scene.width; i += tileSize) {
