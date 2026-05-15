@@ -1,4 +1,4 @@
-import { BulletObject, Cooldown, Entity, Img, Scene } from "../../phantom2d.js";
+import { Cooldown, Entity, Img, Scene } from "../../phantom2d.js";
 window.onerror = alert;
 Img.config.set("root", "assets");
 const tileSize = 50;
@@ -49,34 +49,39 @@ class Peashooter extends Plant {
     cd;
     constructor(x, y) {
         super(x, y, "peashooter.png", 5);
-        this.cd = new Cooldown(1000);
+        this.cd = new Cooldown(5000, true);
     }
     atk() {
-        if (this.cd.ready) {
+        if (this.cd.ready && zombs.some(z => z.y == this.y)) {
             this.cd.consume();
-            new Pea(this.x + 1, this.y);
+            new Pea(this.x + tileSize, this.y);
         }
     }
 }
-class Pea extends BulletObject {
+class Pea extends Entity {
     img;
+    cd;
     constructor(x, y) {
-        super({ x, y, width: tileSize / 5, height: tileSize / 5, scene, rot: 0, spd: 3, collide: (o) => {
-                if (o instanceof Zombie) {
-                    this.destroy();
-                    if (o.armor > 0)
-                        o.armor--;
-                    if (o.armor <= 0)
-                        o.comp("health").hurt(1);
-                }
-            }, extLeft: 0, extRight: scene.width, extBtm: scene.height, extTop: 0 });
+        super({ x, y, width: tileSize / 5, height: tileSize / 5 });
         this.img = new Img("pea.png");
+        this.cd = new Cooldown(1000);
         peas.push(this);
+    }
+    next() {
+        if (this.cd.ready) {
+            this.x += tileSize;
+            this.cd.consume();
+            if (zombs.some(z => z.x == this.x && z.y == this.y)) {
+                const z = zombs.find(z => z.x == this.x && z.y == this.y);
+                z.comp("health").hurt(1);
+                peas.splice(peas.indexOf(this), 1);
+            }
+        }
     }
 }
 class Zomb extends Zombie {
     constructor(x, y) {
-        super(x, y, "zomber.png", 3);
+        super(x, y, "zomber.png", 1);
     }
     atk() {
         if (plants.some(p => p.x == this.x)) {
@@ -111,5 +116,5 @@ scene.start(() => {
         z.next();
     });
     plants.forEach(p => p.atk());
-    peas.forEach(p => p.x += tileSize);
+    peas.forEach(p => p.next());
 });
