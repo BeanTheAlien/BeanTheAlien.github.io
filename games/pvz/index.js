@@ -75,6 +75,14 @@ class Zombie extends Base {
             scene.stop();
         }
     }
+    injure(dmg) {
+        if (this.armor > 0) {
+            this.armor -= dmg;
+        }
+        else {
+            this.comp("health").hurt(dmg);
+        }
+    }
 }
 class Peashooter extends Plant {
     constructor(x, y) {
@@ -114,7 +122,7 @@ class Landmine extends NoAtkPlant {
     touch(z) {
         if (this.cd.ready) {
             this.cd.consume();
-            z.comp("health").die();
+            z.injure(15);
             plants.splice(plants.indexOf(this), 1);
         }
     }
@@ -134,7 +142,7 @@ class Pea extends Entity {
             this.cd.consume();
             if (onSpot(zombs, this)) {
                 const z = spot(zombs, this);
-                z.comp("health").hurt(1);
+                z.injure(1);
                 peas.splice(peas.indexOf(this), 1);
             }
         }

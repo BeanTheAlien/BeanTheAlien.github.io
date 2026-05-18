@@ -1351,13 +1351,10 @@ class BulletObject extends Entity {
             x - this.tol > w ||
             y + this.tol < 0 ||
             y - this.tol > h) {
-            this.destroy();
+            this.scene.rm(this);
+            if (this.onDest)
+                this.onDest(new PhantomDestroyedEvent());
         }
-    }
-    destroy() {
-        this.scene.rm(this);
-        if (this.onDest)
-            this.onDest(new PhantomDestroyedEvent());
     }
     static from(opts) {
         if (opts instanceof Preset) {
@@ -3800,6 +3797,18 @@ class TextUI extends SceneUI {
         super.render();
     }
 }
+class KeyedTextUI extends TextUI {
+    change;
+    constructor(opts) {
+        super(opts);
+        this.change = opts.change;
+        if (opts.val)
+            this.tx = this.change(opts.val);
+    }
+    set val(newVal) {
+        this.tx = this.change(newVal);
+    }
+}
 class MenuUI extends SceneUI {
     key;
     constructor(opts) {
@@ -4151,4 +4160,4 @@ function easeInOutQuad(t) {
 function easeSmoothStep(t) {
     return t * t * (3 - 2 * t);
 }
-export { Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, FloorObject, Aircraft, Weapon, Gun, Pistol, Burst, SceneUI, ButtonUI, TextUI, MenuUI, ImgUI, ProgressUI, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, DebugRay, Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag, External, MultiRaycast, ConeRaycast, ConeDebugRay, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, randItem, lerp, Local, LocalDeprecated, Session, Clipboard, Cookies, Params, Comp, HealthComp, InvComp, EnhancedPhysicsComp, GravityComp, Trigger, Itvl, FixedItvl, KeyInputs, LerpDevice, VectorBasedLerpDevice, VectorLerpDevice, EntityLerpDevice, SceneUILerpDevice, EntityRotationLerpDevice, AngleBasedLerpDevice, SceneUIRotationLerpDevice };
+export { Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, FloorObject, Aircraft, Weapon, Gun, Pistol, Burst, SceneUI, ButtonUI, TextUI, MenuUI, ImgUI, ProgressUI, KeyedTextUI, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, DebugRay, Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag, External, MultiRaycast, ConeRaycast, ConeDebugRay, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, randItem, lerp, Local, LocalDeprecated, Session, Clipboard, Cookies, Params, Comp, HealthComp, InvComp, EnhancedPhysicsComp, GravityComp, Trigger, Itvl, FixedItvl, KeyInputs, LerpDevice, VectorBasedLerpDevice, VectorLerpDevice, EntityLerpDevice, SceneUILerpDevice, EntityRotationLerpDevice, AngleBasedLerpDevice, SceneUIRotationLerpDevice };

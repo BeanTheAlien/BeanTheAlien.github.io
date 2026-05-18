@@ -123,7 +123,7 @@ class Landmine extends NoAtkPlant {
     touch(z: Zombie) {
         if(this.cd.ready) {
             this.cd.consume();
-            z.comp("health").die();
+            z.injure(15);
             plants.splice(plants.indexOf(this), 1);
         }
     }
@@ -143,7 +143,7 @@ class Pea extends Entity {
             this.cd.consume();
             if(onSpot(zombs, this)) {
                 const z = spot(zombs, this) as Zombie;
-                z.comp("health").hurt(1);
+                z.injure(1);
                 peas.splice(peas.indexOf(this), 1);
             }
         }
@@ -216,22 +216,19 @@ scene.on("click", (e) => {
         refresh();
     }
 });
-plantMenu.bind("1", () => {
+plantMenu.binds(["1", () => {
     plantingPlant = Peashooter;
     plantingSun = 25;
-});
-plantMenu.bind("2", () => {
+}], ["2", () => {
     plantingPlant = Sunflower;
     plantingSun = 25;
-});
-plantMenu.bind("3", () => {
+}], ["3", () => {
     plantingPlant = Walnut;
     plantingSun = 75;
-});
-plantMenu.bind("4", () => {
+}], ["4", () => {
     plantingPlant = Landmine;
     plantingSun = 100;
-});
+}]);
 scene.addUI(plantMenu, sunTx);
 
 const boardHeight = 500;
