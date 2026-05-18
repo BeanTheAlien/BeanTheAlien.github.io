@@ -5139,9 +5139,9 @@ function random(a?: number, b?: number): number {
     let min = 0; let max = 0;
     if(a == undefined && b == undefined) {
         min = 0; max = 101;
-    } else if(a && b == undefined) {
+    } else if(a != undefined && b == undefined) {
         min = 0; max = a;
-    } else if(a && b) {
+    } else if(a != undefined && b != undefined) {
         min = a; max = b;
     }
     if(min > max) {
