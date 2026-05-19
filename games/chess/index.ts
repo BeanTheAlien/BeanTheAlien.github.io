@@ -98,12 +98,53 @@ class Knight extends Piece {
     constructor(x: number, y: number, team: TeamColor) {
         super(x, y, team, `horse_${team}.png`);
     }
+    getL(src: Vector) {
+        return [
+            // 2 vertical, 1 horizontal
+            new Vector(src.x + 1, src.y + 2),
+            new Vector(src.x - 1, src.y + 2),
+            new Vector(src.x + 1, src.y - 2),
+            new Vector(src.x - 1, src.y - 2),
+            
+            // 1 vertical, 2 horizontal
+            new Vector(src.x + 2, src.y + 1),
+            new Vector(src.x - 2, src.y + 1),
+            new Vector(src.x + 2, src.y - 1),
+            new Vector(src.x - 2, src.y - 1)
+        ];
+    }
     ok(p: Vector) {
-        return !fd(new Vector(p.x + 1, p.y + 3)) || !fd(new Vector(p.x - 1, p.y + ))
+        const dx = Math.abs(p.x - this.x);
+        const dy = Math.abs(p.y - this.y);
+
+        // A knight move always has a product of 2 (2x1 or 1x2)
+        return dx * dy == 2;
+    }
+    valid() {
+        return this.getL(this.grid());
+    }
+}
+class RKnight extends Knight {
+    constructor(x: number, y: number) {
+        super(x, y, "red");
+    }
+}
+class BKnight extends Knight {
+    constructor(x: number, y: number) {
+        super(x, y, "blue");
+    }
+}
+class Bishop extends Piece {
+    constructor(x: number, y: number, team: TeamColor) {
+        super(x, y, team, `bishop_${team}.png`);
+    }
+    ok(p: Vector) {
+        const g1 = this.grid();
+        const g2 = Piece.grid(p);
+        return Math.abs(g1.x - g2.x) == Math.abs(g1.y - g2.y);
     }
     valid() {
         //
-        return [new Vector(this.grid().x)];
     }
 }
 const pieces: Piece[] = [];
