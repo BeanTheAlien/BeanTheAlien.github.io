@@ -1,6 +1,6 @@
-import { Angle, BulletObject, Constructor, Cooldown, Entity, Img, ImgUI, MenuUI, objIs, random, Scene, TextUI } from "../../phantom2d.js";
+import { Angle, BulletObject, Constructor, Cooldown, Entity, Img, ImgUI, KeyedTextUI, MenuUI, objIs, random, Scene, TextUI } from "../../phantom2d.js";
 
-window.onerror = alert;
+//window.onerror = alert;
 Img.config.set("root", "assets");
 const tileSize = 50;
 
@@ -209,7 +209,7 @@ scene.on("click", (e) => {
     if(v.y <= boardHeight && sun >= plantingSun) {
         const sx = Math.floor(v.x / tileSize) + 1;
         const sy = Math.floor(v.y / tileSize) + 1;
-        if(plants.some(p => p.x == sx && p.y == sy)) return;
+        if(plants.some(p => p.x == (sx * tileSize + (tileSize / 4)) && p.y == (sy * tileSize + (tileSize / 4)))) return;
         new plantingPlant(sx, sy);
         plantingPlant = null;
         sun -= plantingSun;
@@ -238,11 +238,14 @@ function createZombie() {
 }
 var zivTime = 2500;
 var ziv = setInterval(createZombie, zivTime);
+const difficult = new ImgUI({ scene, img: new Img("difficult.png"), w: scene.width * 0.75, h: scene.height * 0.75 });
 setInterval(() => {
     clearInterval(ziv);
     zivTime -= 100;
     zivTime = Math.max(zivTime, 100);
     ziv = setInterval(createZombie, zivTime);
+    scene.addUI(difficult);
+    setTimeout(() => scene.rmUI(difficult), 750);
 }, 10000);
 
 scene.start(() => {

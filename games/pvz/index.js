@@ -1,5 +1,5 @@
 import { Cooldown, Entity, Img, ImgUI, MenuUI, random, Scene, TextUI } from "../../phantom2d.js";
-window.onerror = alert;
+//window.onerror = alert;
 Img.config.set("root", "assets");
 const tileSize = 50;
 const scene = new Scene({ canvas: "pvz", w: 1000, h: 900 });
@@ -201,7 +201,7 @@ scene.on("click", (e) => {
     if (v.y <= boardHeight && sun >= plantingSun) {
         const sx = Math.floor(v.x / tileSize) + 1;
         const sy = Math.floor(v.y / tileSize) + 1;
-        if (plants.some(p => p.x == sx && p.y == sy))
+        if (plants.some(p => p.x == (sx * tileSize + (tileSize / 4)) && p.y == (sy * tileSize + (tileSize / 4))))
             return;
         new plantingPlant(sx, sy);
         plantingPlant = null;
@@ -209,22 +209,19 @@ scene.on("click", (e) => {
         refresh();
     }
 });
-plantMenu.bind("1", () => {
-    plantingPlant = Peashooter;
-    plantingSun = 25;
-});
-plantMenu.bind("2", () => {
-    plantingPlant = Sunflower;
-    plantingSun = 25;
-});
-plantMenu.bind("3", () => {
-    plantingPlant = Walnut;
-    plantingSun = 75;
-});
-plantMenu.bind("4", () => {
-    plantingPlant = Landmine;
-    plantingSun = 100;
-});
+plantMenu.binds(["1", () => {
+        plantingPlant = Peashooter;
+        plantingSun = 25;
+    }], ["2", () => {
+        plantingPlant = Sunflower;
+        plantingSun = 25;
+    }], ["3", () => {
+        plantingPlant = Walnut;
+        plantingSun = 75;
+    }], ["4", () => {
+        plantingPlant = Landmine;
+        plantingSun = 100;
+    }]);
 scene.addUI(plantMenu, sunTx);
 const boardHeight = 500;
 function createZombie() {
@@ -233,11 +230,14 @@ function createZombie() {
 }
 var zivTime = 2500;
 var ziv = setInterval(createZombie, zivTime);
+const difficult = new ImgUI({ scene, img: new Img("difficult.png"), w: scene.width * 0.75, h: scene.height * 0.75 });
 setInterval(() => {
     clearInterval(ziv);
     zivTime -= 100;
     zivTime = Math.max(zivTime, 100);
     ziv = setInterval(createZombie, zivTime);
+    scene.addUI(difficult);
+    setTimeout(() => scene.rmUI(difficult), 750);
 }, 10000);
 scene.start(() => {
     for (let i = 0; i <= scene.width; i += tileSize) {
