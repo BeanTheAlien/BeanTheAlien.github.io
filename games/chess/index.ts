@@ -6,6 +6,8 @@ const tileSize = 50;
 const size = 750;
 
 const scene = new Scene({ canvas: "chess", w: size, h: size });
+const gridWidth = scene.width / tileSize;
+const gridHeight = scene.height / tileSize;
 
 function near(a: Vector, b: Vector, tolerance: number) {
     const dx = b.x - a.x;
@@ -144,14 +146,106 @@ class Bishop extends Piece {
         return Math.abs(g1.x - g2.x) == Math.abs(g1.y - g2.y);
     }
     valid() {
-        //
+        const d: Vector[] = [];
+        const g = this.grid();
+        const v = (r: number, c: number) => 0 <= r && r <= gridWidth &&
+            0 <= c && c <= gridHeight;
+        const r = g.x;
+        const c = g.y;
+        const iter = (next: (i: number) => [number, number]) => {
+            for(let i = 1;; i++) {
+                const [a, b] = next(i);
+                if(!v(a, b)) break;
+                d.push(new Vector(a, b));
+            }
+        }
+        iter((i) => [r - i, c - i]);
+        iter((i) => [r + i, c + i]);
+        iter((i) => [r - i, c + i]);
+        iter((i) => [r + i, c - i]);
+        return d;
+    }
+}
+class RBishop extends Bishop {
+    constructor(x: number, y: number) {
+        super(x, y, "red");
+    }
+}
+class BBishop extends Bishop {
+    constructor(x: number, y: number) {
+        super(x, y, "blue");
+    }
+}
+class King extends Piece {
+    constructor(x: number, y: number, team: TeamColor) {
+        super(x, y, team, `king_${team}.png`);
+    }
+    ok(p: Vector) {
+        const g = this.grid();
+        const dx = Math.abs(p.x - g.x);
+        const dy = Math.abs(p.y - g.y);
+        return (dx == 0 && dy == 1) || (dx == 1 && dy == 0) || (dx == 1 && dy == 1);
+    }
+    valid() {
+        const g = this.grid();
+        return [
+            new Vector(g.x + 1, g.y),
+            new Vector(g.x, g.y + 1),
+            new Vector(g.x - 1, g.y),
+            new Vector(g.x, g.y - 1),
+            new Vector(g.x + 1, g.y + 1),
+            new Vector(g.x - 1, g.y - 1),
+            new Vector(g.x + 1, g.y - 1),
+            new Vector(g.x - 1, g.y + 1)
+        ];
+    }
+}
+class RKing extends King {
+    constructor(x: number, y: number) {
+        super(x, y, "red");
+    }
+}
+class BKing extends King {
+    constructor(x: number, y: number) {
+        super(x, y, "blue");
+    }
+}
+class Rook extends Piece {
+    constructor(x: number, y: number, team: TeamColor) {
+        super(x, y, team, `rook_${team}.png`);
+    }
+    ok(p: Vector) {
+        const g = this.grid();
+        const gp = Piece.grid(p);
+        return g.x == gp.x || g.y == gp.y;
+    }
+    valid() {
+        const pos: Vector[] = [];
+        const g = this.grid();
+        for(let i = 0; i < gridWidth; i += tileSize) {
+            pos.push(new Vector(Piece.normal(i), Piece.normal(g.y)));
+        }
+        for(let i = 0; i < gridHeight; i += tileSize) {
+            pos.push(new Vector(Piece.normal(g.y), Piece.normal(i)));
+        }
+        return pos;
+    }
+}
+class RRook extends Rook {
+    constructor(x: number, y: number) {
+        super(x, y, "red");
+    }
+}
+class BRook extends Rook {
+    constructor(x: number, y: number) {
+        super(x, y, "blue");
     }
 }
 const pieces: Piece[] = [];
 var team: TeamColor = "red";
 var active: Piece | null = null;
 
-new RPawn(1, scene.height / tileSize);
+new RPawn(1, gridHeight);
 new BPawn(1, 1);
 
 scene.start(() => {
