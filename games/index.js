@@ -8,7 +8,7 @@ Object.assign(gamelist.style, {
     gap: "20px"
 });
 
-const games = [["Flappy Bird", "bird"], ["Dungeon", "dng"], ["Pong", "pong"], ["Snake", "snake"], ["RPG", "rpg"], ["PvZ", "pvz"], ["Chess 2: Electric Boogaloo", "chess"]];
+const games = [["Flappy Bird", "bird"], ["Dungeon", "dng"], ["Pong", "pong"], ["Snake", "snake"], ["RPG", "rpg"], ["PvZ", "pvz"], ["Chess 2: Electric Boogaloo", "chess"], ["Big Boo Battlegrounds", "bbb"]];
 games.forEach(g => {
     const b = document.createElement("button");
     b.textContent = g[0];
