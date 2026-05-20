@@ -20,6 +20,29 @@ function fd(at: Vector) {
         return Piece.compare(g, at);
     });
 }
+function eat(at: Vector) {
+    const p = fd(at);
+    if(p) {
+        pieces.splice(pieces.indexOf(p), 1);
+    }
+}
+function okAt(at: Vector, team: TeamColor) {
+    const tp = fd(at);
+    return tp != undefined && tp.team != team;
+}
+function clear(start: Vector, end: Vector): boolean {
+    const dx = Math.sign(end.x - start.x);
+    const dy = Math.sign(end.y - start.y);
+    let x = start.x + dx;
+    let y = start.y + dy;
+
+    while(x != end.x || y != end.y) {
+        if(fd(new Vector(x, y))) return false; // Found an obstacle!
+        x += dx;
+        y += dy;
+    }
+    return true;
+}
 
 type TeamColor = "red" | "blue";
 abstract class Piece extends Entity {
@@ -31,6 +54,7 @@ abstract class Piece extends Entity {
         this.ico = new Img(img);
         this.team = team;
         this.ms = 0;
+        pieces.push(this);
     }
     static center(val: number) {
         return Piece.normal(val) + (tileSize / 4);
@@ -53,30 +77,27 @@ abstract class Piece extends Entity {
 class Pawn extends Piece {
     constructor(x: number, y: number, team: TeamColor) {
         super(x, y, team, `pawn_${team}.png`);
-        pieces.push(this);
     }
+    // Inside class Pawn
     ok(p: Vector) {
-        // 1. Get the CURRENT grid position of THIS piece (using its pixel x,y)
         const currentGrid = this.grid();
-
-        // 2. Calculate the difference (p is already grid coords)
         const dx = p.x - currentGrid.x;
         const dy = p.y - currentGrid.y;
-
-        // No side-stepping
-        if(dx != 0) return false;
-
-        // 3. Direction Logic:
-        // Blue (top) moves DOWN: targetY (2) - currentY (1) = 1. Direction = 1
-        // Red (bottom) moves UP: targetY (14) - currentY (15) = -1. Direction = -1
         const direction = (this.team == "red") ? -1 : 1;
-        const moveDistance = dy * direction;
+        const tp = fd(p);
 
-        const canMoveTwo = this.ms == 0;
-
-        return canMoveTwo 
-            ? (moveDistance == 1 || moveDistance == 2) 
-            : (moveDistance == 1);
+        // Diagonal Capture: Just check if an enemy is there
+        if(Math.abs(dx) == 1 && dy == direction) {
+            return tp !== undefined && tp.team !== this.team;
+        }
+        
+        // Straight Move
+        if(dx == 0) {
+            if(tp) return false;
+            const moveDistance = dy * direction;
+            return (this.ms == 0) ? (moveDistance == 1 || moveDistance == 2) : (moveDistance == 1);
+        }
+        return false;
     }
     valid() {
         const g = this.grid();
@@ -115,12 +136,17 @@ class Knight extends Piece {
             new Vector(src.x - 2, src.y - 1)
         ];
     }
+    // Knight ok()
     ok(p: Vector) {
-        const dx = Math.abs(p.x - this.x);
-        const dy = Math.abs(p.y - this.y);
-
-        // A knight move always has a product of 2 (2x1 or 1x2)
-        return dx * dy == 2;
+        const g = this.grid();
+        const dx = Math.abs(p.x - g.x);
+        const dy = Math.abs(p.y - g.y);
+        const isLMove = dx * dy == 2;
+        
+        if (!isLMove) return false;
+        
+        const target = fd(p);
+        return !target || target.team !== this.team; // Can't land on teammates
     }
     valid() {
         return this.getL(this.grid());
@@ -141,9 +167,14 @@ class Bishop extends Piece {
         super(x, y, team, `bishop_${team}.png`);
     }
     ok(p: Vector) {
-        const g1 = this.grid();
-        const g2 = Piece.grid(p);
-        return Math.abs(g1.x - g2.x) == Math.abs(g1.y - g2.y);
+        const g = this.grid();
+        // 1. Must be a perfect diagonal
+        if(Math.abs(g.x - p.x) != Math.abs(g.y - p.y)) return false;
+        // 2. Path must be clear
+        if(!clear(g, p)) return false;
+        // 3. Target cannot be a teammate
+        const target = fd(p);
+        return !target || target.team != this.team;
     }
     valid() {
         const d: Vector[] = [];
@@ -180,11 +211,15 @@ class King extends Piece {
     constructor(x: number, y: number, team: TeamColor) {
         super(x, y, team, `king_${team}.png`);
     }
+    // King ok()
     ok(p: Vector) {
         const g = this.grid();
         const dx = Math.abs(p.x - g.x);
         const dy = Math.abs(p.y - g.y);
-        return (dx == 0 && dy == 1) || (dx == 1 && dy == 0) || (dx == 1 && dy == 1);
+        const isOneSquare = (dx <= 1 && dy <= 1);
+        if(!isOneSquare) return false;
+        const target = fd(p);
+        return !target || target.team != this.team;
     }
     valid() {
         const g = this.grid();
@@ -216,17 +251,22 @@ class Rook extends Piece {
     }
     ok(p: Vector) {
         const g = this.grid();
-        const gp = Piece.grid(p);
-        return g.x == gp.x || g.y == gp.y;
+        // 1. Must be a straight line
+        if(g.x != p.x && g.y != p.y) return false;
+        // 2. Path must be clear
+        if(!clear(g, p)) return false;
+        // 3. Destination cannot be a teammate
+        const target = fd(p);
+        return !target || target.team != this.team;
     }
     valid() {
         const pos: Vector[] = [];
         const g = this.grid();
-        for(let i = 0; i < gridWidth; i += tileSize) {
-            pos.push(new Vector(Piece.normal(i), Piece.normal(g.y)));
+        for(let i = 1; i <= gridWidth; i++) {
+            pos.push(new Vector(i, g.y));
         }
-        for(let i = 0; i < gridHeight; i += tileSize) {
-            pos.push(new Vector(Piece.normal(g.y), Piece.normal(i)));
+        for(let i = 1; i <= gridHeight; i++) {
+            pos.push(new Vector(g.x, i));
         }
         return pos;
     }
@@ -241,12 +281,73 @@ class BRook extends Rook {
         super(x, y, "blue");
     }
 }
+class Queen extends Piece {
+    constructor(x: number, y: number, team: TeamColor) {
+        super(x, y, team, `queen_${team}.png`);
+    }
+    ok(p: Vector) {
+        const g = this.grid();
+        // 1. Must be a perfect diagonal
+        if((Math.abs(g.x - p.x) != Math.abs(g.y - p.y)) && (g.x != p.x && g.y != p.y)) return false;
+        // 2. Path must be clear
+        if(!clear(g, p)) return false;
+        // 3. Target cannot be a teammate
+        const target = fd(p);
+        return !target || target.team != this.team;
+    }
+    valid() {
+        const d: Vector[] = [];
+        const g = this.grid();
+        const v = (r: number, c: number) => 0 <= r && r <= gridWidth &&
+            0 <= c && c <= gridHeight;
+        const r = g.x;
+        const c = g.y;
+        const iter = (next: (i: number) => [number, number]) => {
+            for(let i = 1;; i++) {
+                const [a, b] = next(i);
+                if(!v(a, b)) break;
+                d.push(new Vector(a, b));
+            }
+        }
+        iter((i) => [r - i, c - i]);
+        iter((i) => [r + i, c + i]);
+        iter((i) => [r - i, c + i]);
+        iter((i) => [r + i, c - i]);
+        for(let i = 1; i <= gridWidth; i++) {
+            d.push(new Vector(i, g.y));
+        }
+        for(let i = 1; i <= gridHeight; i++) {
+            d.push(new Vector(g.x, i));
+        }
+        return d;
+    }
+}
+class RQueen extends Queen {
+    constructor(x: number, y: number) {
+        super(x, y, "red");
+    }
+}
+class BQueen extends Queen {
+    constructor(x: number, y: number) {
+        super(x, y, "blue");
+    }
+}
 const pieces: Piece[] = [];
 var team: TeamColor = "red";
 var active: Piece | null = null;
 
 new RPawn(1, gridHeight);
 new BPawn(1, 1);
+new RKnight(2, gridHeight);
+new BKnight(2, 1);
+new RBishop(3, gridHeight);
+new BBishop(3, 1);
+new RKing(4, gridHeight);
+new BKing(4, 1);
+new RRook(5, gridHeight);
+new BRook(5, 1);
+new RQueen(6, gridHeight);
+new BQueen(6, 1);
 
 scene.start(() => {
     for(let i = 0; i <= scene.width; i += tileSize) {
@@ -267,21 +368,30 @@ scene.start(() => {
 });
 scene.on("click", (e) => {
     const at = scene.mouseAt(e);
-    const sx = Piece.grid(at).x;
-    const sy = Piece.grid(at).y;
-    const pos = new Vector(sx, sy);
-    if(!active) {
+    const pos = Piece.grid(at); // Current clicked grid square
+
+    if (!active) {
         const p = fd(pos);
-        if(!p || p.team != team) return;
+        if (!p || p.team != team) return;
         active = p;
     } else {
-        if(active.ok(pos) && !fd(pos)) {
+        // If we click the same piece again, deselect it
+        if (Piece.compare(pos, active.grid())) {
+            active = null;
+            return;
+        }
+
+        if (active.ok(pos)) {
+            // CHECK FOR CAPTURE HERE
+            const target = fd(pos);
+            if (target && target.team != active.team) {
+                eat(pos);
+            }
+
             active.ms++;
             active.setPos(new Vector(Piece.center(pos.x), Piece.center(pos.y)));
             active = null;
             team = team == "red" ? "blue" : "red";
-        } else if(Piece.compare(pos, active.grid())) {
-            active = null;
         }
     }
 });
