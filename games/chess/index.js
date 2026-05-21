@@ -352,24 +352,25 @@ const unsafe = [];
 const mines = [];
 var team = "red";
 var active = null;
+const tileCountWidth = gridHeight / tileSize;
 new RRook(1, gridHeight);
 new BRook(1, 1);
 new RRook(gridWidth, gridHeight);
 new BRook(gridWidth, 1);
 new RBishop(2, gridHeight);
 new BBishop(2, 1);
-new RBishop(gridWidth - 2 * tileSize, gridHeight);
-new BBishop(gridWidth - 2 * tileSize, 1);
+new RBishop(tileCountWidth - 2, gridHeight);
+new BBishop(tileCountWidth - 2, 1);
 new RKnight(3, gridHeight);
 new BKnight(3, 1);
-new RKnight(gridWidth - 3 * tileSize, gridHeight);
-new BKnight(gridWidth - 3 * tileSize, 1);
+new RKnight(tileCountWidth - 3, gridHeight);
+new BKnight(tileCountWidth - 3, 1);
 new RQueen(4, gridHeight);
 new BQueen(4, 1);
 new RKing(5, gridHeight);
 new BKing(5, 1);
-for (let i = 1; i <= gridWidth / tileSize; i++) {
-    new RPawn(i, gridHeight - tileSize);
+for (let i = 1; i <= tileCountWidth; i++) {
+    new RPawn(i, gridHeight / tileSize - 1);
     new BPawn(i, 2);
 }
 scene.start(() => {
