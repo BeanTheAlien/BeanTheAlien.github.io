@@ -350,6 +350,8 @@ var destructionCountR = 0;
 var destructionCountB = 0;
 var landmineR = false;
 var landmineB = false;
+var lockR = false;
+var lockB = false;
 const removeSelfFromRequests = (name: string) => {
     const out = reqBtnObjects.find(r => r[1] == name);
     if(out) phaseReqs.removeChild(out[0]);
@@ -448,6 +450,7 @@ scene.start(() => {
             scene.rect(i, j, tileSize, tileSize, (r + c) % 2 == 0 ? "#1a5a00" : "#fff4e8");
         }
     }
+    unsafe.forEach(u => scene.rect(u.x, u.y, tileSize, tileSize, "#7b4015"));
     if(active) {
         const g = active.grid();
         // Highlight the whole tile
@@ -530,6 +533,28 @@ scene.on("click", (e) => {
                 // force blue
                 team = "blue";
             } else if(!landmineR && landmineB) {
+                // force red
+                team = "red";
+            }
+            return;
+        }
+    } else if(phase == "lock") {
+        if(!fd(pos)) {
+            if(lockR && lockB) {
+                phase = "play";
+                return;
+            }
+            if(team == "red" ? lockR : lockB) {
+                unsafe.push(pos);
+                if(team == "red") lockR = true;
+                if(team == "blue") lockB = true;
+            }
+            // if both are not done, do handshake
+            if(!lockR && !lockB) team = team == "red" ? "blue" : "red";
+            else if(lockR && !lockB) {
+                // force blue
+                team = "blue";
+            } else if(!lockR && lockB) {
                 // force red
                 team = "red";
             }
