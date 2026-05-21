@@ -48,6 +48,36 @@ function isUnsafe(vec) {
 function isSafe(vec) {
     return !isUnsafe(vec);
 }
+function diag(g) {
+    const d = [];
+    const v = (r, c) => 0 <= r && r <= gridWidth &&
+        0 <= c && c <= gridHeight;
+    const r = g.x;
+    const c = g.y;
+    const iter = (next) => {
+        for (let i = 1;; i++) {
+            const [a, b] = next(i);
+            if (!v(a, b))
+                break;
+            d.push(new Vector(a, b));
+        }
+    };
+    iter((i) => [r - i, c - i]);
+    iter((i) => [r + i, c + i]);
+    iter((i) => [r - i, c + i]);
+    iter((i) => [r + i, c - i]);
+    return d;
+}
+function line(g) {
+    const pos = [];
+    for (let i = 1; i <= gridWidth; i++) {
+        pos.push(new Vector(i, g.y));
+    }
+    for (let i = 1; i <= gridHeight; i++) {
+        pos.push(new Vector(g.x, i));
+    }
+    return pos;
+}
 class Base extends Entity {
     ico;
     constructor(x, y, img) {
@@ -182,25 +212,8 @@ class Bishop extends Piece {
         return !target || target.team != this.team;
     }
     valid() {
-        const d = [];
         const g = this.grid();
-        const v = (r, c) => 0 <= r && r <= gridWidth &&
-            0 <= c && c <= gridHeight;
-        const r = g.x;
-        const c = g.y;
-        const iter = (next) => {
-            for (let i = 1;; i++) {
-                const [a, b] = next(i);
-                if (!v(a, b))
-                    break;
-                d.push(new Vector(a, b));
-            }
-        };
-        iter((i) => [r - i, c - i]);
-        iter((i) => [r + i, c + i]);
-        iter((i) => [r - i, c + i]);
-        iter((i) => [r + i, c - i]);
-        return d.filter(v => clear(g, v));
+        return diag(g).filter(v => clear(g, v));
     }
 }
 class RBishop extends Bishop {
@@ -269,15 +282,8 @@ class Rook extends Piece {
         return !target || target.team != this.team;
     }
     valid() {
-        const pos = [];
         const g = this.grid();
-        for (let i = 1; i <= gridWidth; i++) {
-            pos.push(new Vector(i, g.y));
-        }
-        for (let i = 1; i <= gridHeight; i++) {
-            pos.push(new Vector(g.x, i));
-        }
-        return pos.filter(v => clear(g, v));
+        return line(g).filter(v => clear(g, v));
     }
 }
 class RRook extends Rook {
@@ -307,31 +313,8 @@ class Queen extends Piece {
         return !target || target.team != this.team;
     }
     valid() {
-        const d = [];
         const g = this.grid();
-        const v = (r, c) => 0 <= r && r <= gridWidth &&
-            0 <= c && c <= gridHeight;
-        const r = g.x;
-        const c = g.y;
-        const iter = (next) => {
-            for (let i = 1;; i++) {
-                const [a, b] = next(i);
-                if (!v(a, b))
-                    break;
-                d.push(new Vector(a, b));
-            }
-        };
-        iter((i) => [r - i, c - i]);
-        iter((i) => [r + i, c + i]);
-        iter((i) => [r - i, c + i]);
-        iter((i) => [r + i, c - i]);
-        for (let i = 1; i <= gridWidth; i++) {
-            d.push(new Vector(i, g.y));
-        }
-        for (let i = 1; i <= gridHeight; i++) {
-            d.push(new Vector(g.x, i));
-        }
-        return d.filter(v => clear(g, v));
+        return [...diag(g), ...line(g)].filter(v => clear(g, v));
     }
 }
 class RQueen extends Queen {

@@ -1,4 +1,4 @@
-import { Entity, Img, Scene, Vector } from "../../phantom2d.js";
+import { Constructor, Entity, Img, objIs, Scene, Vector } from "../../phantom2d.js";
 
 window.onerror = alert;
 Img.config.set("root", "assets");
@@ -79,6 +79,9 @@ function line(g: Vector) {
         pos.push(new Vector(g.x, i));
     }
     return pos;
+}
+function isBlack(obj: Piece) {
+    return blacklist.some(b => objIs(obj, b));
 }
 
 class Base extends Entity {
@@ -338,8 +341,83 @@ class Landmine extends Base {
 const pieces: Piece[] = [];
 const unsafe: Vector[] = [];
 const mines: Landmine[] = [];
+const blacklist: Constructor<Piece>[] = [];
 var team: TeamColor = "red";
 var active: Piece | null = null;
+type GamePhase = "play" | "setup" | "des" | "mine" | "mimic" | "lock";
+var phase: GamePhase = "setup";
+var destructionCountR = 0;
+var destructionCountB = 0;
+var landmineR = false;
+var landmineB = false;
+const removeSelfFromRequests = (name: string) => {
+    const out = reqBtnObjects.find(r => r[1] == name);
+    if(out) phaseReqs.removeChild(out[0]);
+}
+const phaseReqs = document.getElementById("phase_game_requests") as HTMLDivElement;
+const reqBtns: [string, string, EventListenerOrEventListenerObject][] = [
+    ["Mutually Assured Destruction", "des", () => {
+        showRequest("Mutually Assured Destruction", () => {
+            phase = "des";
+            removeSelfFromRequests("des");
+        }, () => removeSelfFromRequests("des"));
+    }],
+    ["Landmine", "mine", () => {
+        showRequest("Landmine", () => {
+            phase = "mine";
+            removeSelfFromRequests("mine");
+        }, () => removeSelfFromRequests("mine"));
+    }],
+    ["Mimic", "mimic", () => {
+        showRequest("Mimic", () => {
+            phase = "mimic";
+            removeSelfFromRequests("mimic");
+        }, () => removeSelfFromRequests("mimic"));
+    }],
+    ["Landlock", "lock", () => {
+        showRequest("Landlock", () => {
+            phase = "lock";
+            removeSelfFromRequests("lock");
+        }, () => removeSelfFromRequests("lock"));
+    }],
+    ["End Setup", "done", () => {
+        showRequest("End Setup", () => {
+            phase = "play";
+            document.body.removeChild(phaseReqs);
+        }, () => {});
+    }]
+];
+const reqBtnObjects: [HTMLButtonElement, string][] = [];
+reqBtns.forEach(r => {
+    const b = document.createElement("button");
+    b.addEventListener("click", r[2]);
+    b.textContent = r[0];
+    reqBtnObjects.push([b, r[1]]);
+});
+const activeRequest = document.getElementById("activation_request") as HTMLDialogElement;
+function showRequest(text: string, onAccept: Function, onDeny: Function) {
+    activeRequest.showModal();
+    activeRequest.innerHTML = `
+        <p>Opponent wants to activate phase:</p>
+        <p><strong>${text}</strong></p>
+        <br>
+        <p>Do you accept?</p>
+        <button id="accept">Accept</button>
+        <button id="deny">Deny</button>
+    `;
+    const kill = () => {
+        activeRequest.innerHTML = "";
+        activeRequest.close();
+    }
+    (document.getElementById("accept") as HTMLButtonElement).addEventListener("click", () => {
+        kill();
+        onAccept();
+    });
+    (document.getElementById("deny") as HTMLButtonElement).addEventListener("click", () => {
+        kill();
+        onDeny();
+    });
+}
 
 new RRook(1, tilesY);
 new BRook(1, 1);
@@ -382,32 +460,80 @@ scene.start(() => {
 scene.on("click", (e) => {
     const at = scene.mouseAt(e);
     const pos = Piece.grid(at); // Current clicked grid square
-    if(!active) {
-        const p = fd(pos);
-        if(!p || p.team != team) return;
-        active = p;
-    } else {
-        // If we click the same piece again, deselect it
-        if(Piece.compare(pos, active.grid())) {
-            active = null;
-            return;
-        }
-        if(active.ok(pos) && isSafe(pos)) {
-            // CHECK FOR CAPTURE HERE
-            const target = fd(pos);
-            if(target && target.team != active.team) {
-                eat(pos);
-            }
-            if(mines.some(m => Piece.compare(new Vector(m.x, m.y), pos))) {
-                eat(active.grid());
+    if(phase == "play") {
+        if(!active) {
+            const p = fd(pos);
+            if(!p || p.team != team) return;
+            active = p;
+        } else {
+            // If we click the same piece again, deselect it
+            if(Piece.compare(pos, active.grid())) {
                 active = null;
-                team = team == "red" ? "blue" : "red";
                 return;
             }
-            active.ms++;
-            active.setPos(new Vector(Piece.center(pos.x), Piece.center(pos.y)));
-            active = null;
-            team = team == "red" ? "blue" : "red";
+            if(active.ok(pos) && isSafe(pos)) {
+                // CHECK FOR CAPTURE HERE
+                const target = fd(pos);
+                if(target && target.team != active.team) {
+                    eat(pos);
+                }
+                if(mines.some(m => Piece.compare(new Vector(m.x, m.y), pos))) {
+                    eat(active.grid());
+                    active = null;
+                    team = team == "red" ? "blue" : "red";
+                    return;
+                }
+                active.ms++;
+                active.setPos(new Vector(Piece.center(pos.x), Piece.center(pos.y)));
+                active = null;
+                team = team == "red" ? "blue" : "red";
+            }
+        }
+    } else if(phase == "des") {
+        const p = fd(pos);
+        if(p && p.team != team) {
+            if(destructionCountR >= 3 && destructionCountB >= 3) {
+                phase = "play";
+                return;
+            }
+            if((team == "red" ? destructionCountR : destructionCountB) < 3) {
+                eat(pos);
+                blacklist.push(p.constructor as Constructor<Piece>);
+                if(team == "red") destructionCountR++;
+                if(team == "blue") destructionCountB++;
+            }
+            // if both are not done, do handshake
+            if(destructionCountR < 3 && destructionCountB < 3) team = team == "red" ? "blue" : "red";
+            else if(destructionCountR >= 3 && destructionCountB < 3) {
+                // force blue
+                team = "blue";
+            } else if(destructionCountR < 3 && destructionCountB >= 3) {
+                // force red
+                team = "red";
+            }
+            return;
+        }
+    } else if(phase == "mine") {
+        if(!fd(pos)) {
+            if(landmineR && landmineB) {
+                phase = "play";
+                return;
+            }
+            if(team == "red" ? landmineR : landmineB) {
+                mines.push(new Landmine(pos.x, pos.y));
+                if(team == "red") landmineR = true;
+                if(team == "blue") landmineB = true;
+            }
+            // if both are not done, do handshake
+            if(landmineR && landmineB) team = team == "red" ? "blue" : "red";
+            else if(landmineR && !landmineB) {
+                // force blue
+                team = "blue";
+            } else if(!landmineR && landmineB) {
+                // force red
+                team = "red";
+            }
+            return;
         }
     }
 });
