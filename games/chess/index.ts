@@ -4,8 +4,10 @@ window.onerror = alert;
 Img.config.set("root", "assets");
 const tileSize = 50;
 const size = 400;
+const tilesX = 8;
+const tilesY = 8;
 
-const scene = new Scene({ canvas: "chess", w: size, h: size });
+const scene = new Scene({ canvas: "chess", w: tileSize * tilesX, h: tileSize * tilesY });
 const gridWidth = scene.width / tileSize;
 const gridHeight = scene.height / tileSize;
 
@@ -355,25 +357,24 @@ const mines: Landmine[] = [];
 var team: TeamColor = "red";
 var active: Piece | null = null;
 
-const tileCountWidth = gridHeight / tileSize;
-new RRook(1, gridHeight);
+new RRook(1, tilesY);
 new BRook(1, 1);
-new RRook(gridWidth, gridHeight);
-new BRook(gridWidth, 1);
-new RBishop(2, gridHeight);
-new BBishop(2, 1);
-new RBishop(tileCountWidth - 2, gridHeight);
-new BBishop(tileCountWidth - 2, 1);
-new RKnight(3, gridHeight);
-new BKnight(3, 1);
-new RKnight(tileCountWidth - 3, gridHeight);
-new BKnight(tileCountWidth - 3, 1);
-new RQueen(4, gridHeight);
+new RRook(tilesX, tilesY);
+new BRook(tilesX, 1);
+new RBishop(3, tilesY);
+new BBishop(3, 1);
+new RBishop(tilesX - 2, tilesY);
+new BBishop(tilesX - 2, 1);
+new RKnight(2, tilesY);
+new BKnight(2, 1);
+new RKnight(tilesX - 1, tilesY);
+new BKnight(tilesX - 1, 1);
+new RQueen(4, tilesY);
 new BQueen(4, 1);
-new RKing(5, gridHeight);
+new RKing(5, tilesY);
 new BKing(5, 1);
-for(let i = 1; i <= tileCountWidth; i++) {
-    new RPawn(i, gridHeight / tileSize - 1);
+for(let i = 1; i <= tilesX; i++) {
+    new RPawn(i, tilesY - 1);
     new BPawn(i, 2);
 }
 
