@@ -208,7 +208,7 @@ class Bishop extends Piece {
         iter((i) => [r + i, c + i]);
         iter((i) => [r - i, c + i]);
         iter((i) => [r + i, c - i]);
-        return d;
+        return d.filter(v => clear(g, v));
     }
 }
 class RBishop extends Bishop {
@@ -282,7 +282,7 @@ class Rook extends Piece {
         for(let i = 1; i <= gridHeight; i++) {
             pos.push(new Vector(g.x, i));
         }
-        return pos;
+        return pos.filter(v => clear(g, v));
     }
 }
 class RRook extends Rook {
@@ -333,7 +333,7 @@ class Queen extends Piece {
         for(let i = 1; i <= gridHeight; i++) {
             d.push(new Vector(g.x, i));
         }
-        return d;
+        return d.filter(v => clear(g, v));
     }
 }
 class RQueen extends Queen {
