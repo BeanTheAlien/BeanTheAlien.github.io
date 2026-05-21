@@ -493,7 +493,7 @@ scene.on("click", (e) => {
     }
     else if (phase == "des") {
         const p = fd(pos);
-        if (p && p.team != team) {
+        if (p && p.team == team) {
             if (destructionCountR >= 3 && destructionCountB >= 3) {
                 phase = "play";
                 return;

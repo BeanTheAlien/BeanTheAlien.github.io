@@ -495,7 +495,7 @@ scene.on("click", (e) => {
         }
     } else if(phase == "des") {
         const p = fd(pos);
-        if(p && p.team != team) {
+        if(p && p.team == team) {
             if(destructionCountR >= 3 && destructionCountB >= 3) {
                 phase = "play";
                 return;
@@ -523,7 +523,7 @@ scene.on("click", (e) => {
                 phase = "play";
                 return;
             }
-            if(team == "red" ? landmineR : landmineB) {
+            if(team == "red" ? !landmineR : !landmineB) {
                 mines.push(new Landmine(pos.x, pos.y));
                 if(team == "red") landmineR = true;
                 if(team == "blue") landmineB = true;
@@ -545,7 +545,7 @@ scene.on("click", (e) => {
                 phase = "play";
                 return;
             }
-            if(team == "red" ? lockR : lockB) {
+            if(team == "red" ? !lockR : !lockB) {
                 unsafe.push(pos);
                 if(team == "red") lockR = true;
                 if(team == "blue") lockB = true;
