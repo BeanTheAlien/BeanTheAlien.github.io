@@ -395,6 +395,7 @@ reqBtns.forEach(r => {
     b.addEventListener("click", r[2]);
     b.textContent = r[0];
     reqBtnObjects.push([b, r[1]]);
+    phaseReqs.appendChild(b);
 });
 const activeRequest = document.getElementById("activation_request") as HTMLDialogElement;
 function showRequest(text: string, onAccept: Function, onDeny: Function) {
