@@ -2,7 +2,7 @@ import { Entity, Img, Scene, Vector } from "../../phantom2d.js";
 window.onerror = alert;
 Img.config.set("root", "assets");
 const tileSize = 50;
-const size = 750;
+const size = 400;
 const scene = new Scene({ canvas: "chess", w: size, h: size });
 const gridWidth = scene.width / tileSize;
 const gridHeight = scene.height / tileSize;
@@ -40,13 +40,24 @@ function clear(start, end) {
     }
     return true;
 }
-class Piece extends Entity {
+function isUnsafe(vec) {
+    return unsafe.some(v => Piece.compare(v, vec));
+}
+function isSafe(vec) {
+    return !isUnsafe(vec);
+}
+class Base extends Entity {
     ico;
+    constructor(x, y, img) {
+        super({ x: Piece.center(x), y: Piece.center(y), width: tileSize / 2, height: tileSize / 2 });
+        this.ico = new Img(img);
+    }
+}
+class Piece extends Base {
     team;
     ms;
     constructor(x, y, team, img) {
-        super({ x: Piece.center(x), y: Piece.center(y), width: tileSize / 2, height: tileSize / 2 });
-        this.ico = new Img(img);
+        super(x, y, img);
         this.team = team;
         this.ms = 0;
         pieces.push(this);
@@ -80,7 +91,7 @@ class Pawn extends Piece {
         const tp = fd(p);
         // Diagonal Capture: Just check if an enemy is there
         if (Math.abs(dx) == 1 && dy == direction) {
-            return tp !== undefined && tp.team !== this.team;
+            return tp != undefined && tp.team != this.team;
         }
         // Straight Move
         if (dx == 0) {
@@ -331,21 +342,36 @@ class BQueen extends Queen {
         super(x, y, "blue");
     }
 }
+class Landmine extends Base {
+    constructor(x, y) {
+        super(x, y, "mine.png");
+    }
+}
 const pieces = [];
+const unsafe = [];
+const mines = [];
 var team = "red";
 var active = null;
-new RPawn(1, gridHeight);
-new BPawn(1, 1);
-new RKnight(2, gridHeight);
-new BKnight(2, 1);
-new RBishop(3, gridHeight);
-new BBishop(3, 1);
-new RKing(4, gridHeight);
-new BKing(4, 1);
-new RRook(5, gridHeight);
-new BRook(5, 1);
-new RQueen(6, gridHeight);
-new BQueen(6, 1);
+new RRook(1, gridHeight);
+new BRook(1, 1);
+new RRook(gridWidth, gridHeight);
+new BRook(gridWidth, 1);
+new RBishop(2, gridHeight);
+new BBishop(2, 1);
+new RBishop(gridWidth - 2 * tileSize, gridHeight);
+new BBishop(gridWidth - 2 * tileSize, 1);
+new RKnight(3, gridHeight);
+new BKnight(3, 1);
+new RKnight(gridWidth - 3 * tileSize, gridHeight);
+new BKnight(gridWidth - 3 * tileSize, 1);
+new RQueen(4, gridHeight);
+new BQueen(4, 1);
+new RKing(5, gridHeight);
+new BKing(5, 1);
+for (let i = 1; i <= gridWidth / tileSize; i++) {
+    new RPawn(i, gridHeight - tileSize);
+    new BPawn(i, 2);
+}
 scene.start(() => {
     for (let i = 0; i <= scene.width; i += tileSize) {
         for (let j = 0; j <= scene.height; j += tileSize) {
@@ -358,10 +384,10 @@ scene.start(() => {
         const g = active.grid();
         // Highlight the whole tile
         scene.rect(Piece.normal(g.x), Piece.normal(g.y), tileSize, tileSize, "rgba(238, 255, 0, 0.5)");
-        const a = active.valid();
+        const a = active.valid().filter(isSafe);
         a.forEach(v => scene.rect(Piece.center(v.x), Piece.center(v.y), tileSize / 4, tileSize / 4, "#d40700"));
     }
-    pieces.forEach(p => scene.img(p.ico, p.x, p.y, p.width, p.height));
+    [...pieces, ...mines].forEach(p => scene.img(p.ico, p.x, p.y, p.width, p.height));
 });
 scene.on("click", (e) => {
     const at = scene.mouseAt(e);
@@ -378,11 +404,17 @@ scene.on("click", (e) => {
             active = null;
             return;
         }
-        if (active.ok(pos)) {
+        if (active.ok(pos) && isSafe(pos)) {
             // CHECK FOR CAPTURE HERE
             const target = fd(pos);
             if (target && target.team != active.team) {
                 eat(pos);
+            }
+            if (mines.some(m => Piece.compare(new Vector(m.x, m.y), pos))) {
+                eat(active.grid());
+                active = null;
+                team = team == "red" ? "blue" : "red";
+                return;
             }
             active.ms++;
             active.setPos(new Vector(Piece.center(pos.x), Piece.center(pos.y)));
