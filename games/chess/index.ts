@@ -386,6 +386,7 @@ const reqBtns: [string, string, EventListenerOrEventListenerObject][] = [
         showRequest("End Setup", () => {
             phase = "play";
             document.body.removeChild(phaseReqs);
+            team = "red";
         }, () => {});
     }]
 ];
@@ -451,7 +452,7 @@ scene.start(() => {
             scene.rect(i, j, tileSize, tileSize, (r + c) % 2 == 0 ? "#1a5a00" : "#fff4e8");
         }
     }
-    unsafe.forEach(u => scene.rect(u.x, u.y, tileSize, tileSize, "#7b4015"));
+    unsafe.forEach(u => scene.rect(Piece.normal(u.x), Piece.normal(u.y), tileSize, tileSize, "#7b4015"));
     if(active) {
         const g = active.grid();
         // Highlight the whole tile

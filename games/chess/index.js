@@ -526,7 +526,7 @@ scene.on("click", (e) => {
                 phase = "play";
                 return;
             }
-            if (team == "red" ? landmineR : landmineB) {
+            if (team == "red" ? !landmineR : !landmineB) {
                 mines.push(new Landmine(pos.x, pos.y));
                 if (team == "red")
                     landmineR = true;
@@ -553,7 +553,7 @@ scene.on("click", (e) => {
                 phase = "play";
                 return;
             }
-            if (team == "red" ? lockR : lockB) {
+            if (team == "red" ? !lockR : !lockB) {
                 unsafe.push(pos);
                 if (team == "red")
                     lockR = true;
