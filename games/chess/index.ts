@@ -1,11 +1,13 @@
-import { Entity, Img, Scene, Vector } from "../../phantom2d.js";
+import { Constructor, Entity, Img, objIs, Scene, Vector } from "../../phantom2d.js";
 
 window.onerror = alert;
 Img.config.set("root", "assets");
 const tileSize = 50;
-const size = 750;
+const size = 400;
+const tilesX = 8;
+const tilesY = 8;
 
-const scene = new Scene({ canvas: "chess", w: size, h: size });
+const scene = new Scene({ canvas: "chess", w: tileSize * tilesX, h: tileSize * tilesY });
 const gridWidth = scene.width / tileSize;
 const gridHeight = scene.height / tileSize;
 
@@ -43,15 +45,59 @@ function clear(start: Vector, end: Vector): boolean {
     }
     return true;
 }
+function isUnsafe(vec: Vector) {
+    return unsafe.some(v => Piece.compare(v, vec));
+}
+function isSafe(vec: Vector) {
+    return !isUnsafe(vec);
+}
+function diag(g: Vector) {
+    const d: Vector[] = [];
+    const v = (r: number, c: number) => 0 <= r && r <= gridWidth &&
+        0 <= c && c <= gridHeight;
+    const r = g.x;
+    const c = g.y;
+    const iter = (next: (i: number) => [number, number]) => {
+        for(let i = 1;; i++) {
+            const [a, b] = next(i);
+            if(!v(a, b)) break;
+            d.push(new Vector(a, b));
+        }
+    }
+    iter((i) => [r - i, c - i]);
+    iter((i) => [r + i, c + i]);
+    iter((i) => [r - i, c + i]);
+    iter((i) => [r + i, c - i]);
+    return d;
+}
+function line(g: Vector) {
+    const pos: Vector[] = [];
+    for(let i = 1; i <= gridWidth; i++) {
+        pos.push(new Vector(i, g.y));
+    }
+    for(let i = 1; i <= gridHeight; i++) {
+        pos.push(new Vector(g.x, i));
+    }
+    return pos;
+}
+function isBlack(obj: Piece) {
+    return blacklist.some(b => objIs(obj, b));
+}
+
+class Base extends Entity {
+    ico: Img;
+    constructor(x: number, y: number, img: string) {
+        super({ x: Piece.center(x), y: Piece.center(y), width: tileSize / 2, height: tileSize / 2 });
+        this.ico = new Img(img);
+    }
+}
 
 type TeamColor = "red" | "blue";
-abstract class Piece extends Entity {
-    ico: Img;
+abstract class Piece extends Base {
     team: TeamColor;
     ms: number;
     constructor(x: number, y: number, team: TeamColor, img: string) {
-        super({ x: Piece.center(x), y: Piece.center(y), width: tileSize / 2, height: tileSize / 2 });
-        this.ico = new Img(img);
+        super(x, y, img);
         this.team = team;
         this.ms = 0;
         pieces.push(this);
@@ -88,7 +134,7 @@ class Pawn extends Piece {
 
         // Diagonal Capture: Just check if an enemy is there
         if(Math.abs(dx) == 1 && dy == direction) {
-            return tp !== undefined && tp.team !== this.team;
+            return tp != undefined && tp.team != this.team;
         }
         
         // Straight Move
@@ -177,24 +223,8 @@ class Bishop extends Piece {
         return !target || target.team != this.team;
     }
     valid() {
-        const d: Vector[] = [];
         const g = this.grid();
-        const v = (r: number, c: number) => 0 <= r && r <= gridWidth &&
-            0 <= c && c <= gridHeight;
-        const r = g.x;
-        const c = g.y;
-        const iter = (next: (i: number) => [number, number]) => {
-            for(let i = 1;; i++) {
-                const [a, b] = next(i);
-                if(!v(a, b)) break;
-                d.push(new Vector(a, b));
-            }
-        }
-        iter((i) => [r - i, c - i]);
-        iter((i) => [r + i, c + i]);
-        iter((i) => [r - i, c + i]);
-        iter((i) => [r + i, c - i]);
-        return d;
+        return diag(g).filter(v => clear(g, v));
     }
 }
 class RBishop extends Bishop {
@@ -260,15 +290,8 @@ class Rook extends Piece {
         return !target || target.team != this.team;
     }
     valid() {
-        const pos: Vector[] = [];
         const g = this.grid();
-        for(let i = 1; i <= gridWidth; i++) {
-            pos.push(new Vector(i, g.y));
-        }
-        for(let i = 1; i <= gridHeight; i++) {
-            pos.push(new Vector(g.x, i));
-        }
-        return pos;
+        return line(g).filter(v => clear(g, v));
     }
 }
 class RRook extends Rook {
@@ -296,30 +319,8 @@ class Queen extends Piece {
         return !target || target.team != this.team;
     }
     valid() {
-        const d: Vector[] = [];
         const g = this.grid();
-        const v = (r: number, c: number) => 0 <= r && r <= gridWidth &&
-            0 <= c && c <= gridHeight;
-        const r = g.x;
-        const c = g.y;
-        const iter = (next: (i: number) => [number, number]) => {
-            for(let i = 1;; i++) {
-                const [a, b] = next(i);
-                if(!v(a, b)) break;
-                d.push(new Vector(a, b));
-            }
-        }
-        iter((i) => [r - i, c - i]);
-        iter((i) => [r + i, c + i]);
-        iter((i) => [r - i, c + i]);
-        iter((i) => [r + i, c - i]);
-        for(let i = 1; i <= gridWidth; i++) {
-            d.push(new Vector(i, g.y));
-        }
-        for(let i = 1; i <= gridHeight; i++) {
-            d.push(new Vector(g.x, i));
-        }
-        return d;
+        return [...diag(g), ...line(g)].filter(v => clear(g, v));
     }
 }
 class RQueen extends Queen {
@@ -332,22 +333,116 @@ class BQueen extends Queen {
         super(x, y, "blue");
     }
 }
+class Landmine extends Base {
+    constructor(x: number, y: number) {
+        super(x, y, "mine.png");
+    }
+}
 const pieces: Piece[] = [];
+const unsafe: Vector[] = [];
+const mines: Landmine[] = [];
+const blacklist: Constructor<Piece>[] = [];
 var team: TeamColor = "red";
 var active: Piece | null = null;
+type GamePhase = "play" | "setup" | "des" | "mine" | "mimic" | "lock";
+var phase: GamePhase = "setup";
+var destructionCountR = 0;
+var destructionCountB = 0;
+var landmineR = false;
+var landmineB = false;
+var lockR = false;
+var lockB = false;
+const removeSelfFromRequests = (name: string) => {
+    const out = reqBtnObjects.find(r => r[1] == name);
+    if(out) phaseReqs.removeChild(out[0]);
+}
+const phaseReqs = document.getElementById("phase_game_requests") as HTMLDivElement;
+const reqBtns: [string, string, EventListenerOrEventListenerObject][] = [
+    ["Mutually Assured Destruction", "des", () => {
+        showRequest("Mutually Assured Destruction", () => {
+            phase = "des";
+            removeSelfFromRequests("des");
+        }, () => removeSelfFromRequests("des"));
+    }],
+    ["Landmine", "mine", () => {
+        showRequest("Landmine", () => {
+            phase = "mine";
+            removeSelfFromRequests("mine");
+        }, () => removeSelfFromRequests("mine"));
+    }],
+    ["Mimic", "mimic", () => {
+        showRequest("Mimic", () => {
+            phase = "mimic";
+            removeSelfFromRequests("mimic");
+        }, () => removeSelfFromRequests("mimic"));
+    }],
+    ["Landlock", "lock", () => {
+        showRequest("Landlock", () => {
+            phase = "lock";
+            removeSelfFromRequests("lock");
+        }, () => removeSelfFromRequests("lock"));
+    }],
+    ["End Setup", "done", () => {
+        showRequest("End Setup", () => {
+            phase = "play";
+            document.body.removeChild(phaseReqs);
+            team = "red";
+        }, () => {});
+    }]
+];
+const reqBtnObjects: [HTMLButtonElement, string][] = [];
+reqBtns.forEach(r => {
+    const b = document.createElement("button");
+    b.addEventListener("click", r[2]);
+    b.textContent = r[0];
+    reqBtnObjects.push([b, r[1]]);
+    phaseReqs.appendChild(b);
+});
+const activeRequest = document.getElementById("activation_request") as HTMLDialogElement;
+function showRequest(text: string, onAccept: Function, onDeny: Function) {
+    activeRequest.showModal();
+    activeRequest.innerHTML = `
+        <p>Opponent wants to activate phase:</p>
+        <p><strong>${text}</strong></p>
+        <br>
+        <p>Do you accept?</p>
+        <button id="accept">Accept</button>
+        <button id="deny">Deny</button>
+    `;
+    const kill = () => {
+        activeRequest.innerHTML = "";
+        activeRequest.close();
+    }
+    (document.getElementById("accept") as HTMLButtonElement).addEventListener("click", () => {
+        kill();
+        onAccept();
+    });
+    (document.getElementById("deny") as HTMLButtonElement).addEventListener("click", () => {
+        kill();
+        onDeny();
+    });
+}
 
-new RPawn(1, gridHeight);
-new BPawn(1, 1);
-new RKnight(2, gridHeight);
-new BKnight(2, 1);
-new RBishop(3, gridHeight);
+new RRook(1, tilesY);
+new BRook(1, 1);
+new RRook(tilesX, tilesY);
+new BRook(tilesX, 1);
+new RBishop(3, tilesY);
 new BBishop(3, 1);
-new RKing(4, gridHeight);
-new BKing(4, 1);
-new RRook(5, gridHeight);
-new BRook(5, 1);
-new RQueen(6, gridHeight);
-new BQueen(6, 1);
+new RBishop(tilesX - 2, tilesY);
+new BBishop(tilesX - 2, 1);
+new RKnight(2, tilesY);
+new BKnight(2, 1);
+new RKnight(tilesX - 1, tilesY);
+new BKnight(tilesX - 1, 1);
+new RQueen(4, tilesY);
+new BQueen(4, 1);
+new RKing(5, tilesY);
+new BKing(5, 1);
+for(let i = 1; i <= tilesX; i++) {
+    new RPawn(i, tilesY - 1);
+    new BPawn(i, 2);
+}
 
 scene.start(() => {
     for(let i = 0; i <= scene.width; i += tileSize) {
@@ -357,41 +452,115 @@ scene.start(() => {
             scene.rect(i, j, tileSize, tileSize, (r + c) % 2 == 0 ? "#1a5a00" : "#fff4e8");
         }
     }
+    unsafe.forEach(u => scene.rect(Piece.normal(u.x), Piece.normal(u.y), tileSize, tileSize, "#7b4015"));
     if(active) {
         const g = active.grid();
         // Highlight the whole tile
         scene.rect(Piece.normal(g.x), Piece.normal(g.y), tileSize, tileSize, "rgba(238, 255, 0, 0.5)");
-        const a = active.valid();
+        const a = active.valid().filter(isSafe);
         a.forEach(v => scene.rect(Piece.center(v.x), Piece.center(v.y), tileSize / 4, tileSize / 4, "#d40700"));
     }
-    pieces.forEach(p => scene.img(p.ico, p.x, p.y, p.width, p.height));
+    [...pieces, ...mines].forEach(p => scene.img(p.ico, p.x, p.y, p.width, p.height));
 });
 scene.on("click", (e) => {
     const at = scene.mouseAt(e);
     const pos = Piece.grid(at); // Current clicked grid square
-
-    if (!active) {
+    if(phase == "play") {
+        if(!active) {
+            const p = fd(pos);
+            if(!p || p.team != team) return;
+            active = p;
+        } else {
+            // If we click the same piece again, deselect it
+            if(Piece.compare(pos, active.grid())) {
+                active = null;
+                return;
+            }
+            if(active.ok(pos) && isSafe(pos)) {
+                // CHECK FOR CAPTURE HERE
+                const target = fd(pos);
+                if(target && target.team != active.team) {
+                    eat(pos);
+                }
+                if(mines.some(m => Piece.compare(new Vector(m.x, m.y), pos))) {
+                    eat(active.grid());
+                    active = null;
+                    team = team == "red" ? "blue" : "red";
+                    return;
+                }
+                active.ms++;
+                active.setPos(new Vector(Piece.center(pos.x), Piece.center(pos.y)));
+                active = null;
+                team = team == "red" ? "blue" : "red";
+            }
+        }
+    } else if(phase == "des") {
         const p = fd(pos);
-        if (!p || p.team != team) return;
-        active = p;
-    } else {
-        // If we click the same piece again, deselect it
-        if (Piece.compare(pos, active.grid())) {
-            active = null;
+        if(p && p.team == team) {
+            if(destructionCountR >= 3 && destructionCountB >= 3) {
+                phase = "play";
+                return;
+            }
+            if((team == "red" ? destructionCountR : destructionCountB) < 3) {
+                eat(pos);
+                blacklist.push(p.constructor as Constructor<Piece>);
+                if(team == "red") destructionCountR++;
+                if(team == "blue") destructionCountB++;
+            }
+            // if both are not done, do handshake
+            if(destructionCountR < 3 && destructionCountB < 3) team = team == "red" ? "blue" : "red";
+            else if(destructionCountR >= 3 && destructionCountB < 3) {
+                // force blue
+                team = "blue";
+            } else if(destructionCountR < 3 && destructionCountB >= 3) {
+                // force red
+                team = "red";
+            }
             return;
         }
-
-        if (active.ok(pos)) {
-            // CHECK FOR CAPTURE HERE
-            const target = fd(pos);
-            if (target && target.team != active.team) {
-                eat(pos);
+    } else if(phase == "mine") {
+        if(!fd(pos)) {
+            if(landmineR && landmineB) {
+                phase = "play";
+                return;
             }
-
-            active.ms++;
-            active.setPos(new Vector(Piece.center(pos.x), Piece.center(pos.y)));
-            active = null;
-            team = team == "red" ? "blue" : "red";
+            if(team == "red" ? !landmineR : !landmineB) {
+                mines.push(new Landmine(pos.x, pos.y));
+                if(team == "red") landmineR = true;
+                if(team == "blue") landmineB = true;
+            }
+            // if both are not done, do handshake
+            if(landmineR && landmineB) team = team == "red" ? "blue" : "red";
+            else if(landmineR && !landmineB) {
+                // force blue
+                team = "blue";
+            } else if(!landmineR && landmineB) {
+                // force red
+                team = "red";
+            }
+            return;
+        }
+    } else if(phase == "lock") {
+        if(!fd(pos)) {
+            if(lockR && lockB) {
+                phase = "play";
+                return;
+            }
+            if(team == "red" ? !lockR : !lockB) {
+                unsafe.push(pos);
+                if(team == "red") lockR = true;
+                if(team == "blue") lockB = true;
+            }
+            // if both are not done, do handshake
+            if(!lockR && !lockB) team = team == "red" ? "blue" : "red";
+            else if(lockR && !lockB) {
+                // force blue
+                team = "blue";
+            } else if(!lockR && lockB) {
+                // force red
+                team = "red";
+            }
+            return;
         }
     }
 });
