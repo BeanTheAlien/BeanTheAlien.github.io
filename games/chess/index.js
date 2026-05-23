@@ -1,5 +1,5 @@
 import { Entity, Img, objIs, Scene, Vector } from "../../phantom2d.js";
-window.onerror = alert;
+//window.onerror = alert;
 Img.config.set("root", "assets");
 const tileSize = 50;
 const size = 400;
@@ -87,6 +87,9 @@ class Base extends Entity {
         super({ x: Piece.center(x), y: Piece.center(y), width: tileSize / 2, height: tileSize / 2 });
         this.ico = new Img(img);
     }
+    grid() {
+        return Piece.grid(this.getPos());
+    }
 }
 class Piece extends Base {
     team;
@@ -105,9 +108,6 @@ class Piece extends Base {
     }
     static grid(source) {
         return new Vector(Math.floor(source.x / tileSize) + 1, Math.floor(source.y / tileSize) + 1);
-    }
-    grid() {
-        return Piece.grid(this.getPos());
     }
     static compare(gv1, gv2) {
         return gv1.x == gv2.x && gv1.y == gv2.y;
@@ -479,10 +479,12 @@ scene.on("click", (e) => {
                 if (target && target.team != active.team) {
                     eat(pos);
                 }
-                if (mines.some(m => Piece.compare(new Vector(m.x, m.y), pos))) {
+                if (mines.some(m => Piece.compare(m.grid(), pos))) {
                     eat(active.grid());
                     active = null;
                     team = team == "red" ? "blue" : "red";
+                    mines.splice(mines.findIndex(m => Piece.compare(m.grid(), pos)), 1);
+                    console.log("boom");
                     return;
                 }
                 active.ms++;
