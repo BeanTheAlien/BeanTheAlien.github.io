@@ -484,7 +484,6 @@ scene.on("click", (e) => {
                     active = null;
                     team = team == "red" ? "blue" : "red";
                     mines.splice(mines.findIndex(m => Piece.compare(m.grid(), pos)), 1);
-                    console.log("boom");
                     return;
                 }
                 active.ms++;
