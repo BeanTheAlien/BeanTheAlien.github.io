@@ -18,11 +18,12 @@ const disp = document.getElementById("post_display");
             const div = document.createElement("div");
             div.innerHTML = `
                 <h3>${p.title}</h3>
-                <p style="color: #464646; font-size: 7px;">Posted by ${p.author} at ${(new Date(p.created_at)).toDateString()}</p>
-                <div>
+                <p style="color: #464646; font-size: 9px;">Posted by ${p.author} at ${(new Date(p.created_at)).toDateString()}</p>
+                <div style="font-size: 15px;">
                     ${DOMPurify.sanitize(p.body)}
                 </div>
             `;
+            disp.appendChild(div);
         });
     }
 })();

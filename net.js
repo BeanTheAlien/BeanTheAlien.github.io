@@ -209,18 +209,28 @@ class NetMap extends Net {
 class AdvancedNetMap extends NetMap {
     async json(url, arg1, arg2) {
         // detect "modern" usage
-        if (arg1 && typeof arg1 == "object" && !("method" in arg1) && !("headers" in arg1) && !("body" in arg1)) {
+        if (arg1 && typeof arg1 === "object" && !("method" in arg1) && !("headers" in arg1)) {
             // this is your tuple/body case fallback if needed
-            return super.json(url, "POST", { body: arg1 });
+            return super.json(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(arg1)
+            });
         }
         // detect options object
         if (arg1 && typeof arg1 == "object" && ("body" in arg1 || "headers" in arg1 || "method" in arg1)) {
             const options = arg1;
             const req = {
-                ...(options.headers || {}),
+                headers: {
+                    "Content-Type": "application/json",
+                    ...(options.headers || {}),
+                },
                 ...(options.body ? { body: JSON.stringify(options.body) } : {})
             };
-            return super.json(url, req, options.method);
+            console.log(req);
+            return super.json(url, req);
         }
         // fallback: behave exactly like base class
         return super.json(url, arg1, arg2);

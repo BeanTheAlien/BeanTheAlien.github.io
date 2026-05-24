@@ -1291,18 +1291,28 @@ class AdvancedNetMap<R extends AnyMap> extends NetMap<R> {
     json<K extends Key<R>>(url: K, arg1?: RequestInit | InformalMethod, arg2?: InformalMethod | RequestInit): Promise<Result<R, K>>;
     async json<K extends Key<R>>(url: K, arg1?: any, arg2?: any): Promise<Result<R, K>> {
         // detect "modern" usage
-        if(arg1 && typeof arg1 == "object" && !("method" in arg1) && !("headers" in arg1) && !("body" in arg1)) {
+        if(arg1 && typeof arg1 === "object" && !("method" in arg1) && !("headers" in arg1)) {
             // this is your tuple/body case fallback if needed
-            return super.json(url as any, "POST", { body: arg1 });
+            return super.json(url as any, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(arg1)
+            });
         }
         // detect options object
-        if (arg1 && typeof arg1 == "object" && ("body" in arg1 || "headers" in arg1 || "method" in arg1)) {
+        if(arg1 && typeof arg1 == "object" && ("body" in arg1 || "headers" in arg1 || "method" in arg1)) {
             const options = arg1;
             const req: RequestInit = {
-                ...(options.headers || {}),
+                headers: {
+                    "Content-Type": "application/json",
+                    ...(options.headers || {}),
+                },
                 ...(options.body ? { body: JSON.stringify(options.body) } : {})
             };
-            return super.json(url as any, req, options.method as any);
+            console.log(req);
+            return super.json(url as any, req);
         }
         // fallback: behave exactly like base class
         return super.json(url as any, arg1, arg2);
