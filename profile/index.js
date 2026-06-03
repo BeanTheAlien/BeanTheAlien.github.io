@@ -1,3 +1,4 @@
+import { FilePicker } from "../phantom2d.js";
 import { api } from "../api.js";
 import { net } from "../sv.js";
 
@@ -9,10 +10,15 @@ username.innerText = user?.username;
 role.innerText = user?.role;
 await updPfp();
 pfp.addEventListener("click", async () => {
-    const [handle] = await window.showOpenFilePicker({
-        excludeAcceptAllOption: true,
-        types: [{ accept: { "image/*": [".avif", ".jpg", ".jpeg", ".jfif", ".pjpeg", ".pjp", ".png", ".svg", ".webp"] } }]
-    });
+    const [handle] = await ((new FilePicker()).handle({
+        all: true,
+        mult: false,
+        accept: [{ accept: { "image/*": [".avif", ".jpg", ".jpeg", ".jfif", ".pjpeg", ".pjp", ".png", ".svg", ".webp"] } }]
+    }));
+    // const [handle] = await window.showOpenFilePicker({
+    //     excludeAcceptAllOption: true,
+    //     types: [{ accept: { "image/*": [".avif", ".jpg", ".jpeg", ".jfif", ".pjpeg", ".pjp", ".png", ".svg", ".webp"] } }]
+    // });
     const file = await handle.getFile();
     const max = 1024 * 1024;
     const compress = async () => {
