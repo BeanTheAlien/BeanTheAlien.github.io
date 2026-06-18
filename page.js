@@ -1,7 +1,8 @@
 const fs = require("fs");
 const path = require("path");
 
-const [,, name] = process.argv;
+const [,, name, startPath = ""] = process.argv;
+const cn = name.replace(/\s/g, "")
 const template = `<!DOCTYPE html>
 <html lang="en">
   <head>
@@ -17,13 +18,13 @@ const template = `<!DOCTYPE html>
     <script src="index.js" type="module"></script>
   </body>
 </html>`;
-const dir = path.join(__dirname, name);
+const dir = path.join(__dirname, startPath, cn);
 fs.mkdirSync(dir);
 var html = template;
 var js = "";
-if(fs.existsSync(`${name}.html`)) {
-  html = fs.readFileSync(`${name}.html`, "utf8");
-  js = fs.readFileSync(`${name}.js`, "utf8");
+if(fs.existsSync(`${cn}.html`)) {
+    html = fs.readFileSync(`${cn}.html`, "utf8");
+    js = fs.readFileSync(`${cn}.js`, "utf8");
 }
 fs.writeFileSync(path.join(dir, "index.html"), html);
 fs.writeFileSync(path.join(dir, "index.js"), js);
