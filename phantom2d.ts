@@ -611,6 +611,7 @@ interface SceneOptions {
      * @since v1.0.20
      */
     border?: CSSStyleDeclaration["border"];
+    fit?: FittingMode;
 }
 interface WallObjectOptions extends EntityOptions {}
 /**
@@ -2597,6 +2598,11 @@ class Vector {
     lerp(scene: Scene, to: Vector, lerpMode: LerpDeviceLerpMode = "once") {
         return new VectorLerpDevice(scene, this, this, to, lerpMode);
     }
+    near(vec: Vector, tolerance: number) {
+        const dx = vec.x - this.x;
+        const dy = vec.y - this.y;
+        return Math.sqrt(dx * dx + dy * dy) < tolerance;
+    }
 }
 type LerpDeviceLerpMode = "once" | "bounce";
 abstract class DualLerpDevice<P, T> {
@@ -2894,6 +2900,7 @@ type FontStretch = SceneFont["stretch"];
 type FontSize = SceneFont["size"];
 type FontLineHeight = SceneFont["lineHeight"];
 type FontFamily = SceneFont["family"];
+type FittingMode = "none" | "shrink" | "grow" | "fill";
 /**
  * The root canvas to display content.
  * @since v0.0.0
@@ -3562,6 +3569,52 @@ class Scene {
         for(const lvl of this.lvlStore.items()) {
             yield lvl[1];
         }
+    }
+    grow(rw: number, rh: number) {
+        const tr = rw / rh;
+        const cw = window.innerWidth;
+        const ch = window.innerHeight;
+        const cr = cw / ch;
+        if(cr > tr) {
+            this.canvas.height = Math.floor(ch);
+            this.canvas.width = Math.floor(ch * tr);
+        }
+    }
+    shrink(rw: number, rh: number) {
+        const tr = rw / rh;
+        const cw = window.innerWidth;
+        const ch = window.innerHeight;
+        const cr = cw / ch;
+        if(cr < tr) {
+            this.canvas.width = Math.floor(cw);
+            this.canvas.height = Math.floor(cw / tr);
+        }
+    }
+    set fit(fit: FittingMode) {
+        if(fit == "none") return;
+        if(fit == "fill") {
+            // use WxH as desired dimensions
+            // window.innerWidth and window.innerHeight for measurments
+            // this.canvas.width = window.innerWidth;
+            // this.canvas.height = window.innerHeight;
+        }
+        if(fit == "grow") {
+            // grow WxH to fill, if possible
+            // never shrink dimensions
+        }
+        if(fit == "shrink") {
+            // shrink WxH to fill, if possible
+            // never grow dimensions
+        }
+    }
+    near(pos: Vector, tolerance: number) {
+        return this.items.filter(v => v.getPos().near(pos, tolerance * 2));
+    }
+    hasByMouse(pos: Vector, tolerance: number) {
+        return this.items.some((v) => this.mouseInRect(v.getPos(), v.width + tolerance * 2, v.height + tolerance * 2));
+    }
+    getByMouse(pos: Vector, tolerance: number) {
+        return this.items.find((v): v is Entity => this.mouseInRect(v.getPos(), v.width + tolerance * 2, v.height + tolerance * 2));
     }
 }
 /**
@@ -4957,6 +5010,9 @@ class Params {
     has(k: string, v?: any): boolean {
         return this.params.has(k, Util.strOf(v));
     }
+    set(k: string, v: any) {
+        this.params.set(k, Util.strOf(v));
+    }
 }
 interface Renderable {
     render: () => void;
@@ -5067,6 +5123,34 @@ class Pistol extends Gun {}
 class Burst extends Gun {
     fire(pos: Vector, count = 3, delay?: number) {
         this.shoot(pos, count, delay);
+    }
+}
+type itemof<T extends any[] | { [x: string | number | symbol]: any }> = T extends any[] ? T[number] : T[keyof T];
+class ParamKey<T extends string[], D extends itemof<T>> {
+    param: Params;
+    pkey!: string;
+    opts: T;
+    constructor(key: string, opt: T, def: D) {
+        this.param = new Params();
+        this.key = key;
+        this.val = def;
+        this.opts = opt;
+        if(!(this.val in this.opts)) this.val = def;
+    }
+    get key() {
+        return this.pkey;
+    }
+    set key(key: string) {
+        this.pkey = key;
+    }
+    get val() {
+        return this.get() as itemof<T>;
+    }
+    set val(val: itemof<T>) {
+        this.param.set(this.key, val);
+    }
+    get() {
+        return this.param.get(this.key);
     }
 }
 
@@ -5246,6 +5330,8 @@ export {
     KeyInputs,
 
     LerpDevice, VectorBasedLerpDevice, VectorLerpDevice, EntityLerpDevice, SceneUILerpDevice,
-    EntityRotationLerpDevice, AngleBasedLerpDevice, SceneUIRotationLerpDevice
+    EntityRotationLerpDevice, AngleBasedLerpDevice, SceneUIRotationLerpDevice,
+
+    ParamKey
 };
 export type { Renderable, Constructor, AbstractConstructor, KeyCode };

@@ -1,10 +1,12 @@
-import { Entity, Img, objIs, Scene, Vector } from "../../phantom2d.js";
+import { Entity, Img, objIs, Params, Scene, Vector } from "../../phantom2d.js";
 //window.onerror = alert;
 Img.config.set("root", "assets");
 const tileSize = 50;
 const size = 400;
 const tilesX = 8;
 const tilesY = 8;
+const gmp = new Params();
+const gm = gmp.get("gm");
 const scene = new Scene({ canvas: "chess", w: tileSize * tilesX, h: tileSize * tilesY });
 const gridWidth = scene.width / tileSize;
 const gridHeight = scene.height / tileSize;
@@ -473,7 +475,7 @@ scene.on("click", (e) => {
                 active = null;
                 return;
             }
-            if (active.ok(pos) && isSafe(pos)) {
+            if ((gm == "reg" && active.ok(pos) && isSafe(pos)) || gm == "outlaw") {
                 // CHECK FOR CAPTURE HERE
                 const target = fd(pos);
                 if (target && target.team != active.team) {

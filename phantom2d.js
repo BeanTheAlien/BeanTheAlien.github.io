@@ -1791,6 +1791,11 @@ class Vector {
     lerp(scene, to, lerpMode = "once") {
         return new VectorLerpDevice(scene, this, this, to, lerpMode);
     }
+    near(vec, tolerance) {
+        const dx = vec.x - this.x;
+        const dy = vec.y - this.y;
+        return Math.sqrt(dx * dx + dy * dy) < tolerance;
+    }
 }
 class DualLerpDevice {
     scene;
@@ -2698,6 +2703,53 @@ class Scene {
         for (const lvl of this.lvlStore.items()) {
             yield lvl[1];
         }
+    }
+    grow(rw, rh) {
+        const tr = rw / rh;
+        const cw = window.innerWidth;
+        const ch = window.innerHeight;
+        const cr = cw / ch;
+        if (cr > tr) {
+            this.canvas.height = Math.floor(ch);
+            this.canvas.width = Math.floor(ch * tr);
+        }
+    }
+    shrink(rw, rh) {
+        const tr = rw / rh;
+        const cw = window.innerWidth;
+        const ch = window.innerHeight;
+        const cr = cw / ch;
+        if (cr < tr) {
+            this.canvas.width = Math.floor(cw);
+            this.canvas.height = Math.floor(cw / tr);
+        }
+    }
+    set fit(fit) {
+        if (fit == "none")
+            return;
+        if (fit == "fill") {
+            // use WxH as desired dimensions
+            // window.innerWidth and window.innerHeight for measurments
+            // this.canvas.width = window.innerWidth;
+            // this.canvas.height = window.innerHeight;
+        }
+        if (fit == "grow") {
+            // grow WxH to fill, if possible
+            // never shrink dimensions
+        }
+        if (fit == "shrink") {
+            // shrink WxH to fill, if possible
+            // never grow dimensions
+        }
+    }
+    near(pos, tolerance) {
+        return this.items.filter(v => v.getPos().near(pos, tolerance * 2));
+    }
+    hasByMouse(pos, tolerance) {
+        return this.items.some((v) => this.mouseInRect(v.getPos(), v.width + tolerance * 2, v.height + tolerance * 2));
+    }
+    getByMouse(pos, tolerance) {
+        return this.items.find((v) => this.mouseInRect(v.getPos(), v.width + tolerance * 2, v.height + tolerance * 2));
     }
 }
 /**
@@ -3937,6 +3989,9 @@ class Params {
     has(k, v) {
         return this.params.has(k, Util.strOf(v));
     }
+    set(k, v) {
+        this.params.set(k, Util.strOf(v));
+    }
 }
 const FinalizeOpeningMode = (mode) => (mode.startsWith("_") ? mode : `_${mode}`);
 class OpeningFailedError extends ErrRoot {
@@ -4038,6 +4093,34 @@ class Pistol extends Gun {
 class Burst extends Gun {
     fire(pos, count = 3, delay) {
         this.shoot(pos, count, delay);
+    }
+}
+class ParamKey {
+    param;
+    pkey;
+    opts;
+    constructor(key, opt, def) {
+        this.param = new Params();
+        this.key = key;
+        this.val = def;
+        this.opts = opt;
+        if (!(this.val in this.opts))
+            this.val = def;
+    }
+    get key() {
+        return this.pkey;
+    }
+    set key(key) {
+        this.pkey = key;
+    }
+    get val() {
+        return this.get();
+    }
+    set val(val) {
+        this.param.set(this.key, val);
+    }
+    get() {
+        return this.param.get(this.key);
     }
 }
 /**
@@ -4160,4 +4243,4 @@ function easeInOutQuad(t) {
 function easeSmoothStep(t) {
     return t * t * (3 - 2 * t);
 }
-export { Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, FloorObject, Aircraft, Weapon, Gun, Pistol, Burst, SceneUI, ButtonUI, TextUI, MenuUI, ImgUI, ProgressUI, KeyedTextUI, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, DebugRay, Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag, External, MultiRaycast, ConeRaycast, ConeDebugRay, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, randItem, lerp, Local, LocalDeprecated, Session, Clipboard, Cookies, Params, Comp, HealthComp, InvComp, EnhancedPhysicsComp, GravityComp, Trigger, Itvl, FixedItvl, KeyInputs, LerpDevice, VectorBasedLerpDevice, VectorLerpDevice, EntityLerpDevice, SceneUILerpDevice, EntityRotationLerpDevice, AngleBasedLerpDevice, SceneUIRotationLerpDevice };
+export { Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, FloorObject, Aircraft, Weapon, Gun, Pistol, Burst, SceneUI, ButtonUI, TextUI, MenuUI, ImgUI, ProgressUI, KeyedTextUI, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, DebugRay, Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag, External, MultiRaycast, ConeRaycast, ConeDebugRay, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, randItem, lerp, Local, LocalDeprecated, Session, Clipboard, Cookies, Params, Comp, HealthComp, InvComp, EnhancedPhysicsComp, GravityComp, Trigger, Itvl, FixedItvl, KeyInputs, LerpDevice, VectorBasedLerpDevice, VectorLerpDevice, EntityLerpDevice, SceneUILerpDevice, EntityRotationLerpDevice, AngleBasedLerpDevice, SceneUIRotationLerpDevice, ParamKey };
