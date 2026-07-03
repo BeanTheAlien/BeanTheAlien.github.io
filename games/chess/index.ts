@@ -465,7 +465,7 @@ scene.start(() => {
     }
     [...pieces, ...mines].forEach(p => scene.img(p.ico, p.x, p.y, p.width, p.height));
 });
-scene.on("click", (e) => {
+scene.on("click", async (e) => {
     const at = scene.mouseAt(e);
     const pos = Piece.grid(at); // Current clicked grid square
     if(phase == "play") {
@@ -494,6 +494,30 @@ scene.on("click", (e) => {
                 }
                 active.ms++;
                 active.setPos(new Vector(Piece.center(pos.x), Piece.center(pos.y)));
+                if(objIs(active, Pawn) && (team == "red" ? pos.y == 1 : pos.y == tilesY)) {
+                    eat(pos);
+                    const promo = document.createElement("dialog");
+                    document.body.appendChild(promo);
+                    const paths = ["queen", "rook", "horse", "bishop"];
+                    promo.innerHTML = paths
+                        .map(p => `${p}_${team}`)
+                        .map(p => {console.log(`click-${p}`); return `<img src="assets/${p}.png" id="click-${p}" width="100" height="100">`})
+                        .join("<br>");
+                    promo.showModal();
+                    await new Promise<void>((resolve) => {
+                        paths.forEach(p => {
+                            (document.getElementById(`click-${p}_${team}`) as HTMLImageElement | null)?.addEventListener("click", (e) => {
+                                const id = (e.target as HTMLElement | null)?.id;
+                                const x = id?.split("-")[1];
+                                const t = x?.split("_")[1];
+                                new ({ "queen": Queen, "rook": Rook, "horse": Knight, "bishop": Bishop }[x?.split("_")[0] as "queen" | "rook" | "horse" | "bishop"])(pos.x, pos.y, t as TeamColor);
+                                console.log(t);
+                                resolve();
+                            });
+                        });
+                    });
+                    document.body.removeChild(promo);
+                }
                 active = null;
                 team = team == "red" ? "blue" : "red";
             }
