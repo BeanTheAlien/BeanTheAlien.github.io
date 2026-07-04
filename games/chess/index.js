@@ -5,8 +5,31 @@ const tileSize = 50;
 const size = 400;
 const tilesX = 8;
 const tilesY = 8;
+const gamemodeList = [
+    "reg", "outlaw"
+];
+const rulesList = [
+    // phase blacklist
+    "nomad", "nomine", "nomimic", "nolock",
+    // victory conditions
+    "mate", "cap",
+    // capture all victory condition blacklist
+    "nocapall",
+    // skills
+    // pawn
+    "noself", "nochain", "notake", "nosneak",
+    // bishop
+    "nolight", "nointer",
+    // knight
+    "nofriend", "nosteed",
+    // rook
+    "nostone", "nolook",
+    // king
+    "nojump"
+];
 const gmp = new Params();
-const gm = gmp.get("gm");
+const gm = (gmp.get("gm") ?? "reg");
+const rules = gmp.getAll("rule").filter(Boolean).filter(r => r in rulesList);
 const scene = new Scene({ canvas: "chess", w: tileSize * tilesX, h: tileSize * tilesY });
 const gridWidth = scene.width / tileSize;
 const gridHeight = scene.height / tileSize;
@@ -50,6 +73,59 @@ function isUnsafe(vec) {
 function isSafe(vec) {
     return !isUnsafe(vec);
 }
+function wouldLeaveKingInCheck(piece, target) {
+    const king = piece.team == "red" ? rking : bking;
+    const captured = fd(target);
+    const from = piece.getPos();
+    if (captured && captured != piece) {
+        pieces.splice(pieces.indexOf(captured), 1);
+    }
+    piece.setPos(new Vector(Piece.center(target.x), Piece.center(target.y)));
+    const inCheck = king.check();
+    piece.setPos(from);
+    if (captured && captured != piece) {
+        pieces.push(captured);
+    }
+    return inCheck;
+}
+function isLegal(piece, pos) {
+    return (gm == "reg" && piece.ok(pos) && isSafe(pos) && !wouldLeaveKingInCheck(piece, pos)) || gm == "outlaw";
+}
+function allSpots() {
+    const pos = [];
+    for (let i = 1; i <= tilesX; i++)
+        for (let j = 1; j <= tilesY; j++)
+            pos.push(new Vector(i, j));
+    return pos;
+}
+function hasAnyLegalMove(color) {
+    for (const piece of pieces) {
+        if (piece.team != color)
+            continue;
+        for (let x = 1; x <= tilesX; x++) {
+            for (let y = 1; y <= tilesY; y++) {
+                const target = new Vector(x, y);
+                if (isLegal(piece, target)) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+function resolveGameState() {
+    const king = team === "red" ? rking : bking;
+    const inCheck = king.check();
+    const hasMoves = hasAnyLegalMove(team);
+    if (!hasMoves) {
+        if (inCheck) {
+            console.log("checkmate");
+        }
+        else {
+            console.log("stalemate");
+        }
+    }
+}
 function diag(g) {
     const d = [];
     const v = (r, c) => 0 <= r && r <= gridWidth &&
@@ -83,6 +159,9 @@ function line(g) {
 function isBlack(obj) {
     return blacklist.some(b => objIs(obj, b));
 }
+function isRule(rule) {
+    return rule in rules;
+}
 class Base extends Entity {
     ico;
     constructor(x, y, img) {
@@ -113,6 +192,12 @@ class Piece extends Base {
     }
     static compare(gv1, gv2) {
         return gv1.x == gv2.x && gv1.y == gv2.y;
+    }
+    allies() {
+        return pieces.filter(p => p.team == this.team);
+    }
+    enemies() {
+        return pieces.filter(p => p.team != this.team);
     }
 }
 class Pawn extends Piece {
@@ -184,7 +269,8 @@ class Knight extends Piece {
         if (!isLMove)
             return false;
         const target = fd(p);
-        return !target || target.team !== this.team; // Can't land on teammates
+        // blacklist teammate landing (nofriend)
+        return !target || (target.team != this.team && isRule("nofriend")); // Can't land on teammates
     }
     valid() {
         return this.getL(this.grid());
@@ -258,6 +344,12 @@ class King extends Piece {
             new Vector(g.x + 1, g.y - 1),
             new Vector(g.x - 1, g.y + 1)
         ];
+    }
+    isCheck(where) {
+        return this.enemies().some(p => p.ok(where));
+    }
+    check() {
+        return this.isCheck(this.grid());
     }
 }
 class RKing extends King {
@@ -435,28 +527,40 @@ new RKnight(tilesX - 1, tilesY);
 new BKnight(tilesX - 1, 1);
 new RQueen(4, tilesY);
 new BQueen(4, 1);
-new RKing(5, tilesY);
-new BKing(5, 1);
+var rking = new RKing(5, tilesY);
+var bking = new BKing(5, 1);
 for (let i = 1; i <= tilesX; i++) {
     new RPawn(i, tilesY - 1);
     new BPawn(i, 2);
+}
+function drawTile(x, y, color) {
+    scene.rect(x, y, tileSize, tileSize, color);
+}
+function drawNTile(vec, color) {
+    drawTile(Piece.normal(vec.x), Piece.normal(vec.y), color);
 }
 scene.start(() => {
     for (let i = 0; i <= scene.width; i += tileSize) {
         for (let j = 0; j <= scene.height; j += tileSize) {
             const r = i / tileSize;
             const c = j / tileSize;
-            scene.rect(i, j, tileSize, tileSize, (r + c) % 2 == 0 ? "#1a5a00" : "#fff4e8");
+            drawTile(i, j, (r + c) % 2 == 0 ? "#1a5a00" : "#fff4e8");
         }
     }
-    unsafe.forEach(u => scene.rect(Piece.normal(u.x), Piece.normal(u.y), tileSize, tileSize, "#7b4015"));
+    unsafe.forEach(u => drawNTile(u, "#7b4015"));
     if (active) {
         const g = active.grid();
         // Highlight the whole tile
-        scene.rect(Piece.normal(g.x), Piece.normal(g.y), tileSize, tileSize, "rgba(238, 255, 0, 0.5)");
+        drawNTile(g, "rgba(238, 255, 0, 0.5)");
         const a = active.valid().filter(isSafe);
         a.forEach(v => scene.rect(Piece.center(v.x), Piece.center(v.y), tileSize / 4, tileSize / 4, "#d40700"));
     }
+    const cdraw = (k) => {
+        if (k.check())
+            drawNTile(k.grid(), "#ca1515");
+    };
+    cdraw(rking);
+    cdraw(bking);
     [...pieces, ...mines].forEach(p => scene.img(p.ico, p.x, p.y, p.width, p.height));
 });
 scene.on("click", async (e) => {
@@ -480,7 +584,8 @@ scene.on("click", async (e) => {
                 active = np;
                 return;
             }
-            if ((gm == "reg" && active.ok(pos) && isSafe(pos)) || gm == "outlaw") {
+            const isLegalMove = isLegal(active, pos);
+            if (isLegalMove) {
                 // CHECK FOR CAPTURE HERE
                 const target = fd(pos);
                 if (target && target.team != active.team) {
@@ -502,7 +607,7 @@ scene.on("click", async (e) => {
                     const paths = ["queen", "rook", "horse", "bishop"];
                     promo.innerHTML = paths
                         .map(p => `${p}_${team}`)
-                        .map(p => { console.log(`click-${p}`); return `<img src="assets/${p}.png" id="click-${p}" width="100" height="100">`; })
+                        .map(p => `<img src="assets/${p}.png" id="click-${p}" width="100" height="100">`)
                         .join("<br>");
                     promo.showModal();
                     await new Promise((resolve) => {
@@ -512,7 +617,6 @@ scene.on("click", async (e) => {
                                 const x = id?.split("-")[1];
                                 const t = x?.split("_")[1];
                                 new ({ "queen": Queen, "rook": Rook, "horse": Knight, "bishop": Bishop }[x?.split("_")[0]])(pos.x, pos.y, t);
-                                console.log(t);
                                 resolve();
                             });
                         });
@@ -521,6 +625,7 @@ scene.on("click", async (e) => {
                 }
                 active = null;
                 team = team == "red" ? "blue" : "red";
+                resolveGameState();
             }
         }
     }
