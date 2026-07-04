@@ -7,8 +7,33 @@ const size = 400;
 const tilesX = 8;
 const tilesY = 8;
 
+const gamemodeList = [
+    "reg", "outlaw"
+] as const;
+const rulesList = [
+    // phase blacklist
+    "nomad", "nomine", "nomimic", "nolock",
+    // victory conditions
+    "mate", "cap",
+    // capture all victory condition blacklist
+    "nocapall",
+    // skills
+    // pawn
+    "noself", "nochain", "notake", "nosneak",
+    // bishop
+    "nolight", "nointer",
+    // knight
+    "nofriend", "nosteed",
+    // rook
+    "nostone", "nolook",
+    // king
+    "nojump"
+] as const;
+type Rule = (typeof rulesList)[number];
+type GMRule = (typeof gamemodeList)[number];
 const gmp = new Params();
-const gm = gmp.get("gm") as "reg" | "outlaw";
+const gm = gmp.get("gm") as GMRule;
+const rules = gmp.getAll("rule").filter(Boolean).filter(r => r in rulesList) as Rule[];
 
 const scene = new Scene({ canvas: "chess", w: tileSize * tilesX, h: tileSize * tilesY });
 const gridWidth = scene.width / tileSize;
@@ -85,6 +110,9 @@ function line(g: Vector) {
 }
 function isBlack(obj: Piece) {
     return blacklist.some(b => objIs(obj, b));
+}
+function isRule<T extends Rule>(rule: T) {
+    return rule in rules;
 }
 
 class Base extends Entity {
@@ -195,7 +223,8 @@ class Knight extends Piece {
         if (!isLMove) return false;
         
         const target = fd(p);
-        return !target || target.team !== this.team; // Can't land on teammates
+        // blacklist teammate landing (nofriend)
+        return !target || (target.team != this.team && isRule("nofriend")); // Can't land on teammates
     }
     valid() {
         return this.getL(this.grid());
@@ -516,7 +545,6 @@ scene.on("click", async (e) => {
                                 const x = id?.split("-")[1];
                                 const t = x?.split("_")[1];
                                 new ({ "queen": Queen, "rook": Rook, "horse": Knight, "bishop": Bishop }[x?.split("_")[0] as "queen" | "rook" | "horse" | "bishop"])(pos.x, pos.y, t as TeamColor);
-                                console.log(t);
                                 resolve();
                             });
                         });
