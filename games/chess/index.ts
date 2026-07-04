@@ -479,6 +479,11 @@ scene.on("click", async (e) => {
                 active = null;
                 return;
             }
+            const np = fd(pos);
+            if(np && np.team == team) {
+                active = np;
+                return;
+            }
             if((gm == "reg" && active.ok(pos) && isSafe(pos)) || gm == "outlaw") {
                 // CHECK FOR CAPTURE HERE
                 const target = fd(pos);
