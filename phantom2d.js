@@ -788,6 +788,14 @@ class Entity {
     initState;
     tags;
     child;
+    /**
+     * Whether legacy collision is enabled.
+     *
+     * Note: only runs collisions on other legacy objects.
+     * @since v2.2.0
+     * @default false
+     */
+    legCol;
     constructor(opts) {
         this.collide = opts?.collide ?? ((o) => { });
         this.upd = opts?.upd ?? NoFunc;
@@ -809,6 +817,7 @@ class Entity {
         this.tags = new TagList();
         this.initState = new SavedState(this, "The state this object was in, at the time of construction.");
         this.child = new ItemBox();
+        this.legCol = opts?.legCol ?? false;
     }
     setPos(x, y, z) {
         if (typeof x == "number" && typeof y == "number") {
@@ -1177,6 +1186,12 @@ class Entity {
      */
     static is(obj) {
         return objIs(obj, Entity);
+    }
+    lerp(use, scene, to, angleMode, modeOrRate, rate) {
+        if (use == "pos" && objIs(to, Vector))
+            return new EntityLerpDevice(scene, this, this.getPos(), to, angleMode, modeOrRate);
+        else
+            return new EntityRotationLerpDevice(scene, this, this.rot, to, angleMode, modeOrRate, rate);
     }
 }
 /**
@@ -1796,6 +1811,9 @@ class Vector {
         const dy = vec.y - this.y;
         return Math.sqrt(dx * dx + dy * dy) < tolerance;
     }
+    dot(vec) {
+        return this.x * vec.x + this.y * vec.y;
+    }
 }
 class DualLerpDevice {
     scene;
@@ -2226,6 +2244,9 @@ class Scene {
     img(img, x, y, w, h) {
         this.ctx.drawImage(objIs(img, HTMLImageElement) ? img : img.img, x, y, w, h);
     }
+    drawImg(path, x, y, w, h) {
+        this.img(new Img(path), x, y, w, h);
+    }
     rect(x, y, w, h, color) {
         this.color = color;
         this.ctx.fillRect(x, y, w, h);
@@ -2257,8 +2278,12 @@ class Scene {
                     continue;
                 const a = this.items.stuff[i];
                 const b = this.items.stuff[j];
+                // if both a and b are using legacy
+                // collision detection, then run legacy
+                // instead of modern
+                // (only works if both using)
                 if (a && b)
-                    if (isCol(a, b))
+                    if ((a.legCol && b.legCol) ? isColLegacy(a, b) : isCol(a, b))
                         a.collide(b);
             }
         }
@@ -4129,8 +4154,9 @@ class ParamKey {
  * @param b Object 2.
  * @returns If they collide.
  * @since v0.0.0
+ * @deprecated since v2.2.0
  */
-function isCol(a, b) {
+function isColLegacy(a, b) {
     const w1 = a.width;
     const h1 = a.height;
     const x1 = a.x;
@@ -4140,6 +4166,59 @@ function isCol(a, b) {
     const x2 = b.x;
     const y2 = b.y;
     return x2 < x1 + w1 && x2 + w2 > x1 && y2 < y1 + h1 && y2 + h2 > y1;
+}
+function getCorners(e) {
+    const cx = e.x + e.width / 2;
+    const cy = e.y + e.height / 2;
+    const hw = e.width / 2;
+    const hh = e.height / 2;
+    const c = Math.cos(e.rot);
+    const s = Math.sin(e.rot);
+    return [
+        new Vector(cx + (-hw * c - -hh * s), cy + (-hw * s + -hh * c)),
+        new Vector(cx + (hw * c - -hh * s), cy + (hw * s + -hh * c)),
+        new Vector(cx + (hw * c - hh * s), cy + (hw * s + hh * c)),
+        new Vector(cx + (-hw * c - hh * s), cy + (-hw * s + hh * c))
+    ];
+}
+function project(points, axis) {
+    let min = points[0].dot(axis);
+    let max = min;
+    for (let i = 1; i < points.length; i++) {
+        const value = points[i].dot(axis);
+        if (value < min)
+            min = value;
+        if (value > max)
+            max = value;
+    }
+    return { min, max };
+}
+/**
+ * Returns whether 2 objects are in collision.
+ *
+ * Factors in rotation, unlike `isColLegacy`.
+ * @param a Object 1.
+ * @param b Object 2.
+ * @returns If they collide.
+ * @since v2.2.0
+ */
+function isCol(a, b) {
+    const A = getCorners(a);
+    const B = getCorners(b);
+    const axes = [
+        new Vector(A[1].y - A[0].y, A[0].x - A[1].x),
+        new Vector(A[2].y - A[1].y, A[1].x - A[2].x),
+        new Vector(B[1].y - B[0].y, B[0].x - B[1].x),
+        new Vector(B[2].y - B[1].y, B[1].x - B[2].x)
+    ];
+    for (const axis of axes) {
+        const pA = project(A, axis);
+        const pB = project(B, axis);
+        if (pA.max < pB.min || pB.max < pA.min) {
+            return false;
+        }
+    }
+    return true;
 }
 /**
  * Returns an intersection distance between a ray and a rect.

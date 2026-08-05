@@ -48,3 +48,8 @@ This is the offical website for BeanTheAlien!
 - Update \<br\> statements to be \<div class="space"\>.
 - Fix "Sign Up" to be "Sign In" on `signin/`.
 - Fix "Sign In" to be "Sign Up" on `signup/`.
+## v0.2.2
+- Install PhantomJS v2.2.0.
+- Add `installp2d.js` Node script.
+## v0.2.2.1
+- Add `redirectbtns.js` script.

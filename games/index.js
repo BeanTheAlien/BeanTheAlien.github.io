@@ -1,18 +1,22 @@
-const gamelist = document.createElement("div");
-Object.assign(gamelist.style, {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: "60px",
-    margin: "auto",
-    gap: "20px"
-});
+// const gamelist = document.createElement("div");
+// Object.assign(gamelist.style, {
+//     display: "flex",
+//     justifyContent: "center",
+//     alignItems: "center",
+//     padding: "60px",
+//     margin: "auto",
+//     gap: "20px"
+// });
 
-const games = [["Flappy Bird", "bird"], ["Dungeon", "dng"], ["Pong", "pong"], ["Snake", "snake"], ["RPG", "rpg"], ["PvZ", "pvz"], ["Chess 2: Electric Boogaloo", "chess"], ["Big Boo Battlegrounds", "bbb"]];
-games.forEach(g => {
-    const b = document.createElement("button");
-    b.textContent = g[0];
-    b.addEventListener("click", () => window.location.href = g[1]);
-    gamelist.appendChild(b);
-});
-document.body.appendChild(gamelist);
+// const games = [["Flappy Bird", "bird"], ["Dungeon", "dng"], ["Pong", "pong"], ["Snake", "snake"], ["RPG", "rpg"], ["PvZ", "pvz"], ["Chess 2: Electric Boogaloo", "chess"], ["Big Boo Battlegrounds", "bbb"]];
+// games.forEach(g => {
+//     const b = document.createElement("button");
+//     b.textContent = g[0];
+//     b.addEventListener("click", () => window.location.href = g[1]);
+//     gamelist.appendChild(b);
+// });
+// document.body.appendChild(gamelist);
+
+import { create } from "../redirectbtns.js";
+create([["Flappy Bird", "bird"], ["Dungeon", "dng"], ["Pong", "pong"], ["Snake", "snake"], ["RPG", "rpg"], ["PvZ", "pvz"], ["Chess 2: Electric Boogaloo", "chess"], ["Big Boo Battlegrounds", "bbb"]]);
+create([["Dream Games", "dreams"]])

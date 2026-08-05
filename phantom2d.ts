@@ -471,6 +471,11 @@ interface EntityOptions {
      * @since v1.0.4
      */
     moveMode?: MoveMode;
+    /**
+     * If legacy collisions should be used.
+     * @since v2.2.0
+     */
+    legCol?: boolean;
 }
 /**
  * The options for a `StaticObject`.
@@ -1405,6 +1410,7 @@ for(const [k, v] of Object.entries(KeyCodeMap)) {
  * @since v0.0.0
  */
 type KeyCode = keyof typeof KeyCodeMap;
+type EntityLerp = "pos" | "rot";
 
 /**
  * The root class of all entities, providing base functionality.
@@ -1465,6 +1471,14 @@ class Entity {
     initState: SavedState;
     tags: TagList;
     child: ItemBox<Entity>;
+    /**
+     * Whether legacy collision is enabled.
+     * 
+     * Note: only runs collisions on other legacy objects.
+     * @since v2.2.0
+     * @default false
+     */
+    legCol: boolean;
     constructor();
     constructor(opts: EntityOptions);
     constructor(opts?: EntityOptions) {
@@ -1487,6 +1501,7 @@ class Entity {
         this.tags = new TagList();
         this.initState = new SavedState(this, "The state this object was in, at the time of construction.");
         this.child = new ItemBox();
+        this.legCol = opts?.legCol ?? false;
     }
     /**
      * Sets the position, based on a `Vector`.
@@ -1875,6 +1890,12 @@ class Entity {
      */
     static is(obj: any): obj is Entity {
         return objIs(obj, Entity);
+    }
+    lerp(use: "pos", scene: Scene, to: Vector, mode?: LerpDeviceLerpMode, rate?: number): EntityLerpDevice;
+    lerp(use: "rot", scene: Scene, to: number, angleMode?: AngularMeasurementName, mode?: LerpDeviceLerpMode, rate?: number): EntityRotationLerpDevice;
+    lerp(use: EntityLerp, scene: Scene, to: Vector | number, angleMode?: AngularMeasurementName | LerpDeviceLerpMode, modeOrRate?: LerpDeviceLerpMode | number, rate?: number) {
+        if(use == "pos" && objIs(to, Vector)) return new EntityLerpDevice(scene, this, this.getPos(), to, angleMode as LerpDeviceLerpMode | undefined, modeOrRate as number | undefined);
+        else return new EntityRotationLerpDevice(scene, this, this.rot, to as number, angleMode as AngularMeasurementName, modeOrRate as LerpDeviceLerpMode, rate);
     }
 }
 /**
@@ -2603,6 +2624,9 @@ class Vector {
         const dy = vec.y - this.y;
         return Math.sqrt(dx * dx + dy * dy) < tolerance;
     }
+    dot(vec: Vector) {
+        return this.x * vec.x + this.y * vec.y;
+    }
 }
 type LerpDeviceLerpMode = "once" | "bounce";
 abstract class DualLerpDevice<P, T> {
@@ -3096,6 +3120,9 @@ class Scene {
     img(img: HTMLImageElement | Img, x: number, y: number, w: number, h: number) {
         this.ctx.drawImage(objIs(img, HTMLImageElement) ? img : img.img, x, y, w, h);
     }
+    drawImg(path: string, x: number, y: number, w: number, h: number) {
+        this.img(new Img(path), x, y, w, h);
+    }
     rect(x: number, y: number, w: number, h: number, color: string) {
         this.color = color;
         this.ctx.fillRect(x, y, w, h);
@@ -3126,7 +3153,11 @@ class Scene {
                 if(i == j) continue;
                 const a = this.items.stuff[i];
                 const b = this.items.stuff[j];
-                if(a && b) if(isCol(a, b)) a.collide(b);
+                // if both a and b are using legacy
+                // collision detection, then run legacy
+                // instead of modern
+                // (only works if both using)
+                if(a && b) if((a.legCol && b.legCol) ? isColLegacy(a, b) : isCol(a, b)) a.collide(b);
             }
         }
     }
@@ -5126,7 +5157,7 @@ class Burst extends Gun {
     }
 }
 type itemof<T extends any[] | { [x: string | number | symbol]: any }> = T extends any[] ? T[number] : T[keyof T];
-class ParamKey<T extends string[], D extends itemof<T>> {
+class ParamKey<T extends readonly string[], D extends itemof<T>> {
     param: Params;
     pkey!: string;
     opts: T;
@@ -5160,11 +5191,79 @@ class ParamKey<T extends string[], D extends itemof<T>> {
  * @param b Object 2.
  * @returns If they collide.
  * @since v0.0.0
+ * @deprecated since v2.2.0
  */
-function isCol(a: Entity, b: Entity): boolean {
+function isColLegacy(a: Entity, b: Entity): boolean {
     const w1 = a.width; const h1 = a.height; const x1 = a.x; const y1 = a.y;
     const w2 = b.width; const h2 = b.height; const x2 = b.x; const y2 = b.y;
     return x2 < x1 + w1 && x2 + w2 > x1 && y2 < y1 + h1 && y2 + h2 > y1;
+}
+function getCorners(e: Entity) {
+    const cx = e.x + e.width / 2;
+    const cy = e.y + e.height / 2;
+    const hw = e.width / 2;
+    const hh = e.height / 2;
+    const c = Math.cos(e.rot);
+    const s = Math.sin(e.rot);
+    return [
+        new Vector(cx + (-hw * c - -hh * s), cy + (-hw * s + -hh * c)),
+        new Vector(cx + ( hw * c - -hh * s), cy + ( hw * s + -hh * c)),
+        new Vector(cx + ( hw * c -  hh * s), cy + ( hw * s +  hh * c)),
+        new Vector(cx + (-hw * c -  hh * s), cy + (-hw * s +  hh * c))
+    ];
+}
+function project(points: Vector[], axis: Vector) {
+    let min = points[0].dot(axis);
+    let max = min;
+    for(let i = 1; i < points.length; i++) {
+        const value = points[i].dot(axis);
+        if(value < min) min = value;
+        if(value > max) max = value;
+    }
+    return { min, max };
+}
+/**
+ * Returns whether 2 objects are in collision.
+ * 
+ * Factors in rotation, unlike `isColLegacy`.
+ * @param a Object 1.
+ * @param b Object 2.
+ * @returns If they collide.
+ * @since v2.2.0
+ */
+function isCol(a: Entity, b: Entity): boolean {
+    const A = getCorners(a);
+    const B = getCorners(b);
+
+    const axes = [
+        new Vector(
+            A[1].y - A[0].y,
+            A[0].x - A[1].x
+        ),
+        new Vector(
+            A[2].y - A[1].y,
+            A[1].x - A[2].x
+        ),
+        new Vector(
+            B[1].y - B[0].y,
+            B[0].x - B[1].x
+        ),
+        new Vector(
+            B[2].y - B[1].y,
+            B[1].x - B[2].x
+        )
+    ];
+
+    for (const axis of axes) {
+        const pA = project(A, axis);
+        const pB = project(B, axis);
+
+        if (pA.max < pB.min || pB.max < pA.min) {
+            return false;
+        }
+    }
+
+    return true;
 }
 /**
  * Returns an intersection distance between a ray and a rect.
