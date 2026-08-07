@@ -14,8 +14,7 @@ const template = `<!DOCTYPE html>
   </head>
   <body>
     <script src="/pagedefault.js" type="module"></script>
-    <h1 class="title" id="title">${name.split(" ").map(s => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()).join(" ")}</h1>
-    ${isGame == "true" ? `<canvas id="${inCanvasName}"></canvas>` : ""}
+    <h1 class="title" id="title">${name.split(" ").map(s => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()).join(" ")}</h1>${isGame == "true" ? `\n<canvas id="${inCanvasName}"></canvas>` : ""}
     <script src="index.js" type="module"></script>
   </body>
 </html>`;
