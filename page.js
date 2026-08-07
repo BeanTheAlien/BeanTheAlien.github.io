@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const [,, name, startPath = ""] = process.argv;
+const [,, name, startPath = "", ovrPathName = "", isGame = "false", inCanvasName = ""] = process.argv;
 const cn = name.replace(/\s/g, "")
 const template = `<!DOCTYPE html>
 <html lang="en">
@@ -15,10 +15,11 @@ const template = `<!DOCTYPE html>
   <body>
     <script src="/pagedefault.js" type="module"></script>
     <h1 class="title" id="title">${name.split(" ").map(s => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()).join(" ")}</h1>
+    ${isGame == "true" ? `<canvas id="${inCanvasName}"></canvas>` : ""}
     <script src="index.js" type="module"></script>
   </body>
 </html>`;
-const dir = path.join(__dirname, startPath, cn);
+const dir = path.join(__dirname, startPath, !ovrPathName.length ? cn : ovrPathName);
 fs.mkdirSync(dir);
 var html = template;
 var js = "";
@@ -27,4 +28,11 @@ if(fs.existsSync(`${cn}.html`)) {
     js = fs.readFileSync(`${cn}.js`, "utf8");
 }
 fs.writeFileSync(path.join(dir, "index.html"), html);
-fs.writeFileSync(path.join(dir, "index.js"), js);
+if(isGame == "true") {
+    fs.writeFileSync(path.join(dir, "index.ts"), `import { Scene } from "../../phantom2d.js";
+const scene = new Scene({ canvas: "${inCanvasName}", width: 0, height: 0 });
+
+scene.start();`);
+} else {
+    fs.writeFileSync(path.join(dir, "index.js"), js);
+}

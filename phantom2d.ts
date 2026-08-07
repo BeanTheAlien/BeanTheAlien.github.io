@@ -2704,6 +2704,40 @@ class ProgressUIValueLerpDevice extends DualLerpDevice<ProgressUI, number> {
     }
     end() {}
 }
+class SizeBasedLerpDevice<P extends AngularPos2D> extends DualLerpDevice<P, [number, number]> {
+    constructor(scene: Scene, tg: P, to: [number, number], lerpMode: LerpDeviceLerpMode = "once", rate = 1) {
+        super(scene, tg, [tg.width, tg.height], to, lerpMode, rate);
+    }
+    upd() {
+        this.tg.width = lerp(this.from[0], this.to[0], this.alpha);
+        this.tg.height = lerp(this.from[1], this.to[1], this.alpha);
+    }
+    end() {}
+}
+class WidthBasedLerpDevice<P extends AngularPos2D> extends DualLerpDevice<P, number> {
+    constructor(scene: Scene, tg: P, to: number, lerpMode: LerpDeviceLerpMode = "once", rate = 1) {
+        super(scene, tg, tg.width, to, lerpMode, rate);
+    }
+    upd() {
+        this.tg.width = lerp(this.from, this.to, this.alpha);
+    }
+    end() {}
+}
+class HeightBasedLerpDevice<P extends AngularPos2D> extends DualLerpDevice<P, number> {
+    constructor(scene: Scene, tg: P, to: number, lerpMode: LerpDeviceLerpMode = "once", rate = 1) {
+        super(scene, tg, tg.height, to, lerpMode, rate);
+    }
+    upd() {
+        this.tg.height = lerp(this.from, this.to, this.alpha);
+    }
+    end() {}
+}
+class EntitySizeLerpDevice extends SizeBasedLerpDevice<Entity> {}
+class SceneUISizeLerpDevice extends SizeBasedLerpDevice<SceneUI> {}
+class EntityWidthLerpDevice extends WidthBasedLerpDevice<Entity> {}
+class SceneUIWidthLerpDevice extends WidthBasedLerpDevice<SceneUI> {}
+class EntityHeightLerpDevice extends HeightBasedLerpDevice<Entity> {}
+class SceneUIHeightLerpDevice extends HeightBasedLerpDevice<SceneUI> {}
 /**
  * A pixel.
  * @since v0.0.0
@@ -4767,6 +4801,24 @@ class SceneUI {
     lerpRot(scene: Scene, to: number, mode: AngularMeasurementName, lerpMode: LerpDeviceLerpMode): SceneUIRotationLerpDevice;
     lerpRot(scene: Scene, to: number, mode: AngularMeasurementName = "rad", lerpMode: LerpDeviceLerpMode = "once") {
         return new SceneUIRotationLerpDevice(scene, this, this.rot, to, mode, lerpMode);
+    }
+    lerpSize(scene: Scene, to: [number, number]): SceneUISizeLerpDevice;
+    lerpSize(scene: Scene, to: [number, number], mode: LerpDeviceLerpMode): SceneUISizeLerpDevice;
+    lerpSize(scene: Scene, to: [number, number], mode: LerpDeviceLerpMode, rate: number): SceneUISizeLerpDevice;
+    lerpSize(scene: Scene, to: [number, number], mode?: LerpDeviceLerpMode, rate?: number) {
+        return new SceneUISizeLerpDevice(scene, this, to, mode, rate);
+    }
+    lerpWidth(scene: Scene, to: number): SceneUIWidthLerpDevice;
+    lerpWidth(scene: Scene, to: number, mode: LerpDeviceLerpMode): SceneUIWidthLerpDevice;
+    lerpWidth(scene: Scene, to: number, mode: LerpDeviceLerpMode, rate: number): SceneUIWidthLerpDevice;
+    lerpWidth(scene: Scene, to: number, mode?: LerpDeviceLerpMode, rate?: number) {
+        return new SceneUIWidthLerpDevice(scene, this, to, mode, rate);
+    }
+    lerpHeight(scene: Scene, to: number): SceneUIHeightLerpDevice;
+    lerpHeight(scene: Scene, to: number, mode: LerpDeviceLerpMode): SceneUIHeightLerpDevice;
+    lerpHeight(scene: Scene, to: number, mode: LerpDeviceLerpMode, rate: number): SceneUIHeightLerpDevice;
+    lerpHeight(scene: Scene, to: number, mode?: LerpDeviceLerpMode, rate?: number) {
+        return new SceneUIHeightLerpDevice(scene, this, to, mode, rate);
     }
 }
 class ChildUI extends ItemBox<SceneUI> {}
