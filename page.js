@@ -14,7 +14,7 @@ const template = `<!DOCTYPE html>
   </head>
   <body>
     <script src="/pagedefault.js" type="module"></script>
-    <h1 class="title" id="title">${name.split(" ").map(s => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()).join(" ")}</h1>${isGame == "true" ? `\n<canvas id="${inCanvasName}"></canvas>` : ""}
+    <h1 class="title" id="title">${name.split(" ").map(s => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()).join(" ")}</h1>${isGame == "true" ? `\n    <canvas id="${inCanvasName}"></canvas>` : ""}
     <script src="index.js" type="module"></script>
   </body>
 </html>`;
@@ -29,7 +29,7 @@ if(fs.existsSync(`${cn}.html`)) {
 fs.writeFileSync(path.join(dir, "index.html"), html);
 if(isGame == "true") {
     fs.writeFileSync(path.join(dir, "index.ts"), `import { Scene } from "../../phantom2d.js";
-const scene = new Scene({ canvas: "${inCanvasName}", width: 0, height: 0 });
+const scene = new Scene({ canvas: "${inCanvasName}", w: 0, h: 0 });
 
 scene.start();`);
 } else {
