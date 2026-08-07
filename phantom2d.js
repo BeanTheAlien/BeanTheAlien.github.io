@@ -1895,6 +1895,46 @@ class ProgressUIValueLerpDevice extends DualLerpDevice {
     }
     end() { }
 }
+class SizeBasedLerpDevice extends DualLerpDevice {
+    constructor(scene, tg, to, lerpMode = "once", rate = 1) {
+        super(scene, tg, [tg.width, tg.height], to, lerpMode, rate);
+    }
+    upd() {
+        this.tg.width = lerp(this.from[0], this.to[0], this.alpha);
+        this.tg.height = lerp(this.from[1], this.to[1], this.alpha);
+    }
+    end() { }
+}
+class WidthBasedLerpDevice extends DualLerpDevice {
+    constructor(scene, tg, to, lerpMode = "once", rate = 1) {
+        super(scene, tg, tg.width, to, lerpMode, rate);
+    }
+    upd() {
+        this.tg.width = lerp(this.from, this.to, this.alpha);
+    }
+    end() { }
+}
+class HeightBasedLerpDevice extends DualLerpDevice {
+    constructor(scene, tg, to, lerpMode = "once", rate = 1) {
+        super(scene, tg, tg.height, to, lerpMode, rate);
+    }
+    upd() {
+        this.tg.height = lerp(this.from, this.to, this.alpha);
+    }
+    end() { }
+}
+class EntitySizeLerpDevice extends SizeBasedLerpDevice {
+}
+class SceneUISizeLerpDevice extends SizeBasedLerpDevice {
+}
+class EntityWidthLerpDevice extends WidthBasedLerpDevice {
+}
+class SceneUIWidthLerpDevice extends WidthBasedLerpDevice {
+}
+class EntityHeightLerpDevice extends HeightBasedLerpDevice {
+}
+class SceneUIHeightLerpDevice extends HeightBasedLerpDevice {
+}
 /**
  * A pixel.
  * @since v0.0.0
@@ -3777,6 +3817,15 @@ class SceneUI {
     }
     lerpRot(scene, to, mode = "rad", lerpMode = "once") {
         return new SceneUIRotationLerpDevice(scene, this, this.rot, to, mode, lerpMode);
+    }
+    lerpSize(scene, to, mode, rate) {
+        return new SceneUISizeLerpDevice(scene, this, to, mode, rate);
+    }
+    lerpWidth(scene, to, mode, rate) {
+        return new SceneUIWidthLerpDevice(scene, this, to, mode, rate);
+    }
+    lerpHeight(scene, to, mode, rate) {
+        return new SceneUIHeightLerpDevice(scene, this, to, mode, rate);
     }
 }
 class ChildUI extends ItemBox {
