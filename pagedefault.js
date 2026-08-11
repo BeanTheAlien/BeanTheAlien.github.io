@@ -18,8 +18,9 @@ topbarContainer.className = "container";
 const buttonHome = mk("Home", "/");
 const buttonGames = mk("Games", "/games/");
 const buttonProjects = mk("Projects", "/projects/");
-const buttonResources = mk("Resources", "/resources.html");
-add([buttonHome, buttonGames, buttonProjects, buttonResources]);
+const buttonUserPages = mk("User Pages", "/userpages/");
+// const buttonResources = mk("Resources", "/resources.html");
+add([buttonHome, buttonGames, buttonProjects, buttonUserPages]);
 document.body.prepend(topbarContainer);
 (async () => {
     if((await net.json("verify")).r) {

@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 
 const [,, name, startPath = "", ovrPathName = "", isGame = "false", inCanvasName = ""] = process.argv;
-const cn = name.replace(/\s/g, "")
+const cn = name.replace(/\s/g, "").toLowerCase();
 const template = `<!DOCTYPE html>
 <html lang="en">
   <head>
@@ -14,7 +14,7 @@ const template = `<!DOCTYPE html>
   </head>
   <body>
     <script src="/pagedefault.js" type="module"></script>
-    <h1 class="title" id="title">${name.split(" ").map(s => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()).join(" ")}</h1>${isGame == "true" ? `\n    <canvas id="${inCanvasName}"></canvas>` : ""}
+    <h1 class="title" id="title">${name.startsWith("@") ? name : name.split(" ").map(s => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()).join(" ")}</h1>${isGame == "true" ? `\n    <canvas id="${inCanvasName}"></canvas>` : ""}
     <script src="index.js" type="module"></script>
   </body>
 </html>`;
