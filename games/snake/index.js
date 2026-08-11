@@ -48,6 +48,8 @@ function game() {
     }
     // Draw
     ctx.clearRect(0, 0, c.width, c.height);
+    ctx.fillStyle = "#006809";
+    ctx.fillRect(0, 0, c.width, c.height);
     ctx.drawImage(apfel, apl.x * tileSize, apl.y * tileSize, tileSize, tileSize);
     // Draw apple
     // drawRect(apl.x, apl.y, "#ff0000");
