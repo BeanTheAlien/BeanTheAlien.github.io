@@ -46,25 +46,27 @@ const multiCnDisp = disp("Multishot Count", multiCn);
 scene.addUI(moneyDisp, strengthDisp, randOffDisp, gainDisp, multiDisp, multiCnDisp);
 const bw = 320;
 const upgBox = new SceneUI({ scene, w: bw, h: scene.height, color: "gray", x: scene.width - bw });
+function clean(num, add) {
+    num += add;
+    return Number(num.toFixed(1));
+}
 function upgr(item, k, mo, next) {
     k.val = costMap[item];
     return () => {
         const cost = costMap[item];
         if (mony >= cost) {
-            if (mo == "s") {
-                strength += next;
-                strength = Number(strength.toFixed(1));
-            }
+            if (mo == "s")
+                strength = clean(strength, next);
             else if (mo == "r")
                 randOff += next;
             else if (mo == "g")
                 gain += next;
             else if (mo == "m")
-                multi += next;
+                multi = clean(multi, next);
             else
                 multiCn += next;
             mony -= cost;
-            costMap[item] *= 1.15;
+            costMap[item] *= 1.25;
             costMap[item] = Math.floor(costMap[item]);
             k.val = costMap[item];
         }
@@ -89,9 +91,9 @@ const globalMarketpliers = 1;
 var costMap = {
     str: 50,
     ro: 100,
-    g: 500,
+    g: 750,
     m: 250,
-    mc: 300
+    mc: 1000
 };
 for (const k of Object.keys(costMap))
     costMap[k] = Math.floor(costMap[k] * globalMarketpliers);
