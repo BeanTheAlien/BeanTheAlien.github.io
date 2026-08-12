@@ -1295,7 +1295,7 @@ class ArcMoveSlingComp extends Comp {
     }
     launch(spd: number, angle: number) {
         this.vx = spd * Math.cos(angle);
-        this.vy = -spd * Math.sin(angle);
+        this.vy = spd * Math.sin(angle);
     }
     upd() {
         this.vy += this.strength;
