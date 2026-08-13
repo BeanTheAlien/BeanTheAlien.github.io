@@ -643,7 +643,8 @@ scene.on("click", async (e) => {
     const pos = Piece.grid(at); // Current clicked grid square
     if(adminClick != "none") {
         if(adminClick == "del") eat(pos);
-        else new (adminPlace)(pos.x, pos.y);
+        else if(adminPlace) new (adminPlace)(pos.x, pos.y);
+        adminClick = "none";
         return;
     }
     if(phase == "play") {

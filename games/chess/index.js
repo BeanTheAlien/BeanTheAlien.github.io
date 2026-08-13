@@ -448,6 +448,9 @@ const removeSelfFromRequests = (name) => {
         phaseReqs.removeChild(out[0]);
 };
 const phaseReqs = document.getElementById("phase_game_requests");
+const adminPanel = document.getElementById("admin_panel");
+var adminClick = "none";
+var adminPlace = null;
 const reqBtns = [
     ["Mutually Assured Destruction", "des", () => {
             showRequest("Mutually Assured Destruction", () => {
@@ -488,6 +491,68 @@ reqBtns.forEach(r => {
     b.textContent = r[0];
     reqBtnObjects.push([b, r[1]]);
     phaseReqs.appendChild(b);
+});
+const adminClickBtns = [
+    ["None", "none", () => {
+            adminClick = "none";
+        }],
+    ["Delete", "del", () => {
+            adminClick = "del";
+        }],
+    ["Place RPawn", "place", () => {
+            adminClick = "place";
+            adminPlace = RPawn;
+        }],
+    ["Place RRook", "place", () => {
+            adminClick = "place";
+            adminPlace = RRook;
+        }],
+    ["Place RKnight", "place", () => {
+            adminClick = "place";
+            adminPlace = RKnight;
+        }],
+    ["Place RBishop", "place", () => {
+            adminClick = "place";
+            adminPlace = RBishop;
+        }],
+    ["Place RQueen", "place", () => {
+            adminClick = "place";
+            adminPlace = RQueen;
+        }],
+    ["Place RKing", "place", () => {
+            adminClick = "place";
+            adminPlace = RKing;
+        }],
+    ["Place BPawn", "place", () => {
+            adminClick = "place";
+            adminPlace = BPawn;
+        }],
+    ["Place BRook", "place", () => {
+            adminClick = "place";
+            adminPlace = BRook;
+        }],
+    ["Place BKnight", "place", () => {
+            adminClick = "place";
+            adminPlace = BKnight;
+        }],
+    ["Place BBishop", "place", () => {
+            adminClick = "place";
+            adminPlace = BBishop;
+        }],
+    ["Place BQueen", "place", () => {
+            adminClick = "place";
+            adminPlace = BQueen;
+        }],
+    ["Place BKing", "place", () => {
+            adminClick = "place";
+            adminPlace = BKing;
+        }]
+];
+adminClickBtns.forEach(r => {
+    const b = document.createElement("button");
+    b.addEventListener("click", r[2]);
+    b.textContent = r[0];
+    adminPanel.appendChild(b);
 });
 const activeRequest = document.getElementById("activation_request");
 function showRequest(text, onAccept, onDeny) {
@@ -566,6 +631,14 @@ scene.start(() => {
 scene.on("click", async (e) => {
     const at = scene.mouseAt(e);
     const pos = Piece.grid(at); // Current clicked grid square
+    if (adminClick != "none") {
+        if (adminClick == "del")
+            eat(pos);
+        else if (adminPlace)
+            new (adminPlace)(pos.x, pos.y);
+        adminClick = "none";
+        return;
+    }
     if (phase == "play") {
         if (!active) {
             const p = fd(pos);
