@@ -59,8 +59,7 @@ function upgr(item: keyof typeof costMap, k: KeyedTextUI<number>, mo: Mop, next:
             else if(mo == "m") multi = clean(multi, next);
             else multiCn += next;
             mony -= cost;
-            costMap[item] *= 1.25;
-            costMap[item] = Math.floor(costMap[item]);
+            costMap[item] = Math.floor(costMap[item] * 1.25);
             k.val = costMap[item];
         }
     }
