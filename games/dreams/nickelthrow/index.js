@@ -66,8 +66,7 @@ function upgr(item, k, mo, next) {
             else
                 multiCn += next;
             mony -= cost;
-            costMap[item] *= 1.25;
-            costMap[item] = Math.floor(costMap[item]);
+            costMap[item] = Math.floor(costMap[item] * 1.25);
             k.val = costMap[item];
         }
     };

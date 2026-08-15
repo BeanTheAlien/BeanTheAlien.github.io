@@ -477,6 +477,10 @@ interface EntityOptions {
      */
     legCol?: boolean;
 }
+interface ExpiringEntityOptions extends EntityOptions {
+    expr: number;
+    scene: Scene;
+}
 /**
  * The options for a `StaticObject`.
  * @since v0.0.0
@@ -1481,7 +1485,8 @@ class Entity {
     legCol: boolean;
     constructor();
     constructor(opts: EntityOptions);
-    constructor(opts?: EntityOptions) {
+    constructor(opts: ExpiringEntityOptions);
+    constructor(opts?: EntityOptions | ExpiringEntityOptions) {
         this.collide = opts?.collide ?? ((o: Entity) => {});
         this.upd = opts?.upd ?? NoFunc;
         this.x = opts?.x ?? Entity.defaults.get("x") ?? 0;
@@ -1502,6 +1507,9 @@ class Entity {
         this.initState = new SavedState(this, "The state this object was in, at the time of construction.");
         this.child = new ItemBox();
         this.legCol = opts?.legCol ?? false;
+        if(opts && "expr" in opts) {
+            this.expire(opts.expr, opts.scene);
+        }
     }
     /**
      * Sets the position, based on a `Vector`.
@@ -1896,6 +1904,14 @@ class Entity {
     lerp(use: EntityLerp, scene: Scene, to: Vector | number, angleMode?: AngularMeasurementName | LerpDeviceLerpMode, modeOrRate?: LerpDeviceLerpMode | number, rate?: number) {
         if(use == "pos" && objIs(to, Vector)) return new EntityLerpDevice(scene, this, this.getPos(), to, angleMode as LerpDeviceLerpMode | undefined, modeOrRate as number | undefined);
         else return new EntityRotationLerpDevice(scene, this, this.rot, to as number, angleMode as AngularMeasurementName, modeOrRate as LerpDeviceLerpMode, rate);
+    }
+    /**
+     * Delays for `time` time before popping itself from scenespace.
+     * @param time The time to delay.
+     * @param scene The `Scene` reference.
+     */
+    expire(time: number, scene: Scene) {
+        setTimeout(() => scene.rm(this), time);
     }
 }
 /**
@@ -2990,6 +3006,8 @@ class Scene {
     misc: ItemBox<Renderable>;
     post: ItemBox<Function>;
     dualRuntime: Runtime;
+    scaleX: number;
+    scaleY: number;
     constructor(opts: SceneOptions) {
         if(typeof opts.canvas == "string") {
             opts.canvas = document.getElementById(opts.canvas);
@@ -3022,6 +3040,8 @@ class Scene {
         this.misc = new ItemBox();
         this.post = new ItemBox();
         this.dualRuntime = new Runtime();
+        this.scaleX = 1;
+        this.scaleY = 1;
     }
     get width(): number {
         return this.canvas.width;
@@ -3234,19 +3254,44 @@ class Scene {
         const dx = ex + ox + offX;
         const dy = ey + oy + offY;
         this.ctx.save();
-        const w2 = w/2;
-        const h2 = h/2;
+        const w2 = w / 2;
+        const h2 = h / 2;
+
         this.ctx.translate(dx + w2, dy + h2);
         this.ctx.rotate(rot);
+
         const nx = -w2;
         const ny = -h2;
-        const xw = nx + w;
-        const yh = ny + h;
-        // off-screen no draw check
-        // if the x-coord is less than 0 or more than width
-        // or the y-coord is less than 0 or more than height
-        // then it is not on the canvas
-        if(Scene.config.get("osnd") == true && (xw < 0 || this.width < xw || yh < 0 || this.height < yh)) return this.ctx.restore();
+
+        // Off-screen check
+        if(Scene.config.get("osnd") == true) {
+            const sw = w * Math.abs(this.scaleX);
+            const sh = h * Math.abs(this.scaleY);
+
+            const cos = Math.abs(Math.cos(rot));
+            const sin = Math.abs(Math.sin(rot));
+
+            const bw = sw * cos + sh * sin;
+            const bh = sw * sin + sh * cos;
+
+            const cx = dx + w2;
+            const cy = dy + h2;
+
+            // off-screen no draw check
+            // if the x-coord is less than 0 or more than width
+            // or the y-coord is less than 0 or more than height
+            // then it is not on the canvas
+            if (
+                cx + bw / 2 < 0 ||
+                cx - bw / 2 > this.width ||
+                cy + bh / 2 < 0 ||
+                cy - bh / 2 > this.height
+            ) {
+                return this.ctx.restore();
+            }
+        }
+
+        this.ctx.scale(this.scaleX, this.scaleY);
         this.rect(nx, ny, w, h, color);
         this.ctx.restore();
     }
@@ -3680,6 +3725,10 @@ class Scene {
     }
     getByMouse(pos: Vector, tolerance: number) {
         return this.items.find((v): v is Entity => this.mouseInRect(v.getPos(), v.width + tolerance * 2, v.height + tolerance * 2));
+    }
+    scale(sx: number, sy: number) {
+        this.scaleX = sx;
+        this.scaleY = sy;
     }
 }
 /**
@@ -5049,6 +5098,36 @@ class ProgressUI extends SceneUI {
         return new ProgressUIValueLerpDevice(scene, this, this.val, to, mode, rate);
     }
 }
+interface PagedUIOptions extends SceneUIOptions {
+    pgs?: SceneUI[][];
+    lbt?: ButtonUIOptions;
+    rbt?: ButtonUIOptions;
+}
+class PagedUI extends SceneUI {
+    pgs: SceneUI[][];
+    lbt: ButtonUI;
+    rbt: ButtonUI;
+    active: number;
+    constructor(opts: PagedUIOptions) {
+        super(opts);
+        this.pgs = opts.pgs ?? [];
+        this.lbt = new ButtonUI(opts.lbt ?? { scene: opts.scene, click: this.#changeL });
+        this.rbt = new ButtonUI(opts.rbt ?? { scene: opts.scene, click: this.#changeR });
+        this.active = 0;
+    }
+    addPg(pg: SceneUI[]) {
+        this.pgs.push(pg);
+    }
+    #changeL() {
+        this.active = Math.max(0, --this.active);
+    }
+    #changeR() {
+        this.active = Math.min(this.pgs.length - 1, ++this.active);
+    }
+    addAt(index: number, pg: SceneUI[]) {
+        this.pgs[index].push(...pg);
+    }
+}
 
 class Itvl {
     id: number;
@@ -5450,6 +5529,9 @@ function easeInOutQuad(t: number) {
 }
 function easeSmoothStep(t: number) {
     return t * t * (3 - 2 * t);
+}
+function aspectRatio() {
+    return window.innerWidth / window.innerHeight;
 }
 
 export {
