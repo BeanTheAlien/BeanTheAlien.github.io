@@ -201,8 +201,8 @@ class Tele extends Enemy {
             score++;
         }, () => {
             if(delta % 150 == 0) {
-                this.x = random(0, c.width);
-                this.y = random(0, c.height);
+                this.x = p2d.random(0, c.width);
+                this.y = p2d.random(0, c.height);
             } else if(chance(80) && delta % 2 == 0) {
                 if(player.x < this.x) this.x--;
                 else if(player.x > this.x) this.x++;
@@ -330,10 +330,10 @@ function game() {
 }
 function shop() {
     inshop = true;
-    if(!overlay.parentNode) d2.appendChild(overlay);
+    if(!overlay.parentNode) document.body.appendChild(overlay);
     shopItems = [];
     while(shopItems.length < 3) {
-        const upg = upgs[random(0, upgs.length)];
+        const upg = upgs[p2d.random(0, upgs.length)];
         if(!shopItems.includes(upg)) shopItems.push(upg);
     }
     Object.assign(overlay.style, {
@@ -415,7 +415,7 @@ function shopPurchase(e) {
 }
 function exitShop() {
     overlay.innerHTML = "";
-    if(overlay.parentNode == d2) d2.removeChild(overlay);
+    if(overlay.parentNode == document.body) document.body.removeChild(overlay);
     inshop = false;
     stage++;
     makeStage();
