@@ -72,7 +72,7 @@ class Player {
     }
     hurt(d) {
         this.hp -= d;
-        if(this.hp <= 0) gameEnd(runtime, score, "dungeon-hs");
+        if(this.hp <= 0) load.gameEnd(runtime, score, "dungeon-hs");
     }
     stats() {
         return `HP: ${this.hp}\nMax HP: ${this.maxhp}\nCooldown: ${this.cd}\nAmmo: ${this.ammo}\nMag: ${this.mag}\nDamage: ${this.dmg}\nTokens: ${this.tokens}`;
@@ -299,7 +299,7 @@ var runtime = null;
 
 function game() {
     if(!lvls[stage]) {
-        gameEnd(runtime, score, "dungeon-hs");
+        load.gameEnd(runtime, score, "dungeon-hs");
         return;
     }
     stats.textContent = player.stats();
@@ -423,7 +423,7 @@ function exitShop() {
 function makeStage() {
     const l = lvls[stage];
     if(!lvls[stage]) {
-        gameEnd(runtime, score, "dungeon-hs");
+        load.gameEnd(runtime, score, "dungeon-hs");
         return;
     }
     player.x = 0;
