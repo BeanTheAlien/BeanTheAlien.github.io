@@ -1,20 +1,23 @@
 import { DebugRay, Entity, objIs, PlayableCharacter, Scene, Vector } from "../../phantom2d.js";
 const scene = new Scene({ canvas: "dng", w: 500, h: 500 });
-const size = 1;
+const size = 10;
 var stat = {
-    dmg: 1
+    dmg: 1,
+    spd: 3
 };
 const plr = new PlayableCharacter({ strength: 0, width: size, height: size, color: "#29ad05", upd: () => {
     plr.rot = scene.rotToMouse(plr);
 } });
-plr.binds(["w", () => plr.moveY(-size)], ["a", () => plr.moveX(-size)], ["s", () => plr.moveY(size)], ["d", () => plr.moveX(size)]);
+plr.binds(["w", () => plr.moveY(-stat.spd)], ["a", () => plr.moveX(-stat.spd)], ["s", () => plr.moveY(stat.spd)], ["d", () => plr.moveX(stat.spd)]);
 var pos = new Vector(0, 0);
 interface Room {
     at: Vector;
     e: Enemy[];
     exit: Exit[];
 }
-const rooms = [];
+const rooms: Room[] = [
+    { at: new Vector(0, 0), e: [], exit: [] }
+];
 function fdRm() {
     return rooms.find(r => r.at.x == pos.x && r.at.y == pos.y);
 }
@@ -42,7 +45,7 @@ class Exit extends Entity {
 
 scene.add(plr);
 scene.on("click", () => {
-    const o = new Entity({ x: plr.x, y: plr.y, rot: plr.rot, height: 5, width: 3, scene, color: "#e2e603", expr: 1.5, collide: (e) => { if(objIs(e, Enemy)) e.comp("health").hurt(stat.dmg); scene.rm(o); } });
+    const o = new Entity({ x: plr.x, y: plr.y, rot: scene.rotToMouse(plr), height: 6, width: 18, scene, color: "#e2e603", expr: 50, collide: (e) => { if(objIs(e, Enemy)) { e.comp("health").hurt(stat.dmg); scene.rm(o); } } });
     scene.add(o);
 });
 scene.start(() => {
