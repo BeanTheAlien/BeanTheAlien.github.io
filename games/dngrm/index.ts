@@ -42,10 +42,14 @@ class Exit extends Entity {
         } });
     }
 }
+function LeftExit() { return new Exit(0, scene.height / 2, 0, new Vector(-1, 0)); }
+function RightExit() { return new Exit(scene.width, scene.height / 2, 0, new Vector(1, 0)); }
+function TopExit() { return new Exit(scene.width / 2, 0, Angle.rad(90), new Vector(0, 1)); }
+function BtmExit() { return new Exit(scene.width / 2, scene.height, Angle.rad(90), new Vector(0, -1)); }
 
 scene.add(plr);
 scene.on("click", () => {
-    const o = new Entity({ x: plr.x, y: plr.y, rot: scene.rotToMouse(plr), height: 6, width: 18, scene, color: "#e2e603", expr: 50, collide: (e) => { if(objIs(e, Enemy)) { e.comp("health").hurt(stat.dmg); scene.rm(o); } } });
+    const o = new BulletObject({ x: plr.x, y: plr.y, dir: scene.rotToMouse(plr), height: 6, width: 18, scene, color: "#e2e603", collide: (e) => { if(objIs(e, Enemy)) { e.comp("health").hurt(stat.dmg); scene.rm(o); } }, extLeft: 0, extRight: scene.width, extTop: 0, extBtm: scene.height, spd: 1.5 });
     scene.add(o);
 });
 scene.start(() => {
