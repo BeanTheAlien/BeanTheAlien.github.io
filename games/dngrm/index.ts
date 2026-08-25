@@ -1,4 +1,4 @@
-import { DebugRay, Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Raycast } from "../../phantom2d.js";
+import { DebugRay, Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Raycast, Cooldown, random } from "../../phantom2d.js";
 const scene = new Scene({ canvas: "dng", w: 500, h: 500 });
 const size = 10;
 var stat = {
@@ -8,14 +8,14 @@ var stat = {
     hp: 5
 };
 const healthOpts = (self: Entity, hp: number, onDie: Function, c1: string, c2: string = "#8b0b0b") => {
-    hp, onDie, onHurt: () => {
+    return { hp, onDie, onHurt: () => {
         self.color = c2;
         setTimeout(() => self.color = c1, 125);
-    }, onDie
+    } } as any;
 }
 const plr = new PlayableCharacter({ strength: 0, width: size, height: size, color: "#29ad05", upd: () => {
     plr.rot = scene.rotToMouse(plr);
-} });
+}, x: 5, y: 20 });
 plr.use("health", healthOpts(plr, stat.hp, scene.stop, "#29ad05"));
 plr.binds(["w", () => plr.moveY(-stat.spd)], ["a", () => plr.moveX(-stat.spd)], ["s", () => plr.moveY(stat.spd)], ["d", () => plr.moveX(stat.spd)]);
 var pos = new Vector(0, 0);
@@ -28,7 +28,7 @@ class Enemy extends Entity {
     atkCd: Cooldown;
     constructor(x: number, y: number, w: number, h: number, c: string, hp: number, dmg: number, atk: Function, cd: number) {
         super({ x, y, width: size * w, height: size * h, color: c, upd: () => {
-            if(this.dp() <= 200) {
+            if(this.dp() <= 300) {
                 this.x += Math.sign(plr.x - this.x);
                 this.y += Math.sign(plr.y - this.y);
             }
@@ -37,13 +37,14 @@ class Enemy extends Entity {
                 this.atkCd.consume();
             }
         } });
-        this.use("health", healthOpts(this, hp, this.kill, c));
+        this.use("health", healthOpts(this, hp, () => this.kill(), c));
         this.atkCd = new Cooldown(cd, false);
     }
     dp() {
         return Vector.dist(this.getPos(), plr.getPos());
     }
     kill() {
+        scene.rm(this);
         let x = 0;
         scene.forEach(e => {
             if(objIs(e, Enemy)) x++;
@@ -60,7 +61,7 @@ class MeleeEnemy extends Enemy {
         }, cd);
     }
 }
-class GunEnemy extends Entity {
+class GunEnemy extends Enemy {
     constructor(x: number, y: number, w: number, h: number, c: string, hp: number, dmg: number, getRot: () => number, bspd: number, cd: number, asWell?: (e: Entity) => void, atkCount = 1) {
         super(x, y, w, h, c, hp, dmg, () => {
             for(let i = 0; i < atkCount; i++) {
@@ -78,13 +79,13 @@ class GunEnemy extends Entity {
 }
 class BasicMeleeEnemy extends MeleeEnemy {
     constructor(x: number, y: number) {
-        super(x, y, 1, 2, "#ec0303", 5, 1, 100, 150);
+        super(x, y, 1, 2, "#ec0303", 5, 1, 50, 500);
     }
 }
 class CoreGunEnemy extends GunEnemy {
     rf: number;
     constructor(x: number, y: number, w: number, h: number, c: string, hp: number, dmg: number, bspd: number, cd: number, roff = 10, asWell?: (e: Entity) => void, atkCount = 1) {
-        super(x, y, w, h, c, hp, dmg, this.bulRot, bspd, cd, asWell, atkCount);
+        super(x, y, w, h, c, hp, dmg, () => this.bulRot(), bspd, cd, asWell, atkCount);
         this.rf = roff;
     }
     bulRot() {
@@ -105,14 +106,18 @@ class BulletSprayGunEnemy extends CoreGunEnemy {
 
 class Exit extends Entity {
     constructor(x: number, y: number, rot: number, then: Vector) {
-        super({ x, y, rot, width: 5, height: 10, color: "#a23c04", collide: (e) => {
+        super({ x, y, rot, width: 5, height: 20, color: "#a23c04", collide: (e) => {
             if(e != plr) return;
             // unload previous exits
-            scene.rm(...fdRm()?.exits);
+            const rm = fdRm();
+            if(rm) scene.rm(...rm.exit);
             pos.x += then.x;
             pos.y += then.y;
             // load new room
             ldRm();
+            // reset plr pos to this pos
+            plr.x = this.x + (then.x * -1 * 5);
+            plr.y = this.y + (then.y * -1 * 5);
         } });
     }
 }
@@ -143,7 +148,7 @@ ldRm();
 
 scene.add(plr);
 scene.on("click", () => {
-    const o = bulGenr(plr.x, plr.y scene.rotToMouse(plr), (e) => { if(objIs(e, Enemy)) { e.comp("health").hurt(stat.dmg); scene.rm(o); } }, stat.bspd);
+    const o = bulGenr(plr.x, plr.y, scene.rotToMouse(plr), (e) => { if(objIs(e, Enemy)) { e.comp("health").hurt(stat.dmg); scene.rm(o); } }, stat.bspd);
     scene.add(o);
 });
 scene.start(() => {
