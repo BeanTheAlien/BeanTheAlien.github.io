@@ -15,6 +15,9 @@ const healthOpts = (self: Entity, hp: number, onDie: Function, c1: string, c2: s
 }
 const plr = new PlayableCharacter({ strength: 0, width: size, height: size, color: "#29ad05", upd: () => {
     plr.rot = scene.rotToMouse(plr);
+    const bound = (n: number, n0: number, n1: number) => n < n0 || n > n1 ? (n < n0 ? n0 : n1) : n;
+    plr.x = bound(plr.x, 0, scene.width - plr.width);
+    plr.y = bound(plr.y, 0, scene.height - plr.height);
 }, x: 5, y: 20 });
 plr.use("health", healthOpts(plr, stat.hp, scene.stop, "#29ad05"));
 plr.binds(["w", () => plr.moveY(-stat.spd)], ["a", () => plr.moveX(-stat.spd)], ["s", () => plr.moveY(stat.spd)], ["d", () => plr.moveX(stat.spd)]);
