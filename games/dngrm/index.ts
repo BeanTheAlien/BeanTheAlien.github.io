@@ -7,13 +7,16 @@ var stat = {
     bspd: 4,
     hp: 5
 };
+const healthOpts = (self: Entity, hp: number, onDie: Function, c1: string, c2: string = "#8b0b0b") => {
+    hp, onDie, onHurt: () => {
+        self.color = c2;
+        setTimeout(() => self.color = c1, 125);
+    }, onDie
+}
 const plr = new PlayableCharacter({ strength: 0, width: size, height: size, color: "#29ad05", upd: () => {
     plr.rot = scene.rotToMouse(plr);
 } });
-plr.use("health", { hp: stat.hp, onHurt: () => {
-    plr.color = "#8b0b0b";
-    setTimeout(() => plr.color = "#29ad05", 125);
-}, onDie: scene.stop });
+plr.use("health", healthOpts(plr, stat.hp, scene.stop, "#29ad05"));
 plr.binds(["w", () => plr.moveY(-stat.spd)], ["a", () => plr.moveX(-stat.spd)], ["s", () => plr.moveY(stat.spd)], ["d", () => plr.moveX(stat.spd)]);
 var pos = new Vector(0, 0);
 interface Room {
@@ -34,10 +37,7 @@ class Enemy extends Entity {
                 this.atkCd.consume();
             }
         } });
-        this.use("health", { hp, onHurt: () => {
-            this.color = "#8b0b0b";
-            setTimeout(() => this.color = c, 125);
-        }, onDie: () => scene.rm(this) });
+        this.use("health", healthOpts(this, hp, () => scene.rm(this), c));
         this.atkCd = new Cooldown(cd, false);
     }
     dp() {
