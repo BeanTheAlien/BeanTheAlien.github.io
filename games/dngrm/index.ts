@@ -37,11 +37,18 @@ class Enemy extends Entity {
                 this.atkCd.consume();
             }
         } });
-        this.use("health", healthOpts(this, hp, () => scene.rm(this), c));
+        this.use("health", healthOpts(this, hp, this.kill, c));
         this.atkCd = new Cooldown(cd, false);
     }
     dp() {
         return Vector.dist(this.getPos(), plr.getPos());
+    }
+    kill() {
+        let x = 0;
+        scene.forEach(e => {
+            if(objIs(e, Enemy)) x++;
+        });
+        if(x == 0) ldExs();
     }
 }
 class MeleeEnemy extends Enemy {
@@ -54,16 +61,18 @@ class MeleeEnemy extends Enemy {
     }
 }
 class GunEnemy extends Entity {
-    constructor(x: number, y: number, w: number, h: number, c: string, hp: number, dmg: number, getRot: () => number, bspd: number, cd: number, asWell?: (e: Entity) => void) {
+    constructor(x: number, y: number, w: number, h: number, c: string, hp: number, dmg: number, getRot: () => number, bspd: number, cd: number, asWell?: (e: Entity) => void, atkCount = 1) {
         super(x, y, w, h, c, hp, dmg, () => {
-            const o = bulGenr(this.x, this.y, getRot(), (e) => {
-                if(e == plr) {
-                    e.comp("health").hurt(dmg);
-                    scene.rm(o);
-                    if(asWell) asWell(e);
-                }
-            }, bspd);
-            scene.add(o);
+            for(let i = 0; i < atkCount; i++) {
+                const o = bulGenr(this.x, this.y, getRot(), (e) => {
+                    if(e == plr) {
+                        e.comp("health").hurt(dmg);
+                        scene.rm(o);
+                        if(asWell) asWell(e);
+                    }
+                }, bspd);
+                scene.add(o);
+            }
         }, cd);
     }
 }
@@ -72,31 +81,49 @@ class BasicMeleeEnemy extends MeleeEnemy {
         super(x, y, 1, 2, "#ec0303", 5, 1, 100, 150);
     }
 }
-class BasicGunEnemy extends GunEnemy {
-    constructor(x: number, y: number, roff = 10) {
-        super(x, y, 1, 2, "#ec5c03", 5, 1, () => {
-            const r = scene.rotBtwn(this, plr);
-            return Angle.rad(random(Angle.deg(r) - roff, Angle.deg(r) + roff));
-        }, 3, 150);
+class CoreGunEnemy extends GunEnemy {
+    rf: number;
+    constructor(x: number, y: number, w: number, h: number, c: string, hp: number, dmg: number, bspd: number, cd: number, roff = 10, asWell?: (e: Entity) => void, atkCount = 1) {
+        super(x, y, w, h, c, hp, dmg, this.bulRot, bspd, cd, asWell, atkCount);
+        this.rf = roff;
+    }
+    bulRot() {
+        const r = Angle.deg(scene.rotBtwn(this, plr));
+        return Angle.rad(random(r - this.rf, r + this.rf));
+    }
+}
+class BasicGunEnemy extends CoreGunEnemy {
+    constructor(x: number, y: number) {
+        super(x, y, 1, 2, "#ec5c03", 5, 1, 3, 150);
+    }
+}
+class BulletSprayGunEnemy extends CoreGunEnemy {
+    constructor(x: number, y: number) {
+        super(x, y, 1, 2, "#be2b2b", 5, 1, 3, 150, 10, () => {}, 5);
     }
 }
 
 class Exit extends Entity {
     constructor(x: number, y: number, rot: number, then: Vector) {
-        super({ x, y, rot, width: 5, height: 10, color: "#fa5700", collide: (e) => {
+        super({ x, y, rot, width: 5, height: 10, color: "#a23c04", collide: (e) => {
             if(e != plr) return;
+            // unload previous exits
+            scene.rm(...fdRm()?.exits);
             pos.x += then.x;
             pos.y += then.y;
+            // load new room
+            ldRm();
         } });
     }
 }
 function LeftExit() { return new Exit(0, scene.height / 2, 0, new Vector(-1, 0)); }
-function RightExit() { return new Exit(scene.width, scene.height / 2, 0, new Vector(1, 0)); }
+function RightExit() { return new Exit(scene.width - 5, scene.height / 2, 0, new Vector(1, 0)); }
 function TopExit() { return new Exit(scene.width / 2, 0, Angle.rad(90), new Vector(0, 1)); }
-function BtmExit() { return new Exit(scene.width / 2, scene.height, Angle.rad(90), new Vector(0, -1)); }
+function BtmExit() { return new Exit(scene.width / 2, scene.height - 10, Angle.rad(90), new Vector(0, -1)); }
 
 const rooms: Room[] = [
-    { at: new Vector(0, 0), e: [new BasicMeleeEnemy(0, 0)], exit: [] }
+    { at: new Vector(0, 0), e: [new BasicMeleeEnemy(0, 0)], exit: [RightExit()] },
+    { at: new Vector(1, 0), e: [new BasicMeleeEnemy(0, 0), new BasicMeleeEnemy(10, 0)], exit: [RightExit()] }
 ];
 function fdRm() {
     return rooms.find(r => r.at.x == pos.x && r.at.y == pos.y);
@@ -104,6 +131,10 @@ function fdRm() {
 function ldRm() {
     const rm = fdRm();
     if(rm) scene.add(...rm.e);
+}
+function ldExs() {
+    const rm = fdRm();
+    if(rm) scene.add(...rm.exit);
 }
 function bulGenr(x: number, y: number, rot: number, collide: (e: Entity) => void, spd: number) {
     return new BulletObject({ x, y, rot, height: 6, width: 18, scene, color: "#e2e603", collide, extLeft: 0, extRight: scene.width, extTop: 0, extBtm: scene.height, spd });
