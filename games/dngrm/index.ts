@@ -95,7 +95,7 @@ class CoreGunEnemy extends GunEnemy {
 }
 class BasicGunEnemy extends CoreGunEnemy {
     constructor(x: number, y: number) {
-        super(x, y, 1, 2, "#ec5c03", 5, 1, 3, 150);
+        super(x, y, 1, 2, "#ec5c03", 5, 1, 3, 750);
     }
 }
 class BulletSprayGunEnemy extends CoreGunEnemy {
@@ -128,7 +128,9 @@ function BtmExit() { return new Exit(scene.width / 2, scene.height - 10, Angle.r
 
 const rooms: Room[] = [
     { at: new Vector(0, 0), e: [new BasicMeleeEnemy(0, 0)], exit: [RightExit()] },
-    { at: new Vector(1, 0), e: [new BasicMeleeEnemy(0, 0), new BasicMeleeEnemy(10, 0)], exit: [RightExit()] }
+    { at: new Vector(1, 0), e: [new BasicMeleeEnemy(0, 0), new BasicMeleeEnemy(10, 0)], exit: [RightExit()] },
+    { at: new Vector(2, 0), e: [new BasicGunEnemy(0, 0)], exit: [BtmExit()] },
+    { at: new Vector(2, -1), e: [new BulletSprayGunEnemy(0, 0)], exit: [] }
 ];
 function fdRm() {
     return rooms.find(r => r.at.x == pos.x && r.at.y == pos.y);
