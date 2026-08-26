@@ -119,7 +119,7 @@ class SprintMeleeEnemy extends MeleeEnemy {
 }
 
 class Exit extends Entity {
-    constructor(x: number, y: number, rot: number, then: Vector) {
+    constructor(x: number, y: number, rot: number, then: Vector, sp: Vector) {
         super({ x, y, rot, width: 5, height: 20, color: "#a23c04", collide: (e) => {
             if(e != plr) return;
             // unload previous exits
@@ -129,16 +129,17 @@ class Exit extends Entity {
             pos.y += then.y;
             // load new room
             ldRm();
-            // reset plr pos to this pos
-            plr.x = this.x + (then.x * -1 * 5);
-            plr.y = this.y + (then.y * -1 * 5);
+            // reset plr pos to the spawn pos
+            plr.x = sp.x;
+            plr.y = sp.y;
+            console.log(plr.x, plr.y);
         } });
     }
 }
-function LeftExit() { return new Exit(0, scene.height / 2, 0, new Vector(-1, 0)); }
-function RightExit() { return new Exit(scene.width - 5, scene.height / 2, 0, new Vector(1, 0)); }
-function TopExit() { return new Exit(scene.width / 2, 0, Angle.rad(90), new Vector(0, 1)); }
-function BtmExit() { return new Exit(scene.width / 2, scene.height - 10, Angle.rad(90), new Vector(0, -1)); }
+function LeftExit() { return new Exit(0, scene.height / 2, 0, new Vector(-1, 0), new Vector(scene.width - 25, scene.height / 2)); }
+function RightExit() { return new Exit(scene.width - 5, scene.height / 2, 0, new Vector(1, 0), new Vector(25, scene.height / 2)); }
+function TopExit() { return new Exit(scene.width / 2, 0, Angle.rad(90), new Vector(0, 1), new Vector(scene.width / 2, scene.height - 25)); }
+function BtmExit() { return new Exit(scene.width / 2, scene.height - 10, Angle.rad(90), new Vector(0, -1), new Vector(scene.width / 2, 25)); }
 
 const rooms: Room[] = [
     { at: new Vector(0, 0), e: [new BasicMeleeEnemy(0, 0)], exit: [RightExit(), LeftExit()] },

@@ -116,7 +116,7 @@ class SprintMeleeEnemy extends MeleeEnemy {
     }
 }
 class Exit extends Entity {
-    constructor(x, y, rot, then) {
+    constructor(x, y, rot, then, sp) {
         super({ x, y, rot, width: 5, height: 20, color: "#a23c04", collide: (e) => {
                 if (e != plr)
                     return;
@@ -128,34 +128,49 @@ class Exit extends Entity {
                 pos.y += then.y;
                 // load new room
                 ldRm();
-                // reset plr pos to this pos
-                plr.x = this.x + (then.x * -1 * 5);
-                plr.y = this.y + (then.y * -1 * 5);
+                // reset plr pos to the spawn pos
+                plr.x = sp.x;
+                plr.y = sp.y;
+                console.log(plr.x, plr.y);
             } });
     }
 }
-function LeftExit() { return new Exit(0, scene.height / 2, 0, new Vector(-1, 0)); }
-function RightExit() { return new Exit(scene.width - 5, scene.height / 2, 0, new Vector(1, 0)); }
-function TopExit() { return new Exit(scene.width / 2, 0, Angle.rad(90), new Vector(0, 1)); }
-function BtmExit() { return new Exit(scene.width / 2, scene.height - 10, Angle.rad(90), new Vector(0, -1)); }
+function LeftExit() { return new Exit(0, scene.height / 2, 0, new Vector(-1, 0), new Vector(scene.width - 25, scene.height / 2)); }
+function RightExit() { return new Exit(scene.width - 5, scene.height / 2, 0, new Vector(1, 0), new Vector(25, scene.height / 2)); }
+function TopExit() { return new Exit(scene.width / 2, 0, Angle.rad(90), new Vector(0, 1), new Vector(scene.width / 2, scene.height - 25)); }
+function BtmExit() { return new Exit(scene.width / 2, scene.height - 10, Angle.rad(90), new Vector(0, -1), new Vector(scene.width / 2, 25)); }
 const rooms = [
-    { at: new Vector(0, 0), e: [new BasicMeleeEnemy(0, 0)], exit: [RightExit()] },
+    { at: new Vector(0, 0), e: [new BasicMeleeEnemy(0, 0)], exit: [RightExit(), LeftExit()] },
     { at: new Vector(1, 0), e: [new BasicMeleeEnemy(0, 0), new BasicMeleeEnemy(10, 0)], exit: [RightExit()] },
     { at: new Vector(2, 0), e: [new BasicGunEnemy(0, 0)], exit: [BtmExit()] },
-    { at: new Vector(2, -1), e: [new BulletSprayGunEnemy(0, 0)], exit: [] }
+    { at: new Vector(2, -1), e: [new BulletSprayGunEnemy(0, 0)], exit: [] },
+    { at: new Vector(-1, 0), e: [new SprintMeleeEnemy(0, 0)], exit: [RightExit()] }
 ];
+function rmCb(r) {
+    return r.at.x == pos.x && r.at.y == pos.y;
+}
 function fdRm() {
-    return rooms.find(r => r.at.x == pos.x && r.at.y == pos.y);
+    return rooms.find(rmCb);
+}
+function fdRmIdx() {
+    return rooms.findIndex(rmCb);
 }
 function ldRm() {
     const rm = fdRm();
-    if (rm)
-        scene.add(...rm.e);
+    if (rm) {
+        if (rm.e.length)
+            scene.add(...rm.e);
+        else
+            ldExs();
+    }
 }
 function ldExs() {
     const rm = fdRm();
-    if (rm)
+    if (rm) {
         scene.add(...rm.exit);
+        // remove enemy objects (already defeated)
+        rooms[fdRmIdx()].e = [];
+    }
 }
 function bulGenr(x, y, rot, collide, spd) {
     return new BulletObject({ x, y, rot, height: 6, width: 18, scene, color: "#e2e603", collide, extLeft: 0, extRight: scene.width, extTop: 0, extBtm: scene.height, spd });
