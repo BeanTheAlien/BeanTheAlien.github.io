@@ -24,11 +24,17 @@ plr.binds(["w", () => plr.moveY(-stat.spd)], ["a", () => plr.moveX(-stat.spd)], 
 var pos = new Vector(0, 0);
 class Enemy extends Entity {
     atkCd;
-    constructor(x, y, w, h, c, hp, dmg, atk, cd) {
+    constructor(x, y, w, h, c, hp, atk, cd, spd = 1) {
         super({ x, y, width: size * w, height: size * h, color: c, upd: () => {
                 if (this.dp() <= 300) {
-                    this.x += Math.sign(plr.x - this.x);
-                    this.y += Math.sign(plr.y - this.y);
+                    const dx = plr.x - this.x;
+                    const dy = plr.y - this.y;
+                    const d = Math.hypot(dx, dy);
+                    if (d > 0) {
+                        const md = Math.min(spd, d);
+                        this.x += (dx / d) * md;
+                        this.y += (dy / d) * md;
+                    }
                 }
                 if (this.atkCd.ready) {
                     atk();
@@ -53,17 +59,17 @@ class Enemy extends Entity {
     }
 }
 class MeleeEnemy extends Enemy {
-    constructor(x, y, w, h, c, hp, dmg, range, cd) {
-        super(x, y, w, h, c, hp, dmg, () => {
+    constructor(x, y, w, h, c, hp, dmg, range, cd, spd = 1) {
+        super(x, y, w, h, c, hp, () => {
             if (this.dp() <= range) {
                 plr.comp("health").hurt(dmg);
             }
-        }, cd);
+        }, cd, spd);
     }
 }
 class GunEnemy extends Enemy {
-    constructor(x, y, w, h, c, hp, dmg, getRot, bspd, cd, asWell, atkCount = 1) {
-        super(x, y, w, h, c, hp, dmg, () => {
+    constructor(x, y, w, h, c, hp, dmg, getRot, bspd, cd, asWell, atkCount = 1, spd = 1) {
+        super(x, y, w, h, c, hp, () => {
             for (let i = 0; i < atkCount; i++) {
                 const o = bulGenr(this.x, this.y, getRot(), (e) => {
                     if (e == plr) {
@@ -75,7 +81,7 @@ class GunEnemy extends Enemy {
                 }, bspd);
                 scene.add(o);
             }
-        }, cd);
+        }, cd, spd);
     }
 }
 class BasicMeleeEnemy extends MeleeEnemy {
@@ -85,8 +91,8 @@ class BasicMeleeEnemy extends MeleeEnemy {
 }
 class CoreGunEnemy extends GunEnemy {
     rf;
-    constructor(x, y, w, h, c, hp, dmg, bspd, cd, roff = 10, asWell, atkCount = 1) {
-        super(x, y, w, h, c, hp, dmg, () => this.bulRot(), bspd, cd, asWell, atkCount);
+    constructor(x, y, w, h, c, hp, dmg, bspd, cd, roff = 10, asWell, atkCount = 1, spd = 1) {
+        super(x, y, w, h, c, hp, dmg, () => this.bulRot(), bspd, cd, asWell, atkCount, spd);
         this.rf = roff;
     }
     bulRot() {
@@ -102,6 +108,11 @@ class BasicGunEnemy extends CoreGunEnemy {
 class BulletSprayGunEnemy extends CoreGunEnemy {
     constructor(x, y) {
         super(x, y, 1, 2, "#be2b2b", 5, 1, 3, 150, 10, () => { }, 5);
+    }
+}
+class SprintMeleeEnemy extends MeleeEnemy {
+    constructor(x, y) {
+        super(x, y, 1, 2, "#ec0303", 5, 1, 50, 500, 2.5);
     }
 }
 class Exit extends Entity {

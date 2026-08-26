@@ -62,16 +62,16 @@ class Enemy extends Entity {
     }
 }
 class MeleeEnemy extends Enemy {
-    constructor(x: number, y: number, w: number, h: number, c: string, hp: number, dmg: number, range: number, cd: number) {
+    constructor(x: number, y: number, w: number, h: number, c: string, hp: number, dmg: number, range: number, cd: number, spd = 1) {
         super(x, y, w, h, c, hp, () => {
             if(this.dp() <= range) {
                 plr.comp("health").hurt(dmg);
             }
-        }, cd);
+        }, cd, spd);
     }
 }
 class GunEnemy extends Enemy {
-    constructor(x: number, y: number, w: number, h: number, c: string, hp: number, dmg: number, getRot: () => number, bspd: number, cd: number, asWell?: (e: Entity) => void, atkCount = 1) {
+    constructor(x: number, y: number, w: number, h: number, c: string, hp: number, dmg: number, getRot: () => number, bspd: number, cd: number, asWell?: (e: Entity) => void, atkCount = 1, spd = 1) {
         super(x, y, w, h, c, hp, () => {
             for(let i = 0; i < atkCount; i++) {
                 const o = bulGenr(this.x, this.y, getRot(), (e) => {
@@ -83,7 +83,7 @@ class GunEnemy extends Enemy {
                 }, bspd);
                 scene.add(o);
             }
-        }, cd);
+        }, cd, spd);
     }
 }
 class BasicMeleeEnemy extends MeleeEnemy {
@@ -93,8 +93,8 @@ class BasicMeleeEnemy extends MeleeEnemy {
 }
 class CoreGunEnemy extends GunEnemy {
     rf: number;
-    constructor(x: number, y: number, w: number, h: number, c: string, hp: number, dmg: number, bspd: number, cd: number, roff = 10, asWell?: (e: Entity) => void, atkCount = 1) {
-        super(x, y, w, h, c, hp, dmg, () => this.bulRot(), bspd, cd, asWell, atkCount);
+    constructor(x: number, y: number, w: number, h: number, c: string, hp: number, dmg: number, bspd: number, cd: number, roff = 10, asWell?: (e: Entity) => void, atkCount = 1, spd = 1) {
+        super(x, y, w, h, c, hp, dmg, () => this.bulRot(), bspd, cd, asWell, atkCount, spd);
         this.rf = roff;
     }
     bulRot() {
@@ -110,6 +110,11 @@ class BasicGunEnemy extends CoreGunEnemy {
 class BulletSprayGunEnemy extends CoreGunEnemy {
     constructor(x: number, y: number) {
         super(x, y, 1, 2, "#be2b2b", 5, 1, 3, 150, 10, () => {}, 5);
+    }
+}
+class SprintMeleeEnemy extends MeleeEnemy {
+    constructor(x: number, y: number) {
+        super(x, y, 1, 2, "#ec0303", 5, 1, 50, 500, 2.5);
     }
 }
 
@@ -136,21 +141,35 @@ function TopExit() { return new Exit(scene.width / 2, 0, Angle.rad(90), new Vect
 function BtmExit() { return new Exit(scene.width / 2, scene.height - 10, Angle.rad(90), new Vector(0, -1)); }
 
 const rooms: Room[] = [
-    { at: new Vector(0, 0), e: [new BasicMeleeEnemy(0, 0)], exit: [RightExit()] },
+    { at: new Vector(0, 0), e: [new BasicMeleeEnemy(0, 0)], exit: [RightExit(), LeftExit()] },
     { at: new Vector(1, 0), e: [new BasicMeleeEnemy(0, 0), new BasicMeleeEnemy(10, 0)], exit: [RightExit()] },
     { at: new Vector(2, 0), e: [new BasicGunEnemy(0, 0)], exit: [BtmExit()] },
-    { at: new Vector(2, -1), e: [new BulletSprayGunEnemy(0, 0)], exit: [] }
+    { at: new Vector(2, -1), e: [new BulletSprayGunEnemy(0, 0)], exit: [] },
+    { at: new Vector(-1, 0), e: [new SprintMeleeEnemy(0, 0)], exit: [RightExit()] }
 ];
+function rmCb(r: Room) {
+    return r.at.x == pos.x && r.at.y == pos.y;
+}
 function fdRm() {
-    return rooms.find(r => r.at.x == pos.x && r.at.y == pos.y);
+    return rooms.find(rmCb);
+}
+function fdRmIdx() {
+    return rooms.findIndex(rmCb);
 }
 function ldRm() {
     const rm = fdRm();
-    if(rm) scene.add(...rm.e);
+    if(rm) {
+        if(rm.e.length) scene.add(...rm.e);
+        else ldExs();
+    }
 }
 function ldExs() {
     const rm = fdRm();
-    if(rm) scene.add(...rm.exit);
+    if(rm) {
+        scene.add(...rm.exit);
+        // remove enemy objects (already defeated)
+        rooms[fdRmIdx()].e = [];
+    }
 }
 function bulGenr(x: number, y: number, rot: number, collide: (e: Entity) => void, spd: number) {
     return new BulletObject({ x, y, rot, height: 6, width: 18, scene, color: "#e2e603", collide, extLeft: 0, extRight: scene.width, extTop: 0, extBtm: scene.height, spd });
