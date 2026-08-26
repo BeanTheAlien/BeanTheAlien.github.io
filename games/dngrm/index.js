@@ -1,4 +1,4 @@
-import { Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Cooldown, random, Img } from "../../phantom2d.js";
+import { Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Cooldown, random, Img, chance } from "../../phantom2d.js";
 Img.config.set("root", "assets");
 /**
  * TODO:
@@ -8,7 +8,6 @@ Img.config.set("root", "assets");
  * skill tree
  * objects that block vision
  * sprites
- * fix coin lerp
  */
 const scene = new Scene({ canvas: "dng", w: 500, h: 500 });
 const size = 10;
@@ -212,41 +211,88 @@ function RightExit() { return new Exit(scene.width - 5, scene.height / 2, 0, new
 function TopExit() { return new Exit(scene.width / 2, 0, Angle.rad(90), new Vector(0, 1), new Vector(scene.width / 2, scene.height - 25)); }
 function BtmExit() { return new Exit(scene.width / 2, scene.height - 10, Angle.rad(90), new Vector(0, -1), new Vector(scene.width / 2, 25)); }
 const rooms = [
-    { at: new Vector(0, 0), e: [new BasicMeleeEnemy(0, 0)], exit: [RightExit(), LeftExit()] },
-    { at: new Vector(1, 0), e: [new BasicMeleeEnemy(0, 0), new BasicMeleeEnemy(10, 0)], exit: [RightExit()] },
-    { at: new Vector(2, 0), e: [new BasicGunEnemy(0, 0)], exit: [BtmExit()] },
-    { at: new Vector(2, -1), e: [new BulletSprayGunEnemy(0, 0)], exit: [] },
-    { at: new Vector(-1, 0), e: [new SprintMeleeEnemy(0, 0)], exit: [RightExit()] }
+// { at: new Vector(0, 0), e: [new BasicMeleeEnemy(0, 0)], exit: [RightExit(), LeftExit()] },
+// { at: new Vector(1, 0), e: [new BasicMeleeEnemy(0, 0), new BasicMeleeEnemy(10, 0)], exit: [RightExit()] },
+// { at: new Vector(2, 0), e: [new BasicGunEnemy(0, 0)], exit: [BtmExit()] },
+// { at: new Vector(2, -1), e: [new BulletSprayGunEnemy(0, 0)], exit: [] },
+// { at: new Vector(-1, 0), e: [new SprintMeleeEnemy(0, 0)], exit: [RightExit()] }
 ];
-/**
- * Generates a set of random exit locations, given cardinal directions.
- *
- * Used for procedual generation.
- * @returns Random exit locations.
- */
-function getRmExits() {
-    const es = ["left", "right", "top", "btm"];
-    const esm = { left: LeftExit, right: RightExit, top: TopExit, btm: BtmExit };
-    const exits = new Set();
-    for (let i = 0; i < random(1, 4); i++) {
-        let x = es[random(es.length)];
-        while (exits.has(x))
-            x = es[random(es.length)];
-        exits.add(x);
+function getRmExits(room, rooms) {
+    const hasRoom = (x, y) => rooms.some(r => r.x === x && r.y === y);
+    const exits = [];
+    if (hasRoom(room.x - 1, room.y)) {
+        exits.push(LeftExit());
     }
-    return Array.from(exits).map(v => esm[v]());
+    if (hasRoom(room.x + 1, room.y)) {
+        exits.push(RightExit());
+    }
+    if (hasRoom(room.x, room.y - 1)) {
+        exits.push(TopExit());
+    }
+    if (hasRoom(room.x, room.y + 1)) {
+        exits.push(BtmExit());
+    }
+    return exits;
 }
-function rmCb(r) {
-    return r.at.x == pos.x && r.at.y == pos.y;
+function genEnemyCtors() {
+    const ec = [BasicMeleeEnemy, BasicGunEnemy, BulletSprayGunEnemy, SprintMeleeEnemy];
+    const out = [];
+    for (let i = 0; i < random(1, 6); i++)
+        out.push(ec[random(ec.length)]);
+    return out;
 }
-function fdRm() {
-    return rooms.find(rmCb);
+function genRmCoords() {
+    const max = 20;
+    const br = 70;
+    const cord = [
+        new Vector(0, 0)
+    ];
+    const stack = [
+        new Vector(0, 0)
+    ];
+    const dirs = [
+        new Vector(-1, 0),
+        new Vector(1, 0),
+        new Vector(0, 1),
+        new Vector(0, -1)
+    ];
+    while (stack.length > 0 && cord.length < max) {
+        const current = stack[stack.length - 1];
+        const available = dirs.filter(dir => {
+            const next = new Vector(current.x + dir.x, current.y + dir.y);
+            return !cord.some(p => p.x == next.x && p.y == next.y);
+        });
+        if (available.length == 0 || !chance(br)) {
+            stack.pop();
+            continue;
+        }
+        const dir = available[random(available.length)];
+        const next = new Vector(current.x + dir.x, current.y + dir.y);
+        cord.push(next);
+        stack.push(next);
+    }
+    return cord;
 }
-function fdRmIdx() {
-    return rooms.findIndex(rmCb);
+function genRms() {
+    const cord = genRmCoords();
+    for (const c of cord) {
+        rooms.push({ at: c, e: genEnemyCtors().map(c => new c(0, 0)), exit: getRmExits(c, cord) });
+    }
+}
+genRms();
+function rmCb(r, at) {
+    at = at ?? pos;
+    return r.at.x == at.x && r.at.y == at.y;
+}
+function fdRm(where) {
+    return rooms.find(r => rmCb(r, where));
+}
+function fdRmIdx(where) {
+    return rooms.findIndex(r => rmCb(r, where));
 }
 function ldRm() {
     const rm = fdRm();
+    coins = [];
     if (rm) {
         if (rm.e.length)
             scene.add(...rm.e);
@@ -271,7 +317,7 @@ var coins = [];
 class Coin extends Entity {
     static img = new Img("coin.png");
     constructor(x, y) {
-        super({ x, y, width: 7, height: 7, collide: (e) => { if (e == plr) {
+        super({ x, y, width: 10, height: 10, collide: (e) => { if (e == plr) {
                 scene.rm(this);
                 stat.mon++;
             } } });
