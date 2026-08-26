@@ -8,7 +8,6 @@ Img.config.set("root", "assets");
  * skill tree
  * objects that block vision
  * sprites
- * fix coin lerp
  */
 const scene = new Scene({ canvas: "dng", w: 500, h: 500 });
 const size = 10;
@@ -236,6 +235,16 @@ function getRmExits() {
         exits.add(x);
     }
     return Array.from(exits).map(v => esm[v]());
+}
+/**
+ * 
+ * @returns Random enemy constructors.
+ */
+function genEnemyCtors() {
+    const ec = [BasicMeleeEnemy, BasicGunEnemy, BulletSprayGunEnemy, SprintMeleeEnemy] as const;
+    const out: (new (...arg: any[]) => Enemy)[] = [];
+    for(let i = 0; i < random(1, 6); i++) out.push(ec[random(ec.length)]);
+    return out;
 }
 function rmCb(r: Room) {
     return r.at.x == pos.x && r.at.y == pos.y;
