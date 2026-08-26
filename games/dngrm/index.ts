@@ -251,6 +251,7 @@ function ldRm() {
     if(rm) {
         if(rm.e.length) scene.add(...rm.e);
         else ldExs();
+        coins = [];
     }
 }
 function ldExs() {
@@ -266,16 +267,17 @@ function bulGenr(x: number, y: number, rot: number, collide: (e: Entity) => void
 }
 ldRm();
 
-const coins: Coin[] = [];
+var coins: Coin[] = [];
 class Coin extends Entity {
     static img: Img = new Img("coin.png");
     constructor(x: number, y: number) {
         super({ x, y, width: 7, height: 7, collide: (e) => { if(e == plr) { scene.rm(this); stat.mon++; } } });
         coins.push(this);
         this.use("enhancedphys", { scene });
-        const dir = Angle.toVector(Angle.rad(random(361)));
-        dir.scale(random(1, 4));
-        this.lerp("pos", scene, dir, "once", 0.25);
+        const dir = Angle.toVector(Angle.rad(random(0, 361)));
+        const v = 60;
+        dir.scale(random(-v, v+1));
+        this.lerp("pos", scene, new Vector(this.x + dir.x, this.y + dir.y), "once", 0.25);
     }
     render() {
         scene.img(Coin.img, this.x, this.y, this.width, this.height);

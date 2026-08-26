@@ -8,6 +8,7 @@ Img.config.set("root", "assets");
  * skill tree
  * objects that block vision
  * sprites
+ * fix coin lerp
  */
 const scene = new Scene({ canvas: "dng", w: 500, h: 500 });
 const size = 10;
@@ -251,6 +252,7 @@ function ldRm() {
             scene.add(...rm.e);
         else
             ldExs();
+        coins = [];
     }
 }
 function ldExs() {
@@ -265,7 +267,7 @@ function bulGenr(x, y, rot, collide, spd) {
     return new BulletObject({ x, y, rot, height: 6, width: 18, scene, color: "#e2e603", collide, extLeft: 0, extRight: scene.width, extTop: 0, extBtm: scene.height, spd });
 }
 ldRm();
-const coins = [];
+var coins = [];
 class Coin extends Entity {
     static img = new Img("coin.png");
     constructor(x, y) {
@@ -275,9 +277,10 @@ class Coin extends Entity {
             } } });
         coins.push(this);
         this.use("enhancedphys", { scene });
-        const dir = Angle.toVector(Angle.rad(random(361)));
-        dir.scale(random(1, 4));
-        this.lerp("pos", scene, dir, "once", 0.25);
+        const dir = Angle.toVector(Angle.rad(random(0, 361)));
+        const v = 60;
+        dir.scale(random(-v, v + 1));
+        this.lerp("pos", scene, new Vector(this.x + dir.x, this.y + dir.y), "once", 0.25);
     }
     render() {
         scene.img(Coin.img, this.x, this.y, this.width, this.height);
