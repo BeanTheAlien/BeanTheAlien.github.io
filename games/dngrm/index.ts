@@ -1,11 +1,80 @@
-import { DebugRay, Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Raycast, Cooldown, random } from "../../phantom2d.js";
+import { DebugRay, Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Raycast, Cooldown, random, Img } from "../../phantom2d.js";
+Img.config.set("root", "assets");
+/**
+ * TODO:
+ * procedual gen
+ * stat
+ * shop
+ * skill tree
+ * objects that block vision
+ * sprites
+ * fix coin lerp
+ */
 const scene = new Scene({ canvas: "dng", w: 500, h: 500 });
 const size = 10;
 var stat = {
+    /**
+     * The current XP points.
+     */
+    xp: 0,
+    /**
+     * The current player level.
+     * 
+     * Required xp is Math.floor(Math.pow(lvl, 1.25)).
+     */
+    lvl: 1,
+    /**
+     * The amount of damage dealt per bullet.
+     */
     dmg: 1,
+    /**
+     * The movement speed.
+     */
     spd: 3,
+    /**
+     * The speed the bullet travels at.
+     */
     bspd: 4,
-    hp: 5
+    /**
+     * The current HP.
+     */
+    hp: 5,
+    /**
+     * The max HP.
+     */
+    mhp: 5,
+    /**
+     * The chance to land a critical hit. (dmg x2)
+     */
+    crit: 0,
+    /**
+     * Luck to get better items for purchase.
+     */
+    luck: 0,
+    /**
+     * Damage resistence. Armor-piercing attacks ignore armor.
+     */
+    armor: 0,
+    /**
+     * The chance to dodge an attack.
+     */
+    dodge: 0,
+    /**
+     * Currency. Money dropped from enemy kills.
+     */
+    mon: 0,
+    /**
+     * Perks unlocked during battle.
+     */
+    perks: [],
+    /**
+     * Permanent skills.
+     */
+    skill: [],
+    /**
+     * Adventure points (AP). Used to level up skills.
+     */
+    ap: 0
 };
 const healthOpts = (self: Entity, hp: number, onDie: Function, c1: string, c2: string = "#8b0b0b") => {
     return { hp, onDie, onHurt: () => {
@@ -54,6 +123,9 @@ class Enemy extends Entity {
     }
     kill() {
         scene.rm(this);
+        for(let i = 0; i < random(1, 5); i++) {
+            new Coin(this.x, this.y);
+        }
         let x = 0;
         scene.forEach(e => {
             if(objIs(e, Enemy)) x++;
@@ -148,6 +220,12 @@ const rooms: Room[] = [
     { at: new Vector(2, -1), e: [new BulletSprayGunEnemy(0, 0)], exit: [] },
     { at: new Vector(-1, 0), e: [new SprintMeleeEnemy(0, 0)], exit: [RightExit()] }
 ];
+/**
+ * Generates a set of random exit locations, given cardinal directions.
+ * 
+ * Used for procedual generation.
+ * @returns Random exit locations.
+ */
 function getRmExits() {
     const es = ["left", "right", "top", "btm"] as const;
     const esm = { left: LeftExit, right: RightExit, top: TopExit, btm: BtmExit } as const;
@@ -157,7 +235,7 @@ function getRmExits() {
         while(exits.has(x)) x = es[random(es.length)];
         exits.add(x);
     }
-    return Array.from(exits).map(v => esm[v]);
+    return Array.from(exits).map(v => esm[v]());
 }
 function rmCb(r: Room) {
     return r.at.x == pos.x && r.at.y == pos.y;
@@ -188,6 +266,22 @@ function bulGenr(x: number, y: number, rot: number, collide: (e: Entity) => void
 }
 ldRm();
 
+const coins: Coin[] = [];
+class Coin extends Entity {
+    static img: Img = new Img("coin.png");
+    constructor(x: number, y: number) {
+        super({ x, y, width: 7, height: 7, collide: (e) => { if(e == plr) { scene.rm(this); stat.mon++; } } });
+        coins.push(this);
+        this.use("enhancedphys", { scene });
+        const dir = Angle.toVector(Angle.rad(random(361)));
+        dir.scale(random(1, 4));
+        this.lerp("pos", scene, dir, "once", 0.25);
+    }
+    render() {
+        scene.img(Coin.img, this.x, this.y, this.width, this.height);
+    }
+}
+
 scene.add(plr);
 scene.on("click", () => {
     const o = bulGenr(plr.x, plr.y, scene.rotToMouse(plr), (e) => { if(objIs(e, Enemy)) { e.comp("health").hurt(stat.dmg); scene.rm(o); } }, stat.bspd);
@@ -195,4 +289,5 @@ scene.on("click", () => {
 });
 scene.start(() => {
     scene.bg("#003764");
+    coins.forEach(c => c.render());
 });
