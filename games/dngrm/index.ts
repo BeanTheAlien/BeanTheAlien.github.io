@@ -29,11 +29,17 @@ interface Room {
 }
 class Enemy extends Entity {
     atkCd: Cooldown;
-    constructor(x: number, y: number, w: number, h: number, c: string, hp: number, dmg: number, atk: Function, cd: number) {
+    constructor(x: number, y: number, w: number, h: number, c: string, hp: number, atk: Function, cd: number, spd = 1) {
         super({ x, y, width: size * w, height: size * h, color: c, upd: () => {
             if(this.dp() <= 300) {
-                this.x += Math.sign(plr.x - this.x);
-                this.y += Math.sign(plr.y - this.y);
+                const dx = plr.x - this.x;
+                const dy = plr.y - this.y;
+                const d = Math.hypot(dx, dy);
+                if(d > 0) {
+                    const md = Math.min(spd, d);
+                    this.x += (dx / d) * md;
+                    this.y += (dy / d) * md;
+                }
             }
             if(this.atkCd.ready) {
                 atk();
@@ -57,7 +63,7 @@ class Enemy extends Entity {
 }
 class MeleeEnemy extends Enemy {
     constructor(x: number, y: number, w: number, h: number, c: string, hp: number, dmg: number, range: number, cd: number) {
-        super(x, y, w, h, c, hp, dmg, () => {
+        super(x, y, w, h, c, hp, () => {
             if(this.dp() <= range) {
                 plr.comp("health").hurt(dmg);
             }
@@ -66,7 +72,7 @@ class MeleeEnemy extends Enemy {
 }
 class GunEnemy extends Enemy {
     constructor(x: number, y: number, w: number, h: number, c: string, hp: number, dmg: number, getRot: () => number, bspd: number, cd: number, asWell?: (e: Entity) => void, atkCount = 1) {
-        super(x, y, w, h, c, hp, dmg, () => {
+        super(x, y, w, h, c, hp, () => {
             for(let i = 0; i < atkCount; i++) {
                 const o = bulGenr(this.x, this.y, getRot(), (e) => {
                     if(e == plr) {
