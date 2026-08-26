@@ -148,6 +148,17 @@ const rooms: Room[] = [
     { at: new Vector(2, -1), e: [new BulletSprayGunEnemy(0, 0)], exit: [] },
     { at: new Vector(-1, 0), e: [new SprintMeleeEnemy(0, 0)], exit: [RightExit()] }
 ];
+function getRmExits() {
+    const es = ["left", "right", "top", "btm"] as const;
+    const esm = { left: LeftExit, right: RightExit, top: TopExit, btm: BtmExit } as const;
+    const exits = new Set<(typeof es)[number]>();
+    for(let i = 0; i < random(1, 4); i++) {
+        let x = es[random(es.length)];
+        while(exits.has(x)) x = es[random(es.length)];
+        exits.add(x);
+    }
+    return Array.from(exits).map(v => esm[v]);
+}
 function rmCb(r: Room) {
     return r.at.x == pos.x && r.at.y == pos.y;
 }
