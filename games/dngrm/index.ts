@@ -1,4 +1,4 @@
-import { DebugRay, Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Raycast, Cooldown, random, Img, chance } from "../../phantom2d.js";
+import { DebugRay, Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Raycast, Cooldown, random, Img, chance, ButtonUI, SceneUI, TextUI } from "../../phantom2d.js";
 Img.config.set("root", "assets");
 /**
  * TODO:
@@ -11,7 +11,24 @@ Img.config.set("root", "assets");
  */
 const scene = new Scene({ canvas: "dng", w: 500, h: 500 });
 const size = 10;
-var stat = {
+interface Stat {
+    xp: number;
+    lvl: number;
+    dmg: number;
+    spd: number;
+    bspd: number;
+    hp: number;
+    mhp: number;
+    crit: number;
+    luck: number;
+    armor: number;
+    dodge: number;
+    mon: number;
+    perks: Shop[];
+    skill: never[];
+    ap: number;
+}
+var stat: Stat = {
     /**
      * The current XP points.
      */
@@ -86,14 +103,17 @@ const plr = new PlayableCharacter({ strength: 0, width: size, height: size, colo
     const bound = (n: number, n0: number, n1: number) => n < n0 || n > n1 ? (n < n0 ? n0 : n1) : n;
     plr.x = bound(plr.x, 0, scene.width - plr.width);
     plr.y = bound(plr.y, 0, scene.height - plr.height);
-}, x: 5, y: 20 });
+}, x: 50, y: 50 });
 plr.use("health", healthOpts(plr, stat.hp, scene.stop, "#29ad05"));
 plr.binds(["w", () => plr.moveY(-stat.spd)], ["a", () => plr.moveX(-stat.spd)], ["s", () => plr.moveY(stat.spd)], ["d", () => plr.moveX(stat.spd)]);
 var pos = new Vector(0, 0);
+type RoomTag = "nm" | "shop" | "boss";
 interface Room {
     at: Vector;
     e: Enemy[];
     exit: Exit[];
+    tg: RoomTag;
+    welt?: WorldObj[];
 }
 class Enemy extends Entity {
     atkCd: Cooldown;
@@ -195,7 +215,10 @@ class Exit extends Entity {
             if(e != plr) return;
             // unload previous exits
             const rm = fdRm();
-            if(rm) scene.rm(...rm.exit);
+            if(rm) {
+                scene.rm(...rm.exit);
+                if(rm.welt) rm.welt.forEach(r => r.rm());
+            }
             pos.x += then.x;
             pos.y += then.y;
             // load new room
@@ -203,7 +226,6 @@ class Exit extends Entity {
             // reset plr pos to the spawn pos
             plr.x = sp.x;
             plr.y = sp.y;
-            console.log(plr.x, plr.y);
         } });
     }
 }
@@ -222,7 +244,7 @@ const rooms: Room[] = [
 function getRmExits(room: Vector, rooms: Vector[]) {
     const hasRoom = (x: number, y: number) =>
         rooms.some(
-            r => r.x === x && r.y === y
+            r => r.x == x && r.y == y
         );
     const exits: Exit[] = [];
     if(hasRoom(room.x - 1, room.y)) {
@@ -247,7 +269,8 @@ function genEnemyCtors() {
 }
 function genRmCoords() {
     const max = 20;
-    const br = 70;
+    const br = 85;
+    const min = 10;
 
     const cord: Vector[] = [
         new Vector(0, 0)
@@ -278,7 +301,7 @@ function genRmCoords() {
             );
         });
 
-        if(available.length == 0 || !chance(br)) {
+        if(available.length == 0 || (!chance(br) && cord.length >= min)) {
             stack.pop();
             continue;
         }
@@ -297,9 +320,32 @@ function genRmCoords() {
 }
 function genRms() {
     const cord = genRmCoords();
-    for(const c of cord) {
-        rooms.push({ at: c, e: genEnemyCtors().map(c => new c(0, 0)), exit: getRmExits(c, cord) });
+    let sc = 5;
+    const bc = 5;
+    for(let i = 0; i < cord.length; i++) {
+        const c = cord[i];
+        const tag: RoomTag = chance(bc) ? "boss" : chance(sc) ? "shop" : "nm";
+        rooms.push({ at: c, e: genEnemyCtors().map(c => new c(0, 0)), exit: getRmExits(c, cord), tg: tag });
+        if(tag != "shop") sc++;
     }
+    // now clean rooms with shop / boss tag
+    // boss logic not impl yet
+    // but they cant have standard enemy spawn
+    rooms.forEach(r => {
+        if(r.tg == "nm") return;
+        r.e = [];
+        if(r.tg == "shop") r.welt = genShop();
+    });
+}
+function genShop() {
+    const ctor: ((x: number, y: number) => Shop)[] = [ShopEx];
+    const obj: Shop[] = [];
+    const ct = 3;
+    const sx = scene.width / ct;
+    for(let i = 0; i < ct; i++) {
+        obj.push(ctor[random(ctor.length)](sx * i, scene.height / 2));
+    }
+    return obj;
 }
 function rmCb(r: Room, at?: Vector) {
     at = at ?? pos;
@@ -317,6 +363,7 @@ function ldRm() {
     if(rm) {
         if(rm.e.length) scene.add(...rm.e);
         else ldExs();
+        if(rm.welt) scene.add(...rm.welt);
         coins = [];
     }
 }
@@ -332,12 +379,30 @@ function bulGenr(x: number, y: number, rot: number, collide: (e: Entity) => void
     return new BulletObject({ x, y, rot, height: 6, width: 18, scene, color: "#e2e603", collide, extLeft: 0, extRight: scene.width, extTop: 0, extBtm: scene.height, spd });
 }
 
+abstract class WorldObj extends Entity {
+    a: WorldObj[];
+    constructor(x: number, y: number, width: number, height: number, col: (e: Entity) => void, a: WorldObj[], verif?: (e: Entity) => boolean) {
+        super({ x, y, width, height, color: "rgba(0, 0, 0, 0)", collide: (e) => {
+            if(e == plr && ((verif ?? (() => true))(e))) {
+                this.rm();
+                col(e);
+            }
+        } });
+        a.push(this);
+        scene.add(this);
+        this.a = a;
+    }
+    abstract render(): void;
+    rm() {
+        scene.rm(this);
+        this.a.splice(this.a.indexOf(this));
+    }
+}
 var coins: Coin[] = [];
-class Coin extends Entity {
+class Coin extends WorldObj {
     static img: Img = new Img("coin.png");
     constructor(x: number, y: number) {
-        super({ x, y, width: 10, height: 10, collide: (e) => { if(e == plr) { scene.rm(this); stat.mon++; coins.splice(coins.indexOf(this), 1); } } });
-        coins.push(this);
+        super(x, y, 10, 10, () => stat.mon++, coins);
         this.use("enhancedphys", { scene });
         const dir = Angle.toVector(Angle.rad(random(0, 361)));
         const v = 60;
@@ -348,25 +413,42 @@ class Coin extends Entity {
         scene.img(Coin.img, this.x, this.y, this.width, this.height);
     }
 }
+var shop: Shop[] = [];
+class Shop extends WorldObj {
+    img: Img;
+    constructor(x: number, y: number, cost: number, spr: string) {
+        super(x, y, 20, 20, () => { plr.mon -= cost; stat.perks.push(this); }, shop, () => plr.mon >= cost);
+        this.img = new Img(spr);
+    }
+    render() {
+        scene.img(this.img, this.x, this.y, this.width, this.height);
+    }
+}
+function ShopEx(x: number, y: number) { return new Shop(x, y, 1, "coin.png"); }
+genRms();
+ldRm();
 
-const startScrn = new SceneUI({ scene, width: scene.width, height: scene.height, color: "#000c49" });
-const ssStartBtn = new ButtonUI({ scene, width: 100, height: 75, styles: {
-    idle: "#41e50a",
-    hover: "#bc0b0b"
-    click: "#7a0707"
-}, x: startScrn.width / 2, click: () => {
-    genRms();
-    ldRm();
-    hideStartScrn();
-} });
-const sssbText = new TextUI({ scene, tx: "Enter The Dungeon", x: ssStartBtn.x + ssStartBtn.width / 2 });
-function hideStartScrn() {
-    scene.rmUI(startScrn, ssStartBtn, sssbText);
-}
-function showStartScrn() {
-    scene.addUI(startScrn, ssStartBtn, sssbText);
-}
-showStartScrn();
+// const startScrn = new SceneUI({ scene, w: scene.width, h: scene.height, color: "#000c49" });
+// const ssStartBtn = new ButtonUI({ scene, w: 100, h: 75, styles: {
+//     idle: "#41e50a",
+//     hover: "#bc0b0b",
+//     click: "#7a0707"
+// }, x: startScrn.width / 2, click: () => {
+//     genRms();
+//     // const r = fdRm(new Vector());
+//     // // remove all enemies from first room
+//     // if(r) r.e = [];
+//     ldRm();
+//     hideStartScrn();
+// } });
+// const sssbText = new TextUI({ scene, tx: "Enter The Dungeon", x: ssStartBtn.x + ssStartBtn.width / 2 });
+// function hideStartScrn() {
+//     scene.rmUI(startScrn, ssStartBtn, sssbText);
+// }
+// function showStartScrn() {
+//     scene.addUI(startScrn, ssStartBtn, sssbText);
+// }
+// showStartScrn();
 
 scene.add(plr);
 scene.on("click", () => {
@@ -376,4 +458,5 @@ scene.on("click", () => {
 scene.start(() => {
     scene.bg("#003764");
     coins.forEach(c => c.render());
+    shop.forEach(s => s.render());
 });
