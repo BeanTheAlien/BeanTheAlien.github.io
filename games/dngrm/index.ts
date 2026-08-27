@@ -301,7 +301,6 @@ function genRms() {
         rooms.push({ at: c, e: genEnemyCtors().map(c => new c(0, 0)), exit: getRmExits(c, cord) });
     }
 }
-genRms();
 function rmCb(r: Room, at?: Vector) {
     at = at ?? pos;
     return r.at.x == at.x && r.at.y == at.y;
@@ -332,7 +331,6 @@ function ldExs() {
 function bulGenr(x: number, y: number, rot: number, collide: (e: Entity) => void, spd: number) {
     return new BulletObject({ x, y, rot, height: 6, width: 18, scene, color: "#e2e603", collide, extLeft: 0, extRight: scene.width, extTop: 0, extBtm: scene.height, spd });
 }
-ldRm();
 
 var coins: Coin[] = [];
 class Coin extends Entity {
@@ -350,6 +348,25 @@ class Coin extends Entity {
         scene.img(Coin.img, this.x, this.y, this.width, this.height);
     }
 }
+
+const startScrn = new SceneUI({ scene, width: scene.width, height: scene.height, color: "#000c49" });
+const ssStartBtn = new ButtonUI({ scene, width: 100, height: 75, styles: {
+    idle: "#41e50a",
+    hover: "#bc0b0b"
+    click: "#7a0707"
+}, x: startScrn.width / 2, click: () => {
+    genRms();
+    ldRm();
+    hideStartScrn();
+} });
+const sssbText = new TextUI({ scene, tx: "Enter The Dungeon", x: ssStartBtn.x + ssStartBtn.width / 2 });
+function hideStartScrn() {
+    scene.rmUI(startScrn, ssStartBtn, sssbText);
+}
+function showStartScrn() {
+    scene.addUI(startScrn, ssStartBtn, sssbText);
+}
+showStartScrn();
 
 scene.add(plr);
 scene.on("click", () => {
