@@ -322,20 +322,32 @@ function genRms() {
     const cord = genRmCoords();
     let sc = 5;
     const bc = 5;
+    let bcg = false;
+    // todo: fix chances
     for(let i = 0; i < cord.length; i++) {
         const c = cord[i];
-        const tag: RoomTag = chance(bc) ? "boss" : chance(sc) ? "shop" : "nm";
+        const tag: RoomTag = (chance(bc) && !bcg) || i == cord.length - 1 ? "boss" : chance(sc) ? "shop" : "nm";
         rooms.push({ at: c, e: genEnemyCtors().map(c => new c(0, 0)), exit: getRmExits(c, cord), tg: tag });
-        if(tag != "shop") sc++;
+        // if(tag != "shop") sc++;
+        // else sc = 5;
+        console.log(tag);
+        if(tag == "boss") bcg = true;
     }
     // now clean rooms with shop / boss tag
     // boss logic not impl yet
     // but they cant have standard enemy spawn
     rooms.forEach(r => {
         if(r.tg == "nm") return;
+        console.log(r.tg);
         r.e = [];
         if(r.tg == "shop") r.welt = genShop();
     });
+    const r = fdRm(new Vector());
+    if(r) {
+        r.e = [];
+        r.tg = "nm";
+        r.welt = [];
+    }
 }
 function genShop() {
     const ctor: ((x: number, y: number) => Shop)[] = [ShopEx];
