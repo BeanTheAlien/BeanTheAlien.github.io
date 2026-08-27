@@ -281,15 +281,18 @@ function genRms() {
     let sc = 5;
     const bc = 5;
     let bcg = false;
+    let scg = false;
+    // todo: fix chances
     for (let i = 0; i < cord.length; i++) {
         const c = cord[i];
-        const tag = (chance(bc) && !bcg) || i == cord.length - 1 ? "boss" : chance(sc) ? "shop" : "nm";
+        const tag = (chance(bc) && i > 0 && !bcg) || (i == cord.length - 1 && !bcg) ? "boss" : (chance(sc) && !scg && i > 0) ? "shop" : "nm";
         rooms.push({ at: c, e: genEnemyCtors().map(c => new c(0, 0)), exit: getRmExits(c, cord), tg: tag });
         // if(tag != "shop") sc++;
         // else sc = 5;
-        console.log(tag);
         if (tag == "boss")
             bcg = true;
+        else if (tag == "shop")
+            scg = true;
     }
     // now clean rooms with shop / boss tag
     // boss logic not impl yet
@@ -297,7 +300,6 @@ function genRms() {
     rooms.forEach(r => {
         if (r.tg == "nm")
             return;
-        console.log(r.tg);
         r.e = [];
         if (r.tg == "shop")
             r.welt = genShop();
@@ -333,12 +335,15 @@ function ldRm() {
     const rm = fdRm();
     coins = [];
     if (rm) {
+        console.log(rm.tg);
         if (rm.e.length)
             scene.add(...rm.e);
         else
             ldExs();
-        if (rm.welt)
-            scene.add(...rm.welt);
+        if (rm.welt) {
+            rm.welt.filter(r => objIs(r, Shop)).forEach(r => r.add());
+            rm.welt.filter(r => !objIs(r, Shop)).forEach(r => scene.add(r));
+        }
         coins = [];
     }
 }
@@ -355,20 +360,24 @@ function bulGenr(x, y, rot, collide, spd) {
 }
 class WorldObj extends Entity {
     a;
-    constructor(x, y, width, height, col, a, verif) {
+    constructor(x, y, width, height, col, a, auto = true, verif) {
         super({ x, y, width, height, color: "rgba(0, 0, 0, 0)", collide: (e) => {
                 if (e == plr && ((verif ?? (() => true))(e))) {
                     this.rm();
                     col(e);
                 }
             } });
-        a.push(this);
-        scene.add(this);
+        if (auto)
+            this.add();
         this.a = a;
     }
     rm() {
         scene.rm(this);
         this.a.splice(this.a.indexOf(this));
+    }
+    add() {
+        scene.add(this);
+        this.a.push(this);
     }
 }
 var coins = [];
@@ -390,7 +399,7 @@ var shop = [];
 class Shop extends WorldObj {
     img;
     constructor(x, y, cost, spr) {
-        super(x, y, 20, 20, () => { plr.mon -= cost; stat.perks.push(this); }, shop, () => plr.mon >= cost);
+        super(x, y, 20, 20, () => { plr.mon -= cost; stat.perks.push(this); }, shop, false, () => plr.mon >= cost);
         this.img = new Img(spr);
     }
     render() {
