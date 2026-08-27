@@ -338,7 +338,7 @@ var coins: Coin[] = [];
 class Coin extends Entity {
     static img: Img = new Img("coin.png");
     constructor(x: number, y: number) {
-        super({ x, y, width: 10, height: 10, collide: (e) => { if(e == plr) { scene.rm(this); stat.mon++; } } });
+        super({ x, y, width: 10, height: 10, collide: (e) => { if(e == plr) { scene.rm(this); stat.mon++; coins.splice(coins.indexOf(this), 1); } } });
         coins.push(this);
         this.use("enhancedphys", { scene });
         const dir = Angle.toVector(Angle.rad(random(0, 361)));
