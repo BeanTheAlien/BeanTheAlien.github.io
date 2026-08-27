@@ -323,15 +323,17 @@ function genRms() {
     let sc = 5;
     const bc = 5;
     let bcg = false;
+    let scg = false;
     // todo: fix chances
     for(let i = 0; i < cord.length; i++) {
         const c = cord[i];
-        const tag: RoomTag = (chance(bc) && !bcg) || i == cord.length - 1 ? "boss" : chance(sc) ? "shop" : "nm";
+        const tag: RoomTag = (chance(bc) && !bcg) || i == cord.length - 1 ? "boss" : (chance(sc) && !scg) ? "shop" : "nm";
         rooms.push({ at: c, e: genEnemyCtors().map(c => new c(0, 0)), exit: getRmExits(c, cord), tg: tag });
         // if(tag != "shop") sc++;
         // else sc = 5;
         console.log(tag);
         if(tag == "boss") bcg = true;
+        else if(tag == "shop") scg = true;
     }
     // now clean rooms with shop / boss tag
     // boss logic not impl yet
