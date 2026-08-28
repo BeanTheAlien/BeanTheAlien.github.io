@@ -116,17 +116,20 @@ class Enemy extends Entity {
         return Vector.dist(this.getPos(), plr.getPos());
     }
     kill() {
-        scene.rm(this);
+        const rm = this.rs();
         for (let i = 0; i < random(1, 5); i++) {
             new Coin(this.x, this.y);
         }
-        let x = 0;
-        scene.forEach(e => {
-            if (objIs(e, Enemy))
-                x++;
-        });
-        if (x == 0)
+        if (rm?.e.length == 0)
             ldExs();
+    }
+    rs() {
+        scene.rm(this);
+        const rm = fdRm();
+        if (!rm)
+            return;
+        rm.e.splice(rm.e.indexOf(this), 1);
+        return rm;
     }
 }
 class MeleeEnemy extends Enemy {
@@ -204,10 +207,11 @@ class Exit extends Entity {
         super({ x, y, rot, width: 5, height: 20, color: "#a23c04", collide: (e) => {
                 if (e != plr)
                     return;
-                // unload previous exits
+                // unload previous exits and enemies
                 const rm = fdRm();
                 if (rm) {
                     scene.rm(...rm.exit);
+                    scene.rm(...rm.e);
                     if (rm.welt)
                         rm.welt.forEach(r => r.rm());
                 }
@@ -235,10 +239,10 @@ function getRmExits(room, rooms) {
     if (hasRoom(room.x + 1, room.y)) {
         exits.push(RightExit());
     }
-    if (hasRoom(room.x, room.y - 1)) {
+    if (hasRoom(room.x, room.y + 1)) {
         exits.push(TopExit());
     }
-    if (hasRoom(room.x, room.y + 1)) {
+    if (hasRoom(room.x, room.y - 1)) {
         exits.push(BtmExit());
     }
     return exits;
@@ -348,7 +352,6 @@ function ldRm() {
     const rm = fdRm();
     coins = [];
     if (rm) {
-        console.log(rm.exit.length);
         if (rm.e.length)
             scene.add(...rm.e);
         else
