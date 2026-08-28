@@ -208,6 +208,19 @@ class SprintMeleeEnemy extends MeleeEnemy {
         super(x, y, 1, 2, "#ec0303", 5, 1, 50, 500, 2.5);
     }
 }
+class MeleeBoss extends MeleeEnemy {
+    constructor(x: number, y: number, w: number, h: number, c: string, hp = 50, dmg = 3, spd = 1) {
+        super(x, y, w, h, c, hp, dmg, 100, 100, spd);
+    }
+    kill() {
+        scene.rm(this);
+    }
+}
+class BulkBoss extends MeleeBoss {
+    constructor(x: number, y: number) {
+        super(x, y, 10, 10, "#3d2d0b", 100, 3, 0.85);
+    }
+}
 
 class Exit extends Entity {
     constructor(x: number, y: number, rot: number, then: Vector, sp: Vector) {
@@ -234,13 +247,7 @@ function RightExit() { return new Exit(scene.width - 5, scene.height / 2, 0, new
 function TopExit() { return new Exit(scene.width / 2, 0, Angle.rad(90), new Vector(0, 1), new Vector(scene.width / 2, scene.height - 25)); }
 function BtmExit() { return new Exit(scene.width / 2, scene.height - 10, Angle.rad(90), new Vector(0, -1), new Vector(scene.width / 2, 25)); }
 
-const rooms: Room[] = [
-    // { at: new Vector(0, 0), e: [new BasicMeleeEnemy(0, 0)], exit: [RightExit(), LeftExit()] },
-    // { at: new Vector(1, 0), e: [new BasicMeleeEnemy(0, 0), new BasicMeleeEnemy(10, 0)], exit: [RightExit()] },
-    // { at: new Vector(2, 0), e: [new BasicGunEnemy(0, 0)], exit: [BtmExit()] },
-    // { at: new Vector(2, -1), e: [new BulletSprayGunEnemy(0, 0)], exit: [] },
-    // { at: new Vector(-1, 0), e: [new SprintMeleeEnemy(0, 0)], exit: [RightExit()] }
-];
+const rooms: Room[] = [];
 function getRmExits(room: Vector, rooms: Vector[]) {
     const hasRoom = (x: number, y: number) =>
         rooms.some(
@@ -266,6 +273,10 @@ function genEnemyCtors() {
     const out: (new (...arg: any[]) => Enemy)[] = [];
     for(let i = 0; i < random(1, 6); i++) out.push(ec[random(ec.length)]);
     return out;
+}
+function getBossCtor() {
+    const bc = [BulkBoss] as const;
+    return bc[random(bc.length)];
 }
 function genRmCoords() {
     const max = 20;
@@ -341,6 +352,7 @@ function genRms() {
         if(r.tg == "nm") return;
         r.e = [];
         if(r.tg == "shop") r.welt = genShop();
+        if(r.tg == "boss") r.e = [new (getBossCtor())(0, 0)];
     });
     const r = fdRm(new Vector());
     if(r) {
@@ -373,7 +385,7 @@ function ldRm() {
     const rm = fdRm();
     coins = [];
     if(rm) {
-        console.log(rm.tg);
+        console.log(rm.exit.length);
         if(rm.e.length) scene.add(...rm.e);
         else ldExs();
         if(rm.welt) {
@@ -410,7 +422,7 @@ abstract class WorldObj extends Entity {
     abstract render(): void;
     rm() {
         scene.rm(this);
-        this.a.splice(this.a.indexOf(this));
+        this.a.splice(this.a.indexOf(this), 1);
     }
     add() {
         scene.add(this);

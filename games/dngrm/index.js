@@ -186,6 +186,19 @@ class SprintMeleeEnemy extends MeleeEnemy {
         super(x, y, 1, 2, "#ec0303", 5, 1, 50, 500, 2.5);
     }
 }
+class MeleeBoss extends MeleeEnemy {
+    constructor(x, y, w, h, c, hp = 50, dmg = 3, spd = 1) {
+        super(x, y, w, h, c, hp, dmg, 100, 100, spd);
+    }
+    kill() {
+        scene.rm(this);
+    }
+}
+class BulkBoss extends MeleeBoss {
+    constructor(x, y) {
+        super(x, y, 10, 10, "#3d2d0b", 100, 3, 0.85);
+    }
+}
 class Exit extends Entity {
     constructor(x, y, rot, then, sp) {
         super({ x, y, rot, width: 5, height: 20, color: "#a23c04", collide: (e) => {
@@ -212,13 +225,7 @@ function LeftExit() { return new Exit(0, scene.height / 2, 0, new Vector(-1, 0),
 function RightExit() { return new Exit(scene.width - 5, scene.height / 2, 0, new Vector(1, 0), new Vector(25, scene.height / 2)); }
 function TopExit() { return new Exit(scene.width / 2, 0, Angle.rad(90), new Vector(0, 1), new Vector(scene.width / 2, scene.height - 25)); }
 function BtmExit() { return new Exit(scene.width / 2, scene.height - 10, Angle.rad(90), new Vector(0, -1), new Vector(scene.width / 2, 25)); }
-const rooms = [
-// { at: new Vector(0, 0), e: [new BasicMeleeEnemy(0, 0)], exit: [RightExit(), LeftExit()] },
-// { at: new Vector(1, 0), e: [new BasicMeleeEnemy(0, 0), new BasicMeleeEnemy(10, 0)], exit: [RightExit()] },
-// { at: new Vector(2, 0), e: [new BasicGunEnemy(0, 0)], exit: [BtmExit()] },
-// { at: new Vector(2, -1), e: [new BulletSprayGunEnemy(0, 0)], exit: [] },
-// { at: new Vector(-1, 0), e: [new SprintMeleeEnemy(0, 0)], exit: [RightExit()] }
-];
+const rooms = [];
 function getRmExits(room, rooms) {
     const hasRoom = (x, y) => rooms.some(r => r.x == x && r.y == y);
     const exits = [];
@@ -242,6 +249,10 @@ function genEnemyCtors() {
     for (let i = 0; i < random(1, 6); i++)
         out.push(ec[random(ec.length)]);
     return out;
+}
+function getBossCtor() {
+    const bc = [BulkBoss];
+    return bc[random(bc.length)];
 }
 function genRmCoords() {
     const max = 20;
@@ -303,6 +314,8 @@ function genRms() {
         r.e = [];
         if (r.tg == "shop")
             r.welt = genShop();
+        if (r.tg == "boss")
+            r.e = [new (getBossCtor())(0, 0)];
     });
     const r = fdRm(new Vector());
     if (r) {
@@ -335,7 +348,7 @@ function ldRm() {
     const rm = fdRm();
     coins = [];
     if (rm) {
-        console.log(rm.tg);
+        console.log(rm.exit.length);
         if (rm.e.length)
             scene.add(...rm.e);
         else
@@ -367,13 +380,13 @@ class WorldObj extends Entity {
                     col(e);
                 }
             } });
+        this.a = a;
         if (auto)
             this.add();
-        this.a = a;
     }
     rm() {
         scene.rm(this);
-        this.a.splice(this.a.indexOf(this));
+        this.a.splice(this.a.indexOf(this), 1);
     }
     add() {
         scene.add(this);
