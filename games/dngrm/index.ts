@@ -264,6 +264,9 @@ function getRmExits(room: Vector, rooms: Vector[]) {
     if(hasRoom(room.x + 1, room.y)) {
         exits.push(RightExit());
     }
+    // use standard coords
+    // up => positive, down => negative
+    // (at least for world pos)
     if(hasRoom(room.x, room.y + 1)) {
         exits.push(TopExit());
     }
