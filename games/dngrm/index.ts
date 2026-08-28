@@ -404,8 +404,8 @@ abstract class WorldObj extends Entity {
                 col(e);
             }
         } });
-        if(auto) this.add();
         this.a = a;
+        if(auto) this.add();
     }
     abstract render(): void;
     rm() {
