@@ -1,4 +1,4 @@
-import { Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Cooldown, random, Img, chance } from "../../phantom2d.js";
+import { Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Cooldown, random, Img, chance, ButtonUI, SceneUI, TextUI } from "../../phantom2d.js";
 Img.config.set("root", "assets");
 /**
  * TODO:
@@ -75,6 +75,17 @@ var stat = {
      */
     ap: 0
 };
+var rStat = resetRS();
+function resetRS() {
+    return {
+        kill: 0,
+        hpl: 0,
+        hpg: 0,
+        dmg: 0,
+        me: 0,
+        ms: 0
+    };
+}
 const healthOpts = (self, hp, onDie, c1, c2 = "#8b0b0b") => {
     return { hp, onDie, onHurt: () => {
             self.color = c2;
@@ -92,9 +103,9 @@ plr.binds(["w", () => plr.moveY(-stat.spd)], ["a", () => plr.moveX(-stat.spd)], 
 var pos = new Vector(0, 0);
 class Enemy extends Entity {
     atkCd;
-    constructor(x, y, w, h, c, hp, atk, cd, spd = 1) {
+    constructor(x, y, w, h, c, hp, atk, cd, spd = 1, sight = 300) {
         super({ x, y, width: size * w, height: size * h, color: c, upd: () => {
-                if (this.dp() <= 300) {
+                if (this.dp() <= sight) {
                     const dx = plr.x - this.x;
                     const dy = plr.y - this.y;
                     const d = Math.hypot(dx, dy);
@@ -133,16 +144,16 @@ class Enemy extends Entity {
     }
 }
 class MeleeEnemy extends Enemy {
-    constructor(x, y, w, h, c, hp, dmg, range, cd, spd = 1) {
+    constructor(x, y, w, h, c, hp, dmg, range, cd, spd = 1, sight) {
         super(x, y, w, h, c, hp, () => {
             if (this.dp() <= range) {
                 plr.comp("health").hurt(dmg);
             }
-        }, cd, spd);
+        }, cd, spd, sight);
     }
 }
 class GunEnemy extends Enemy {
-    constructor(x, y, w, h, c, hp, dmg, getRot, bspd, cd, asWell, atkCount = 1, spd = 1) {
+    constructor(x, y, w, h, c, hp, dmg, getRot, bspd, cd, asWell, atkCount = 1, spd = 1, sight) {
         super(x, y, w, h, c, hp, () => {
             for (let i = 0; i < atkCount; i++) {
                 const o = bulGenr(this.x, this.y, getRot(), (e) => {
@@ -155,7 +166,7 @@ class GunEnemy extends Enemy {
                 }, bspd);
                 scene.add(o);
             }
-        }, cd, spd);
+        }, cd, spd, sight);
     }
 }
 class BasicMeleeEnemy extends MeleeEnemy {
@@ -191,15 +202,37 @@ class SprintMeleeEnemy extends MeleeEnemy {
 }
 class MeleeBoss extends MeleeEnemy {
     constructor(x, y, w, h, c, hp = 50, dmg = 3, spd = 1) {
-        super(x, y, w, h, c, hp, dmg, 100, 100, spd);
+        super(x, y, w, h, c, hp, dmg, 100, 100, spd, 500);
     }
     kill() {
         scene.rm(this);
+        showOvr();
+        const hideAll = () => {
+            hideOvr();
+            scene.rmUI(b, b2, ...s);
+        };
+        const b = btn(() => {
+            hideAll();
+            genRms();
+            ldRm();
+        }, 120, "Continue");
+        const b2 = btn(() => {
+            hideAll();
+            showSS();
+        }, 200, "Main Menu");
+        const s = genStatText(rStat);
+        scene.addUI(...s, b, b2);
+        rStat = resetRS();
     }
 }
 class BulkBoss extends MeleeBoss {
     constructor(x, y) {
-        super(x, y, 10, 10, "#3d2d0b", 100, 3, 0.85);
+        super(x, y, 10, 10, "#3d2d0b", 50, 3, 0.85);
+    }
+}
+class SprinterBoss extends MeleeBoss {
+    constructor(x, y) {
+        super(x, y, 5, 5, "#920d92", 10, 1, 2.35);
     }
 }
 class Exit extends Entity {
@@ -239,6 +272,9 @@ function getRmExits(room, rooms) {
     if (hasRoom(room.x + 1, room.y)) {
         exits.push(RightExit());
     }
+    // use standard coords
+    // up => positive, down => negative
+    // (at least for world pos)
     if (hasRoom(room.x, room.y + 1)) {
         exits.push(TopExit());
     }
@@ -255,7 +291,7 @@ function genEnemyCtors() {
     return out;
 }
 function getBossCtor() {
-    const bc = [BulkBoss];
+    const bc = [BulkBoss, SprinterBoss];
     return bc[random(bc.length)];
 }
 function genRmCoords() {
@@ -292,6 +328,8 @@ function genRmCoords() {
     return cord;
 }
 function genRms() {
+    rooms.splice(0);
+    pos = new Vector();
     const cord = genRmCoords();
     let sc = 5;
     const bc = 5;
@@ -424,28 +462,51 @@ class Shop extends WorldObj {
 }
 function ShopEx(x, y) { return new Shop(x, y, 1, "coin.png"); }
 genRms();
-ldRm();
-// const startScrn = new SceneUI({ scene, w: scene.width, h: scene.height, color: "#000c49" });
-// const ssStartBtn = new ButtonUI({ scene, w: 100, h: 75, styles: {
-//     idle: "#41e50a",
-//     hover: "#bc0b0b",
-//     click: "#7a0707"
-// }, x: startScrn.width / 2, click: () => {
-//     genRms();
-//     // const r = fdRm(new Vector());
-//     // // remove all enemies from first room
-//     // if(r) r.e = [];
-//     ldRm();
-//     hideStartScrn();
-// } });
-// const sssbText = new TextUI({ scene, tx: "Enter The Dungeon", x: ssStartBtn.x + ssStartBtn.width / 2 });
-// function hideStartScrn() {
-//     scene.rmUI(startScrn, ssStartBtn, sssbText);
-// }
-// function showStartScrn() {
-//     scene.addUI(startScrn, ssStartBtn, sssbText);
-// }
-// showStartScrn();
+// ldRm();
+const ovr = new SceneUI({ scene, w: scene.width, h: scene.height, color: "#000c49" });
+function btn(click, y, tx) {
+    const b = new ButtonUI({ scene, w: 200, h: 75, styles: {
+            idle: "#0ac1c7",
+            hover: "#bc0b0b",
+            click: "#7a0707"
+        }, x: ovr.width / 2 - 100, y: ovr.height / 2 - 50 + y, click });
+    b.addChild(new TextUI({ scene, tx, x: b.width / 2 - 75, y: b.height / 2 }));
+    return b;
+}
+const ssStartBtn = btn(() => {
+    // genRms();
+    // const r = fdRm(new Vector());
+    // // remove all enemies from first room
+    // if(r) r.e = [];
+    ldRm();
+    hideSS();
+}, 0, "Enter The Dungeon");
+scene.font = "16px Comic Sans MS";
+function showOvr() {
+    scene.addUI(ovr);
+}
+function hideOvr() {
+    scene.rmUI(ovr);
+}
+function hideSS() {
+    hideOvr();
+    scene.rmUI(ssStartBtn);
+}
+function showSS() {
+    showOvr();
+    scene.addUI(ssStartBtn);
+}
+showSS();
+function genStatText(s) {
+    const out = [];
+    const e = Object.entries(s);
+    for (let i = 0; i < e.length; i++) {
+        const [ka, v] = e[i];
+        const k = ka;
+        out.push(new TextUI({ scene, tx: `${k == "kill" ? "Kills" : k == "hpl" ? "Health Lost" : k == "hpg" ? "Health Gained" : k == "dmg" ? "Damage" : k == "me" ? "Money Earned" : k == "ms" ? "Money Spent" : "unknown"}: ${v}`, x: 100, y: 50 + i * 50 }));
+    }
+    return out;
+}
 scene.add(plr);
 scene.on("click", () => {
     const o = bulGenr(plr.x, plr.y, scene.rotToMouse(plr), (e) => { if (objIs(e, Enemy)) {

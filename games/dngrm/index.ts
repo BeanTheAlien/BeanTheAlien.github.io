@@ -92,10 +92,21 @@ var stat: Stat = {
      */
     ap: 0
 };
+var rStat = resetRS();
+function resetRS(): RunStat {
+    return {
+        kill: 0,
+        hpl: 0,
+        hpg: 0,
+        dmg: 0,
+        me: 0,
+        ms: 0
+    };
+}
 const healthOpts = (self: Entity, hp: number, onDie: Function, c1: string, c2: string = "#8b0b0b") => {
     return { hp, onDie, onHurt: () => {
         self.color = c2;
-        setTimeout(() => self.color = c1, 125);
+        setTimeout(() => self.color = c1, 125); 
     } } as any;
 }
 const plr = new PlayableCharacter({ strength: 0, width: size, height: size, color: "#29ad05", upd: () => {
@@ -117,9 +128,9 @@ interface Room {
 }
 class Enemy extends Entity {
     atkCd: Cooldown;
-    constructor(x: number, y: number, w: number, h: number, c: string, hp: number, atk: Function, cd: number, spd = 1) {
+    constructor(x: number, y: number, w: number, h: number, c: string, hp: number, atk: Function, cd: number, spd = 1, sight = 300) {
         super({ x, y, width: size * w, height: size * h, color: c, upd: () => {
-            if(this.dp() <= 300) {
+            if(this.dp() <= sight) {
                 const dx = plr.x - this.x;
                 const dy = plr.y - this.y;
                 const d = Math.hypot(dx, dy);
@@ -156,16 +167,16 @@ class Enemy extends Entity {
     }
 }
 class MeleeEnemy extends Enemy {
-    constructor(x: number, y: number, w: number, h: number, c: string, hp: number, dmg: number, range: number, cd: number, spd = 1) {
+    constructor(x: number, y: number, w: number, h: number, c: string, hp: number, dmg: number, range: number, cd: number, spd = 1, sight?: number) {
         super(x, y, w, h, c, hp, () => {
             if(this.dp() <= range) {
                 plr.comp("health").hurt(dmg);
             }
-        }, cd, spd);
+        }, cd, spd, sight);
     }
 }
 class GunEnemy extends Enemy {
-    constructor(x: number, y: number, w: number, h: number, c: string, hp: number, dmg: number, getRot: () => number, bspd: number, cd: number, asWell?: (e: Entity) => void, atkCount = 1, spd = 1) {
+    constructor(x: number, y: number, w: number, h: number, c: string, hp: number, dmg: number, getRot: () => number, bspd: number, cd: number, asWell?: (e: Entity) => void, atkCount = 1, spd = 1, sight?: number) {
         super(x, y, w, h, c, hp, () => {
             for(let i = 0; i < atkCount; i++) {
                 const o = bulGenr(this.x, this.y, getRot(), (e) => {
@@ -177,7 +188,7 @@ class GunEnemy extends Enemy {
                 }, bspd);
                 scene.add(o);
             }
-        }, cd, spd);
+        }, cd, spd, sight);
     }
 }
 class BasicMeleeEnemy extends MeleeEnemy {
@@ -213,15 +224,37 @@ class SprintMeleeEnemy extends MeleeEnemy {
 }
 class MeleeBoss extends MeleeEnemy {
     constructor(x: number, y: number, w: number, h: number, c: string, hp = 50, dmg = 3, spd = 1) {
-        super(x, y, w, h, c, hp, dmg, 100, 100, spd);
+        super(x, y, w, h, c, hp, dmg, 100, 100, spd, 500);
     }
     kill() {
         scene.rm(this);
+        showOvr();
+        const hideAll = () => {
+            hideOvr();
+            scene.rmUI(b, b2, ...s);
+        }
+        const b = btn(() => {
+            hideAll();
+            genRms();
+            ldRm();
+        }, 120, "Continue");
+        const b2 = btn(() => {
+            hideAll();
+            showSS();
+        }, 200, "Main Menu");
+        const s = genStatText(rStat);
+        scene.addUI(...s, b, b2);
+        rStat = resetRS();
     }
 }
 class BulkBoss extends MeleeBoss {
     constructor(x: number, y: number) {
-        super(x, y, 10, 10, "#3d2d0b", 100, 3, 0.85);
+        super(x, y, 10, 10, "#3d2d0b", 50, 3, 0.85);
+    }
+}
+class SprinterBoss extends MeleeBoss {
+    constructor(x: number, y: number) {
+        super(x, y, 5, 5, "#920d92", 10, 1, 2.35);
     }
 }
 
@@ -282,7 +315,7 @@ function genEnemyCtors() {
     return out;
 }
 function getBossCtor() {
-    const bc = [BulkBoss] as const;
+    const bc = [BulkBoss, SprinterBoss] as const;
     return bc[random(bc.length)];
 }
 function genRmCoords() {
@@ -337,6 +370,8 @@ function genRmCoords() {
     return cord;
 }
 function genRms() {
+    rooms.splice(0);
+    pos = new Vector();
     const cord = genRmCoords();
     let sc = 5;
     const bc = 5;
@@ -463,29 +498,80 @@ class Shop extends WorldObj {
 }
 function ShopEx(x: number, y: number) { return new Shop(x, y, 1, "coin.png"); }
 genRms();
-ldRm();
+// ldRm();
 
-// const startScrn = new SceneUI({ scene, w: scene.width, h: scene.height, color: "#000c49" });
-// const ssStartBtn = new ButtonUI({ scene, w: 100, h: 75, styles: {
-//     idle: "#41e50a",
-//     hover: "#bc0b0b",
-//     click: "#7a0707"
-// }, x: startScrn.width / 2, click: () => {
-//     genRms();
-//     // const r = fdRm(new Vector());
-//     // // remove all enemies from first room
-//     // if(r) r.e = [];
-//     ldRm();
-//     hideStartScrn();
-// } });
-// const sssbText = new TextUI({ scene, tx: "Enter The Dungeon", x: ssStartBtn.x + ssStartBtn.width / 2 });
-// function hideStartScrn() {
-//     scene.rmUI(startScrn, ssStartBtn, sssbText);
-// }
-// function showStartScrn() {
-//     scene.addUI(startScrn, ssStartBtn, sssbText);
-// }
-// showStartScrn();
+const ovr = new SceneUI({ scene, w: scene.width, h: scene.height, color: "#000c49" });
+function btn(click: Function, y: number, tx: string, x = 0) {
+    const b = new ButtonUI({ scene, w: 200, h: 75, styles: {
+        idle: "#0ac1c7",
+        hover: "#bc0b0b",
+        click: "#7a0707"
+    }, x: ovr.width / 2 - 100 - x, y: ovr.height / 2 - 50 + y, click });
+    b.addChild(new TextUI({ scene, tx, x: b.width / 2 - 75, y: b.height / 2 }));
+    return b;
+}
+const ssStartBtn = btn(() => {
+    // genRms();
+    // const r = fdRm(new Vector());
+    // // remove all enemies from first room
+    // if(r) r.e = [];
+    ldRm();
+    hideSS();
+}, 0, "Enter The Dungeon");
+const shopBtn = btn(showShop, 100, "Shop");
+const treeBtn = btn(showTree, 100, "Tree");
+const shopBk = btn(hideShop, 200, "Back", 50);
+const treeBk = btn(hideTree, 200, "Back", 50);
+function showShop() {
+    scene.addUI(shopBk);
+    hideSS();
+}
+function hideShop() {
+    scene.rmUI(shopBk);
+    showSS();
+}
+function showTree() {
+    scene.addUI(treeBk);
+    hideSS();
+}
+function hideTree() {
+    scene.rmUI(treeBk);
+    showSS();
+}
+scene.font = "16px Comic Sans MS";
+function showOvr() {
+    scene.addUI(ovr);
+}
+function hideOvr() {
+    scene.rmUI(ovr);
+}
+function hideSS() {
+    hideOvr();
+    scene.rmUI(ssStartBtn, shopBtn, treeBtn);
+}
+function showSS() {
+    showOvr();
+    scene.addUI(ssStartBtn, shopBtn, treeBtn);
+}
+showSS();
+interface RunStat {
+    kill: number;
+    hpl: number;
+    hpg: number;
+    dmg: number;
+    me: number;
+    ms: number;
+}
+function genStatText(s: RunStat) {
+    const out: TextUI[] = [];
+    const e = Object.entries(s);
+    for(let i = 0; i < e.length; i++) {
+        const [ka, v]: [string, RunStat[keyof RunStat]] = e[i];
+        const k = ka as keyof RunStat;
+        out.push(new TextUI({ scene, tx: `${k == "kill" ? "Kills" : k == "hpl" ? "Health Lost" : k == "hpg" ? "Health Gained" : k == "dmg" ? "Damage" : k == "me" ? "Money Earned" : k == "ms" ? "Money Spent" : "unknown"}: ${v}`, x: 100, y: 50 + i * 50 }));
+    }
+    return out;
+}
 
 scene.add(plr);
 scene.on("click", () => {
