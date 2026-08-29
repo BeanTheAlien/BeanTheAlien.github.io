@@ -503,7 +503,7 @@ genRms();
 const ovr = new SceneUI({ scene, w: scene.width, h: scene.height, color: "#000c49" });
 function btn(click: Function, y: number, tx: string, x = 0) {
     const b = new ButtonUI({ scene, w: 200, h: 75, styles: {
-        idle: "#0ac1c7",
+        idle: "#00868a",
         hover: "#bc0b0b",
         click: "#7a0707"
     }, x: ovr.width / 2 - 100 - x, y: ovr.height / 2 - 50 + y, click });
@@ -545,13 +545,14 @@ function showOvr() {
 function hideOvr() {
     scene.rmUI(ovr);
 }
+const ssBtns = [ssStartBtn, shopBtn, treeBtn];
 function hideSS() {
     hideOvr();
-    scene.rmUI(ssStartBtn, shopBtn, treeBtn);
+    scene.rmUI(...ssBtns);
 }
 function showSS() {
     showOvr();
-    scene.addUI(ssStartBtn, shopBtn, treeBtn);
+    scene.addUI(...ssBtns);
 }
 showSS();
 interface RunStat {
