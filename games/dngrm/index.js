@@ -207,6 +207,7 @@ class MeleeBoss extends MeleeEnemy {
     kill() {
         scene.rm(this);
         showOvr();
+        gmRn = false;
         const hideAll = () => {
             hideOvr();
             scene.rmUI(b, b2, ...s);
@@ -331,7 +332,7 @@ function genRms() {
     rooms.splice(0);
     pos = new Vector();
     const cord = genRmCoords();
-    let sc = 5;
+    const sc = 5;
     const bc = 5;
     let bcg = false;
     let scg = false;
@@ -464,13 +465,13 @@ function ShopEx(x, y) { return new Shop(x, y, 1, "coin.png"); }
 genRms();
 // ldRm();
 const ovr = new SceneUI({ scene, w: scene.width, h: scene.height, color: "#000c49" });
-function btn(click, y, tx) {
+function btn(click, y, tx, x = 0, tex = 0) {
     const b = new ButtonUI({ scene, w: 200, h: 75, styles: {
-            idle: "#0ac1c7",
+            idle: "#00868a",
             hover: "#bc0b0b",
             click: "#7a0707"
-        }, x: ovr.width / 2 - 100, y: ovr.height / 2 - 50 + y, click });
-    b.addChild(new TextUI({ scene, tx, x: b.width / 2 - 75, y: b.height / 2 }));
+        }, x: ovr.width / 2 - 100 - x, y: ovr.height / 2 - 50 + y, click });
+    b.addChild(new TextUI({ scene, tx, x: b.width / 2 - 75 - tex, y: b.height / 2 }));
     return b;
 }
 const ssStartBtn = btn(() => {
@@ -480,7 +481,30 @@ const ssStartBtn = btn(() => {
     // if(r) r.e = [];
     ldRm();
     hideSS();
+    gmRn = true;
 }, 0, "Enter The Dungeon");
+const shopBtn = btn(showShop, 100, "Shop", 0, -50);
+const treeBtn = btn(showTree, 200, "Tree", 0, -50);
+const shopBk = btn(hideShop, 200, "Back", 50);
+const treeBk = btn(hideTree, 200, "Back", 50);
+function showShop() {
+    hideSS();
+    showOvr();
+    scene.addUI(shopBk);
+}
+function hideShop() {
+    scene.rmUI(shopBk);
+    showSS();
+}
+function showTree() {
+    hideSS();
+    showOvr();
+    scene.addUI(treeBk);
+}
+function hideTree() {
+    scene.rmUI(treeBk);
+    showSS();
+}
 scene.font = "16px Comic Sans MS";
 function showOvr() {
     scene.addUI(ovr);
@@ -488,13 +512,14 @@ function showOvr() {
 function hideOvr() {
     scene.rmUI(ovr);
 }
+const ssBtns = [ssStartBtn, shopBtn, treeBtn];
 function hideSS() {
     hideOvr();
-    scene.rmUI(ssStartBtn);
+    scene.rmUI(...ssBtns);
 }
 function showSS() {
     showOvr();
-    scene.addUI(ssStartBtn);
+    scene.addUI(...ssBtns);
 }
 showSS();
 function genStatText(s) {
@@ -507,8 +532,11 @@ function genStatText(s) {
     }
     return out;
 }
+var gmRn = false;
 scene.add(plr);
 scene.on("click", () => {
+    if (!gmRn)
+        return;
     const o = bulGenr(plr.x, plr.y, scene.rotToMouse(plr), (e) => { if (objIs(e, Enemy)) {
         e.comp("health").hurt(stat.dmg);
         scene.rm(o);
