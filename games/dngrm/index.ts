@@ -652,4 +652,6 @@ scene.start(() => {
     scene.bg("#003764");
     coins.forEach(c => c.render());
     shop.forEach(s => s.render());
+    // TEST ONLY
+    scene.img(pss[gsi.x][gsi.y], 70, scene.height - 70, 50, 50);
 });
