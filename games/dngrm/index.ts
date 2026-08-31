@@ -1,6 +1,5 @@
 import { DebugRay, Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Raycast, Cooldown, random, Img, chance, ButtonUI, SceneUI, TextUI } from "../../phantom2d.js";
 Img.config.set("root", "assets");
-window.addEventListener("error", (e) => alert(e.message + ", " + e.lineno));
 /**
  * TODO:
  * procedual gen
@@ -183,7 +182,7 @@ const pssID: SpriteSheetID[] = [
 ];
 const pss = pssID.map(s => {
     const img = [];
-    for(let i = 0; i < s.cnt - 1; i++) img.push(new Img(`gunfred/${s.id}${i}.png`));
+    for(let i = 0; i < s.cnt; i++) img.push(new Img(`gunfred/${s.id}${i}.png`));
     return img;
 });
 /**
@@ -192,7 +191,7 @@ const pss = pssID.map(s => {
  * Changes sprite every `1000 / fps` seconds.
  */
 const fps = 5;
-setInterval(() => gsi.y = gsi.y + 1 > pss[gsi.x].length ? 0 : gsi.y + 1, 1000 / fps);
+setInterval(() => gsi.y = (gsi.y + 1) >= pss[gsi.x].length ? 0 : gsi.y + 1, 1000 / fps);
 var pos = new Vector(0, 0);
 type RoomTag = "nm" | "shop" | "boss";
 interface Room {
@@ -566,7 +565,7 @@ var shop: Shop[] = [];
 class Shop extends WorldObj {
     img: Img;
     constructor(x: number, y: number, cost: number, spr: string) {
-        super(x, y, 20, 20, () => { plr.mon -= cost; stat.perks.push(this); }, shop, false, () => plr.mon >= cost);
+        super(x, y, 20, 20, () => { stat.mon -= cost; stat.perks.push(this); }, shop, false, () => stat.mon >= cost);
         this.img = new Img(spr);
     }
     render() {
