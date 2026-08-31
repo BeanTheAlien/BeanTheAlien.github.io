@@ -109,6 +109,32 @@ const healthOpts = (self: Entity, hp: number, onDie: Function, c1: string, c2: s
         setTimeout(() => self.color = c1, 125); 
     } } as any;
 }
+/**
+ * HEROS:
+ * Gun Fred
+ * A bald man with a short temper. No one knows how he got here.
+ * Wep: Pistol
+ * 
+ * George
+ * G e o r g e.
+ * Wep: Detached Arm
+ * 
+ * Splerb
+ * Don't steal his pie.
+ * Wep: Shotgun
+ * 
+ * John
+ * Legend says he's still looking for that buried trasure.
+ * Wep: Shovel
+ * 
+ * The Thing
+ * Scary description text.
+ * Wep: Explosive Burger
+ * 
+ * Coughing Baby
+ * He's VERY evil.
+ * Wep: Germs
+ */
 const plr = new PlayableCharacter({ strength: 0, width: size, height: size, color: "#29ad05", upd: () => {
     plr.rot = scene.rotToMouse(plr);
     const bound = (n: number, n0: number, n1: number) => n < n0 || n > n1 ? (n < n0 ? n0 : n1) : n;
@@ -117,6 +143,42 @@ const plr = new PlayableCharacter({ strength: 0, width: size, height: size, colo
 }, x: 50, y: 50 });
 plr.use("health", healthOpts(plr, stat.hp, scene.stop, "#29ad05"));
 plr.binds(["w", () => plr.moveY(-stat.spd)], ["a", () => plr.moveX(-stat.spd)], ["s", () => plr.moveY(stat.spd)], ["d", () => plr.moveX(stat.spd)]);
+/**
+ * Global (player) sprite index.
+ * 
+ * x represents sheet, y represents index.
+ */
+var gsi = new Vector();
+interface SpriteSheetIDr {
+    id: string;
+}
+interface SpriteSheetID extends SpriteSheetIDr {
+    cnt: number;
+}
+/**
+ * Player sprite sheet IDs.
+ */
+const pssID: SpriteSheetID[] = [
+    { id: "idle", cnt: 2 },
+    { id: "left", cnt: 1 },
+    { id: "right", cnt: 1 },
+    { id: "down", cnt: 1 },
+    { id: "up", cnt: 1 },
+    { id: "fireleft", cnt: 1 },
+    { id: "fireright", cnt: 1 },
+    { id: "firedown", cnt: 1 }
+];
+const pss = pssId.map(s => {
+    const img = [];
+    for(let i = 0; i < s.cnt - 1; i++) img.push(new Img(`${s.id}${i}`));
+    return img;
+});
+/**
+ * The global frames per second for updating sprites.
+ * 
+ * Changes sprite every `1000 / fps` seconds.
+ */
+const fps = 5;
 var pos = new Vector(0, 0);
 type RoomTag = "nm" | "shop" | "boss";
 interface Room {
