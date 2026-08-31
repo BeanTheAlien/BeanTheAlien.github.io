@@ -86,6 +86,12 @@ function resetRS() {
         ms: 0
     };
 }
+const sHealthOpts = (hp, onDie, controller, idleFrm, painFrm) => {
+    return { hp, onDie, onHurt: () => {
+            controller.x = painFrm;
+            setTimeout(() => controller.x = idleFrm, 125);
+        } };
+};
 const healthOpts = (self, hp, onDie, c1, c2 = "#8b0b0b") => {
     return { hp, onDie, onHurt: () => {
             self.color = c2;
@@ -117,14 +123,41 @@ const healthOpts = (self, hp, onDie, c1, c2 = "#8b0b0b") => {
  * Coughing Baby
  * He's VERY evil.
  * Wep: Germs
+ *
+ * Boring Bob
+ * Zzz...
+ * Wep: Boring
+ *
+ * Marmaduke
+ * Go go gadget amry!
+ * Wep: Army
+ *
+ * Ocean
+ * Mmmm waves.
+ * Wep: Waves
+ *
+ * Axel Axton
+ * Arrested 7 times for felony murder charges.
+ * Wep: Car Axle
+ *
+ * Chip Charles
+ * Wields the magic of chip summoning.
+ * Wep: Summons Bowls Of Chips
  */
-const plr = new PlayableCharacter({ strength: 0, width: size, height: size, color: "#29ad05", upd: () => {
-        plr.rot = scene.rotToMouse(plr);
+const invis = "#0000";
+const plr = new PlayableCharacter({ strength: 0, width: size * 3, height: size * 3, color: invis, upd: () => {
+        //plr.rot = scene.rotToMouse(plr);
         const bound = (n, n0, n1) => n < n0 || n > n1 ? (n < n0 ? n0 : n1) : n;
         plr.x = bound(plr.x, 0, scene.width - plr.width);
         plr.y = bound(plr.y, 0, scene.height - plr.height);
     }, x: 50, y: 50 });
-plr.use("health", healthOpts(plr, stat.hp, scene.stop, "#29ad05"));
+/**
+ * Global (player) sprite index.
+ *
+ * x represents sheet, y represents index.
+ */
+var gsi = new Vector();
+plr.use("health", sHealthOpts(stat.hp, scene.stop, gsi, 0, 9));
 plr.binds(["w", () => {
         plr.moveY(-stat.spd);
         gsi.x = 4;
@@ -139,12 +172,6 @@ plr.binds(["w", () => {
         gsi.x = 2;
     }]);
 /**
- * Global (player) sprite index.
- *
- * x represents sheet, y represents index.
- */
-var gsi = new Vector();
-/**
  * Player sprite sheet IDs.
  */
 const pssID = [
@@ -155,7 +182,8 @@ const pssID = [
     { id: "up", cnt: 1 },
     { id: "fireleft", cnt: 1 },
     { id: "fireright", cnt: 1 },
-    { id: "firedown", cnt: 1 }
+    { id: "firedown", cnt: 1 },
+    { id: "pain", cnt: 1 }
 ];
 const pss = pssID.map(s => {
     const img = [];
@@ -486,7 +514,7 @@ function bulGenr(x, y, rot, collide, spd) {
 class WorldObj extends Entity {
     a;
     constructor(x, y, width, height, col, a, auto = true, verif) {
-        super({ x, y, width, height, color: "rgba(0, 0, 0, 0)", collide: (e) => {
+        super({ x, y, width, height, color: invis, collide: (e) => {
                 if (e == plr && ((verif ?? (() => true))(e))) {
                     this.rm();
                     col(e);
@@ -617,6 +645,14 @@ scene.start(() => {
     scene.bg("#003764");
     coins.forEach(c => c.render());
     shop.forEach(s => s.render());
+    try {
+        scene.img(pss[gsi.x][gsi.y], plr.x, plr.y, plr.width, plr.height);
+    }
+    catch (e) {
+        if (objIs(e, TypeError)) {
+            console.warn(`Scene Sprite Rendering Error:\n${e.message}\n${e.stack}\nValues at time:\nx=${gsi.x}, y=${gsi.y}`);
+        }
+    }
     // TEST ONLY
-    scene.img(pss[gsi.x][gsi.y], 70, scene.height - 70, 50, 50);
+    // scene.img(pss[gsi.x][gsi.y], 70, scene.height - 70, 50, 50);
 });

@@ -103,6 +103,12 @@ function resetRS(): RunStat {
         ms: 0
     };
 }
+const sHealthOpts = (hp: number, onDie: Function, controller: Vector, idleFrm: number, painFrm: number) => {
+    return { hp, onDie, onHurt: () => {
+        controller.x = painFrm;
+        setTimeout(() => controller.x = idleFrm, 125); 
+    } } as any;
+};
 const healthOpts = (self: Entity, hp: number, onDie: Function, c1: string, c2: string = "#8b0b0b") => {
     return { hp, onDie, onHurt: () => {
         self.color = c2;
@@ -155,13 +161,20 @@ const healthOpts = (self: Entity, hp: number, onDie: Function, c1: string, c2: s
  * Wields the magic of chip summoning.
  * Wep: Summons Bowls Of Chips
  */
-const plr = new PlayableCharacter({ strength: 0, width: size, height: size, color: "#29ad05", upd: () => {
-    plr.rot = scene.rotToMouse(plr);
+const invis = "#0000";
+const plr = new PlayableCharacter({ strength: 0, width: size * 3, height: size * 3, color: invis, upd: () => {
+    //plr.rot = scene.rotToMouse(plr);
     const bound = (n: number, n0: number, n1: number) => n < n0 || n > n1 ? (n < n0 ? n0 : n1) : n;
     plr.x = bound(plr.x, 0, scene.width - plr.width);
     plr.y = bound(plr.y, 0, scene.height - plr.height);
 }, x: 50, y: 50 });
-plr.use("health", healthOpts(plr, stat.hp, scene.stop, "#29ad05"));
+/**
+ * Global (player) sprite index.
+ * 
+ * x represents sheet, y represents index.
+ */
+var gsi = new Vector();
+plr.use("health", sHealthOpts(stat.hp, scene.stop, gsi, 0, 9));
 plr.binds(["w", () => {
     plr.moveY(-stat.spd);
     gsi.x = 4;
@@ -175,12 +188,6 @@ plr.binds(["w", () => {
     plr.moveX(stat.spd);
     gsi.x = 2;
 }]);
-/**
- * Global (player) sprite index.
- * 
- * x represents sheet, y represents index.
- */
-var gsi = new Vector();
 interface SpriteSheetIDr {
     id: string;
 }
@@ -198,7 +205,8 @@ const pssID: SpriteSheetID[] = [
     { id: "up", cnt: 1 },
     { id: "fireleft", cnt: 1 },
     { id: "fireright", cnt: 1 },
-    { id: "firedown", cnt: 1 }
+    { id: "firedown", cnt: 1 },
+    { id: "pain", cnt: 1 }
 ];
 const pss = pssID.map(s => {
     const img = [];
@@ -547,7 +555,7 @@ function bulGenr(x: number, y: number, rot: number, collide: (e: Entity) => void
 abstract class WorldObj extends Entity {
     a: WorldObj[];
     constructor(x: number, y: number, width: number, height: number, col: (e: Entity) => void, a: WorldObj[], auto = true, verif?: (e: Entity) => boolean) {
-        super({ x, y, width, height, color: "rgba(0, 0, 0, 0)", collide: (e) => {
+        super({ x, y, width, height, color: invis, collide: (e) => {
             if(e == plr && ((verif ?? (() => true))(e))) {
                 this.rm();
                 col(e);
@@ -685,6 +693,13 @@ scene.start(() => {
     scene.bg("#003764");
     coins.forEach(c => c.render());
     shop.forEach(s => s.render());
+    try {
+        scene.img(pss[gsi.x][gsi.y], plr.x, plr.y, plr.width, plr.height);
+    } catch(e) {
+        if(objIs(e, TypeError)) {
+            console.warn(`Scene Sprite Rendering Error:\n${e.message}\n${e.stack}\nValues at time:\nx=${gsi.x}, y=${gsi.y}`);
+        }
+    }
     // TEST ONLY
-    scene.img(pss[gsi.x][gsi.y], 70, scene.height - 70, 50, 50);
+    // scene.img(pss[gsi.x][gsi.y], 70, scene.height - 70, 50, 50);
 });
