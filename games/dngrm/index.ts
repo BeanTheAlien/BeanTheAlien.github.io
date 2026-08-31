@@ -150,6 +150,10 @@ const healthOpts = (self: Entity, hp: number, onDie: Function, c1: string, c2: s
  * Axel Axton
  * Arrested 7 times for felony murder charges.
  * Wep: Car Axle
+ * 
+ * Chip Charles
+ * Wields the magic of chip summoning.
+ * Wep: Summons Bowls Of Chips
  */
 const plr = new PlayableCharacter({ strength: 0, width: size, height: size, color: "#29ad05", upd: () => {
     plr.rot = scene.rotToMouse(plr);
