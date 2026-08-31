@@ -1,5 +1,6 @@
 import { DebugRay, Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Raycast, Cooldown, random, Img, chance, ButtonUI, SceneUI, TextUI } from "../../phantom2d.js";
 Img.config.set("root", "assets");
+window.addEventListener("error", (e) => alert(e.message + ", " + e.lineno));
 /**
  * TODO:
  * procedual gen
@@ -142,7 +143,19 @@ const plr = new PlayableCharacter({ strength: 0, width: size, height: size, colo
     plr.y = bound(plr.y, 0, scene.height - plr.height);
 }, x: 50, y: 50 });
 plr.use("health", healthOpts(plr, stat.hp, scene.stop, "#29ad05"));
-plr.binds(["w", () => plr.moveY(-stat.spd)], ["a", () => plr.moveX(-stat.spd)], ["s", () => plr.moveY(stat.spd)], ["d", () => plr.moveX(stat.spd)]);
+plr.binds(["w", () => {
+    plr.moveY(-stat.spd);
+    gsi.x = 4;
+}], ["a", () => {
+    plr.moveX(-stat.spd);
+    gsi.x = 1;
+}], ["s", () => {
+    plr.moveY(stat.spd);
+    gsi.x = 3;
+}], ["d", () => {
+    plr.moveX(stat.spd);
+    gsi.x = 2;
+}]);
 /**
  * Global (player) sprite index.
  * 
@@ -168,9 +181,9 @@ const pssID: SpriteSheetID[] = [
     { id: "fireright", cnt: 1 },
     { id: "firedown", cnt: 1 }
 ];
-const pss = pssId.map(s => {
+const pss = pssID.map(s => {
     const img = [];
-    for(let i = 0; i < s.cnt - 1; i++) img.push(new Img(`${s.id}${i}`));
+    for(let i = 0; i < s.cnt - 1; i++) img.push(new Img(`gunfred/${s.id}${i}.png`));
     return img;
 });
 /**
@@ -179,6 +192,7 @@ const pss = pssId.map(s => {
  * Changes sprite every `1000 / fps` seconds.
  */
 const fps = 5;
+setInterval(() => gsi.y = gsi.y + 1 > pss[gsi.x].length ? 0 : gsi.y + 1, 1000 / fps);
 var pos = new Vector(0, 0);
 type RoomTag = "nm" | "shop" | "boss";
 interface Room {

@@ -1,5 +1,6 @@
 import { Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Cooldown, random, Img, chance, ButtonUI, SceneUI, TextUI } from "../../phantom2d.js";
 Img.config.set("root", "assets");
+window.addEventListener("error", (e) => alert(e.message + ", " + e.lineno));
 /**
  * TODO:
  * procedual gen
@@ -92,6 +93,32 @@ const healthOpts = (self, hp, onDie, c1, c2 = "#8b0b0b") => {
             setTimeout(() => self.color = c1, 125);
         } };
 };
+/**
+ * HEROS:
+ * Gun Fred
+ * A bald man with a short temper. No one knows how he got here.
+ * Wep: Pistol
+ *
+ * George
+ * G e o r g e.
+ * Wep: Detached Arm
+ *
+ * Splerb
+ * Don't steal his pie.
+ * Wep: Shotgun
+ *
+ * John
+ * Legend says he's still looking for that buried trasure.
+ * Wep: Shovel
+ *
+ * The Thing
+ * Scary description text.
+ * Wep: Explosive Burger
+ *
+ * Coughing Baby
+ * He's VERY evil.
+ * Wep: Germs
+ */
 const plr = new PlayableCharacter({ strength: 0, width: size, height: size, color: "#29ad05", upd: () => {
         plr.rot = scene.rotToMouse(plr);
         const bound = (n, n0, n1) => n < n0 || n > n1 ? (n < n0 ? n0 : n1) : n;
@@ -99,7 +126,51 @@ const plr = new PlayableCharacter({ strength: 0, width: size, height: size, colo
         plr.y = bound(plr.y, 0, scene.height - plr.height);
     }, x: 50, y: 50 });
 plr.use("health", healthOpts(plr, stat.hp, scene.stop, "#29ad05"));
-plr.binds(["w", () => plr.moveY(-stat.spd)], ["a", () => plr.moveX(-stat.spd)], ["s", () => plr.moveY(stat.spd)], ["d", () => plr.moveX(stat.spd)]);
+plr.binds(["w", () => {
+        plr.moveY(-stat.spd);
+        gsi.x = 4;
+    }], ["a", () => {
+        plr.moveX(-stat.spd);
+        gsi.x = 1;
+    }], ["s", () => {
+        plr.moveY(stat.spd);
+        gsi.x = 3;
+    }], ["d", () => {
+        plr.moveX(stat.spd);
+        gsi.x = 2;
+    }]);
+/**
+ * Global (player) sprite index.
+ *
+ * x represents sheet, y represents index.
+ */
+var gsi = new Vector();
+/**
+ * Player sprite sheet IDs.
+ */
+const pssID = [
+    { id: "idle", cnt: 2 },
+    { id: "left", cnt: 1 },
+    { id: "right", cnt: 1 },
+    { id: "down", cnt: 1 },
+    { id: "up", cnt: 1 },
+    { id: "fireleft", cnt: 1 },
+    { id: "fireright", cnt: 1 },
+    { id: "firedown", cnt: 1 }
+];
+const pss = pssID.map(s => {
+    const img = [];
+    for (let i = 0; i < s.cnt - 1; i++)
+        img.push(new Img(`gunfred/${s.id}${i}.png`));
+    return img;
+});
+/**
+ * The global frames per second for updating sprites.
+ *
+ * Changes sprite every `1000 / fps` seconds.
+ */
+const fps = 5;
+setInterval(() => gsi.y = gsi.y + 1 > pss[gsi.x].length ? 0 : gsi.y + 1, 1000 / fps);
 var pos = new Vector(0, 0);
 class Enemy extends Entity {
     atkCd;
@@ -547,4 +618,6 @@ scene.start(() => {
     scene.bg("#003764");
     coins.forEach(c => c.render());
     shop.forEach(s => s.render());
+    // TEST ONLY
+    scene.img(pss[gsi.x][gsi.y], 70, scene.height - 70, 50, 50);
 });
