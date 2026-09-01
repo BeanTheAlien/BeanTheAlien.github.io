@@ -103,8 +103,12 @@ function resetRS(): RunStat {
         ms: 0
     };
 }
-const sHealthOpts = (hp: number, onDie: Function, controller: Vector, idleFrm: number, painFrm: number) => {
+interface BObj {
+    v: boolean;
+}
+const sHealthOpts = (hp: number, onDie: Function, controller: Vector, idleFrm: number, painFrm: number, invince?: BObj) => {
     return { hp, onDie, onHurt: () => {
+        if(invince && !invince.v) return;
         controller.x = painFrm;
         setTimeout(() => controller.x = idleFrm, 125); 
     } } as any;
@@ -174,7 +178,16 @@ const plr = new PlayableCharacter({ strength: 0, width: size * 3, height: size *
  * x represents sheet, y represents index.
  */
 var gsi = new Vector();
-plr.use("health", sHealthOpts(stat.hp, scene.stop, gsi, 0, 8));
+var pCanHurt: BObj = { v: true };
+plr.use("health", sHealthOpts(stat.hp, () => {
+    console.log("died");
+    plr.setMoveMode("fixed");
+    gsi.x = 9;
+    gsi.y = 0;
+    noSFU();
+    fps = 1.5;
+    sfu = setSFU(false);
+}, gsi, 0, 8, pCanHurt));
 plr.binds(["w", () => {
     plr.moveY(-stat.spd);
     gsi.x = 4;
@@ -206,7 +219,8 @@ const pssID: SpriteSheetID[] = [
     { id: "fireleft", cnt: 1 },
     { id: "fireright", cnt: 1 },
     { id: "firedown", cnt: 1 },
-    { id: "pain", cnt: 1 }
+    { id: "pain", cnt: 1 },
+    { id: "die", cnt: 6 }
 ];
 const pss = pssID.map(s => {
     const img = [];
@@ -218,8 +232,28 @@ const pss = pssID.map(s => {
  * 
  * Changes sprite every `1000 / fps` seconds.
  */
-const fps = 5;
-setInterval(() => gsi.y = (gsi.y + 1) >= pss[gsi.x].length ? 0 : gsi.y + 1, 1000 / fps);
+var fps = 5;
+function setSFU(loop = true) {
+    return setInterval(() => {
+        const next = gsi.y + 1;
+
+        if(next >= pss[gsi.x].length) {
+            if(loop) {
+                gsi.y = 0;
+            } else {
+                gsi.y = pss[gsi.x].length - 1;
+                noSFU();
+            }
+            return;
+        }
+
+        gsi.y = next;
+    }, 1000 / fps);
+}
+function noSFU() {
+    clearInterval(sfu);
+}
+var sfu = setSFU();
 var pos = new Vector(0, 0);
 type RoomTag = "nm" | "shop" | "boss";
 interface Room {
@@ -484,7 +518,7 @@ function genRms() {
     // todo: fix chances
     for(let i = 0; i < cord.length; i++) {
         const c = cord[i];
-        const tag: RoomTag = (chance(bc) && i > 2 && !bcg) || (i == cord.length - 1 && !bcg) ? "boss" : (chance(sc) && !scg && i > 0) ? "shop" : "nm";
+        const tag: RoomTag = (chance(bc) && i > 2 && !bcg) || (i == cord.length - 1 && !bcg) ? "boss" : /*(chance(sc) && !scg && i > 0) ? "shop" :*/ "nm";
         rooms.push({ at: c, e: genEnemyCtors().map(c => new c(0, 0)), exit: getRmExits(c, cord), tg: tag });
         // if(tag != "shop") sc++;
         // else sc = 5;
