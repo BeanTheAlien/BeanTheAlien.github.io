@@ -157,7 +157,7 @@ const plr = new PlayableCharacter({ strength: 0, width: size * 3, height: size *
  * x represents sheet, y represents index.
  */
 var gsi = new Vector();
-plr.use("health", sHealthOpts(stat.hp, scene.stop, gsi, 0, 9));
+plr.use("health", sHealthOpts(stat.hp, scene.stop, gsi, 0, 8));
 plr.binds(["w", () => {
         plr.moveY(-stat.spd);
         gsi.x = 4;
@@ -437,7 +437,7 @@ function genRms() {
     // todo: fix chances
     for (let i = 0; i < cord.length; i++) {
         const c = cord[i];
-        const tag = (chance(bc) && i > 0 && !bcg) || (i == cord.length - 1 && !bcg) ? "boss" : (chance(sc) && !scg && i > 0) ? "shop" : "nm";
+        const tag = (chance(bc) && i > 2 && !bcg) || (i == cord.length - 1 && !bcg) ? "boss" : (chance(sc) && !scg && i > 0) ? "shop" : "nm";
         rooms.push({ at: c, e: genEnemyCtors().map(c => new c(0, 0)), exit: getRmExits(c, cord), tg: tag });
         // if(tag != "shop") sc++;
         // else sc = 5;
@@ -645,12 +645,15 @@ scene.start(() => {
     scene.bg("#003764");
     coins.forEach(c => c.render());
     shop.forEach(s => s.render());
+    // failsafe for y going over anyway
+    if (gsi.y >= pss[gsi.x].length)
+        gsi.y = 0;
     try {
         scene.img(pss[gsi.x][gsi.y], plr.x, plr.y, plr.width, plr.height);
     }
     catch (e) {
         if (objIs(e, TypeError)) {
-            console.warn(`Scene Sprite Rendering Error:\n${e.message}\n${e.stack}\nValues at time:\nx=${gsi.x}, y=${gsi.y}`);
+            console.warn(`Scene Sprite Rendering Error:\n${e.message}\n${e.stack}\nValues at time:\nx=${gsi.x}, y=${gsi.y}\nsheets=${pssID.length}`);
         }
     }
     // TEST ONLY
