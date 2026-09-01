@@ -693,8 +693,17 @@ function lclSave() {
     Local.set("stat", stat);
 }
 function pcSave() {
-    (new FilePicker()).handle({ accept: [{ accept: { "text/json": ["*.json"] } }], all: true, mult: false });
+    (new FilePicker()).handle({ accept: [{ accept: { "text/json": ["*.json"] } }], all: true, mult: false })
+        .then(h => h[0])
+        .then(h => h.createWritable())
+        .then(w => {
+        w.write(JSON.stringify(stat));
+        return w;
+    })
+        .then(w => w.close());
 }
+// leave this cmtd until testing
+// pcSave();
 scene.add(plr);
 scene.on("click", () => {
     if (!gmRn)
