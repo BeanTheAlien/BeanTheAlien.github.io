@@ -180,8 +180,10 @@ const plr = new PlayableCharacter({ strength: 0, width: size * 3, height: size *
 var gsi = new Vector();
 var pCanHurt: BObj = { v: true };
 plr.use("health", sHealthOpts(stat.hp, () => {
-    console.log("died");
+    const rm = fdRm();
+    if(rm) scene.rm(...rm.e);
     plr.setMoveMode("fixed");
+    pCanHurt.v = false;
     gsi.x = 9;
     gsi.y = 0;
     noSFU();
@@ -523,7 +525,7 @@ function genRms() {
         // if(tag != "shop") sc++;
         // else sc = 5;
         if(tag == "boss") bcg = true;
-        else if(tag == "shop") scg = true;
+        //else if(tag == "shop") scg = true;
     }
     // now clean rooms with shop / boss tag
     // boss logic not impl yet
@@ -727,6 +729,7 @@ scene.start(() => {
     scene.bg("#003764");
     coins.forEach(c => c.render());
     shop.forEach(s => s.render());
+    console.log(gsi.y);
     // failsafe for y going over anyway
     if(gsi.y >= pss[gsi.x].length) gsi.y = 0;
     try {

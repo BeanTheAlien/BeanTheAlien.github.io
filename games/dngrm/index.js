@@ -161,13 +161,17 @@ const plr = new PlayableCharacter({ strength: 0, width: size * 3, height: size *
 var gsi = new Vector();
 var pCanHurt = { v: true };
 plr.use("health", sHealthOpts(stat.hp, () => {
-    console.log("died");
+    const rm = fdRm();
+    if (rm)
+        scene.rm(...rm.e);
     plr.setMoveMode("fixed");
+    pCanHurt.v = false;
     gsi.x = 9;
     gsi.y = 0;
     noSFU();
     fps = 1.5;
     sfu = setSFU(false);
+    scene.stop();
 }, gsi, 0, 8, pCanHurt));
 plr.binds(["w", () => {
         plr.moveY(-stat.spd);
@@ -468,14 +472,13 @@ function genRms() {
     // todo: fix chances
     for (let i = 0; i < cord.length; i++) {
         const c = cord[i];
-        const tag = (chance(bc) && i > 2 && !bcg) || (i == cord.length - 1 && !bcg) ? "boss" : (chance(sc) && !scg && i > 0) ? "shop" : "nm";
+        const tag = (chance(bc) && i > 2 && !bcg) || (i == cord.length - 1 && !bcg) ? "boss" : /*(chance(sc) && !scg && i > 0) ? "shop" :*/ "nm";
         rooms.push({ at: c, e: genEnemyCtors().map(c => new c(0, 0)), exit: getRmExits(c, cord), tg: tag });
         // if(tag != "shop") sc++;
         // else sc = 5;
         if (tag == "boss")
             bcg = true;
-        else if (tag == "shop")
-            scg = true;
+        //else if(tag == "shop") scg = true;
     }
     // now clean rooms with shop / boss tag
     // boss logic not impl yet
@@ -676,6 +679,7 @@ scene.start(() => {
     scene.bg("#003764");
     coins.forEach(c => c.render());
     shop.forEach(s => s.render());
+    console.log(gsi.y);
     // failsafe for y going over anyway
     if (gsi.y >= pss[gsi.x].length)
         gsi.y = 0;
