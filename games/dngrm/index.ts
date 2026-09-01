@@ -191,6 +191,7 @@ plr.use("health", sHealthOpts(stat.hp, () => {
         rm.e.filter(e => objIs(e, GunEnemy)).forEach(e => scene.rm(...e.bls));
     }
     plr.setMoveMode("fixed");
+    scene.follow(plr);
     pCanHurt.v = false;
     gsi.x = 9;
     gsi.y = 0;
@@ -746,7 +747,6 @@ scene.start(() => {
     scene.bg("#003764");
     coins.forEach(c => c.render());
     shop.forEach(s => s.render());
-    console.log(gsi.x, gsi.y);
     // failsafe for y going over anyway
     if(gsi.y >= pss[gsi.x].length) gsi.y = 0;
     try {
@@ -756,6 +756,7 @@ scene.start(() => {
             console.warn(`Scene Sprite Rendering Error:\n${e.message}\n${e.stack}\nValues at time:\nx=${gsi.x}, y=${gsi.y}\nsheets=${pssID.length}`);
         }
     }
+    console.log(scene.ui.stuff.length)
     // TEST ONLY
     // scene.img(pss[gsi.x][gsi.y], 70, scene.height - 70, 50, 50);
 });

@@ -4904,6 +4904,7 @@ class ButtonUI extends SceneUI {
         this.cdTime = 250;
         this.disabled = false;
         this.scene.on("click", () => {
+            if(!this.scene.hasUI(this)) return;
             if(this.#boundsTest()) {
                 if(!this.disabled) {
                     if(this.clickCD && !this.clickCD.ready) return;
