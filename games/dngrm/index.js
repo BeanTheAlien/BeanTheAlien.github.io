@@ -162,8 +162,11 @@ var gsi = new Vector();
 var pCanHurt = { v: true };
 plr.use("health", sHealthOpts(stat.hp, () => {
     const rm = fdRm();
-    if (rm)
+    if (rm) {
         scene.rm(...rm.e);
+        // remove hostile bullets
+        rm.e.filter(e => objIs(e, GunEnemy)).forEach(e => scene.rm(...e.bls));
+    }
     plr.setMoveMode("fixed");
     pCanHurt.v = false;
     gsi.x = 9;
@@ -171,7 +174,6 @@ plr.use("health", sHealthOpts(stat.hp, () => {
     noSFU();
     fps = 1.5;
     sfu = setSFU(false);
-    scene.stop();
 }, gsi, 0, 8, pCanHurt));
 plr.binds(["w", () => {
         plr.moveY(-stat.spd);
@@ -286,6 +288,7 @@ class MeleeEnemy extends Enemy {
     }
 }
 class GunEnemy extends Enemy {
+    bls;
     constructor(x, y, w, h, c, hp, dmg, getRot, bspd, cd, asWell, atkCount = 1, spd = 1, sight) {
         super(x, y, w, h, c, hp, () => {
             for (let i = 0; i < atkCount; i++) {
@@ -298,8 +301,12 @@ class GunEnemy extends Enemy {
                     }
                 }, bspd);
                 scene.add(o);
+                // force expiration
+                o.expire(5000, scene);
+                this.bls.push(o);
             }
         }, cd, spd, sight);
+        this.bls = [];
     }
 }
 class BasicMeleeEnemy extends MeleeEnemy {
@@ -679,7 +686,6 @@ scene.start(() => {
     scene.bg("#003764");
     coins.forEach(c => c.render());
     shop.forEach(s => s.render());
-    console.log(gsi.y);
     // failsafe for y going over anyway
     if (gsi.y >= pss[gsi.x].length)
         gsi.y = 0;
