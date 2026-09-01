@@ -1,4 +1,4 @@
-import { Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Cooldown, random, Img, chance, ButtonUI, SceneUI, TextUI } from "../../phantom2d.js";
+import { Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Cooldown, random, Img, chance, ButtonUI, SceneUI, TextUI, Local, FilePicker } from "../../phantom2d.js";
 Img.config.set("root", "assets");
 /**
  * TODO:
@@ -689,6 +689,12 @@ function genStatText(s) {
     return out;
 }
 var gmRn = false;
+function lclSave() {
+    Local.set("stat", stat);
+}
+function pcSave() {
+    (new FilePicker()).handle({ accept: [{ accept: { "text/json": ["*.json"] } }], all: true, mult: false });
+}
 scene.add(plr);
 scene.on("click", () => {
     if (!gmRn)
