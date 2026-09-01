@@ -1,4 +1,4 @@
-import { DebugRay, Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Raycast, Cooldown, random, Img, chance, ButtonUI, SceneUI, TextUI } from "../../phantom2d.js";
+import { DebugRay, Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Raycast, Cooldown, random, Img, chance, ButtonUI, SceneUI, TextUI, Local, FilePicker } from "../../phantom2d.js";
 Img.config.set("root", "assets");
 /**
  * TODO:
@@ -385,24 +385,7 @@ class MeleeBoss extends MeleeEnemy {
     }
     kill() {
         scene.rm(this);
-        showOvr();
-        gmRn = false;
-        const hideAll = () => {
-            hideOvr();
-            scene.rmUI(b, b2, ...s);
-        }
-        const b = btn(() => {
-            hideAll();
-            genRms();
-            ldRm();
-        }, 120, "Continue");
-        const b2 = btn(() => {
-            hideAll();
-            showSS();
-        }, 200, "Main Menu");
-        const s = genStatText(rStat);
-        scene.addUI(...s, b, b2);
-        rStat = resetRS();
+        gss();
     }
 }
 class BulkBoss extends MeleeBoss {
@@ -716,6 +699,26 @@ function showSS() {
     scene.addUI(...ssBtns);
 }
 showSS();
+function gss() {
+    showOvr();
+    gmRn = false;
+    const hideAll = () => {
+        hideOvr();
+        scene.rmUI(b, b2, ...s);
+    }
+    const b = btn(() => {
+        hideAll();
+        genRms();
+        ldRm();
+    }, 120, "Continue");
+    const b2 = btn(() => {
+        hideAll();
+        showSS();
+    }, 200, "Main Menu");
+    const s = genStatText(rStat);
+    scene.addUI(...s, b, b2);
+    rStat = resetRS();
+}
 interface RunStat {
     kill: number;
     hpl: number;
@@ -737,6 +740,13 @@ function genStatText(s: RunStat) {
 
 var gmRn = false;
 
+function lclSave() {
+    Local.set("stat", stat);
+}
+function pcSave() {
+    (new FilePicker()).handle({ accept: [{ accept: { "text/json": ["*.json"] } }] })
+}
+
 scene.add(plr);
 scene.on("click", () => {
     if(!gmRn) return;
@@ -756,7 +766,9 @@ scene.start(() => {
             console.warn(`Scene Sprite Rendering Error:\n${e.message}\n${e.stack}\nValues at time:\nx=${gsi.x}, y=${gsi.y}\nsheets=${pssID.length}`);
         }
     }
-    console.log(scene.ui.stuff.length)
+    if(gsi.x == 9 && gsi.y == pss[gsi.x].length - 1) {
+        setTimeout(gss, 1000);
+    }
     // TEST ONLY
     // scene.img(pss[gsi.x][gsi.y], 70, scene.height - 70, 50, 50);
 });

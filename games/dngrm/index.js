@@ -360,24 +360,7 @@ class MeleeBoss extends MeleeEnemy {
     }
     kill() {
         scene.rm(this);
-        showOvr();
-        gmRn = false;
-        const hideAll = () => {
-            hideOvr();
-            scene.rmUI(b, b2, ...s);
-        };
-        const b = btn(() => {
-            hideAll();
-            genRms();
-            ldRm();
-        }, 120, "Continue");
-        const b2 = btn(() => {
-            hideAll();
-            showSS();
-        }, 200, "Main Menu");
-        const s = genStatText(rStat);
-        scene.addUI(...s, b, b2);
-        rStat = resetRS();
+        gss();
     }
 }
 class BulkBoss extends MeleeBoss {
@@ -675,6 +658,26 @@ function showSS() {
     scene.addUI(...ssBtns);
 }
 showSS();
+function gss() {
+    showOvr();
+    gmRn = false;
+    const hideAll = () => {
+        hideOvr();
+        scene.rmUI(b, b2, ...s);
+    };
+    const b = btn(() => {
+        hideAll();
+        genRms();
+        ldRm();
+    }, 120, "Continue");
+    const b2 = btn(() => {
+        hideAll();
+        showSS();
+    }, 200, "Main Menu");
+    const s = genStatText(rStat);
+    scene.addUI(...s, b, b2);
+    rStat = resetRS();
+}
 function genStatText(s) {
     const out = [];
     const e = Object.entries(s);
@@ -711,7 +714,9 @@ scene.start(() => {
             console.warn(`Scene Sprite Rendering Error:\n${e.message}\n${e.stack}\nValues at time:\nx=${gsi.x}, y=${gsi.y}\nsheets=${pssID.length}`);
         }
     }
-    console.log(scene.ui.stuff.length);
+    if (gsi.x == 9 && gsi.y == pss[gsi.x].length - 1) {
+        setTimeout(gss, 1000);
+    }
     // TEST ONLY
     // scene.img(pss[gsi.x][gsi.y], 70, scene.height - 70, 50, 50);
 });
