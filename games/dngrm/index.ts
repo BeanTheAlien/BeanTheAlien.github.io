@@ -108,9 +108,11 @@ interface BObj {
 }
 const sHealthOpts = (hp: number, onDie: Function, controller: Vector, idleFrm: number, painFrm: number, invince?: BObj) => {
     return { hp, onDie, onHurt: () => {
-        if(invince && !invince.v) return;
+        if(pDed || (invince && !invince.v)) return;
         controller.x = painFrm;
-        setTimeout(() => controller.x = idleFrm, 125); 
+        setTimeout(() => {
+            if(!pDed) controller.x = idleFrm;
+        }, 125); 
     } } as any;
 };
 const healthOpts = (self: Entity, hp: number, onDie: Function, c1: string, c2: string = "#8b0b0b") => {
@@ -172,6 +174,7 @@ const plr = new PlayableCharacter({ strength: 0, width: size * 3, height: size *
     plr.x = bound(plr.x, 0, scene.width - plr.width);
     plr.y = bound(plr.y, 0, scene.height - plr.height);
 }, x: 50, y: 50 });
+var pDed = false;
 /**
  * Global (player) sprite index.
  * 
@@ -180,6 +183,7 @@ const plr = new PlayableCharacter({ strength: 0, width: size * 3, height: size *
 var gsi = new Vector();
 var pCanHurt: BObj = { v: true };
 plr.use("health", sHealthOpts(stat.hp, () => {
+    pDed = true;
     const rm = fdRm();
     if(rm) {
         scene.rm(...rm.e);
@@ -195,15 +199,19 @@ plr.use("health", sHealthOpts(stat.hp, () => {
     sfu = setSFU(false);
 }, gsi, 0, 8, pCanHurt));
 plr.binds(["w", () => {
+    if(pDed) return;
     plr.moveY(-stat.spd);
     gsi.x = 4;
 }], ["a", () => {
+    if(pDed) return;
     plr.moveX(-stat.spd);
     gsi.x = 1;
 }], ["s", () => {
+    if(pDed) return;
     plr.moveY(stat.spd);
     gsi.x = 3;
 }], ["d", () => {
+    if(pDed) return;
     plr.moveX(stat.spd);
     gsi.x = 2;
 }]);
@@ -312,7 +320,7 @@ class Enemy extends Entity {
 class MeleeEnemy extends Enemy {
     constructor(x: number, y: number, w: number, h: number, c: string, hp: number, dmg: number, range: number, cd: number, spd = 1, sight?: number) {
         super(x, y, w, h, c, hp, () => {
-            if(this.dp() <= range) {
+            if(this.dp() <= range && pCanHurt.v) {
                 plr.comp("health").hurt(dmg);
             }
         }, cd, spd, sight);
@@ -324,7 +332,7 @@ class GunEnemy extends Enemy {
         super(x, y, w, h, c, hp, () => {
             for(let i = 0; i < atkCount; i++) {
                 const o = bulGenr(this.x, this.y, getRot(), (e) => {
-                    if(e == plr) {
+                    if(e == plr && pCanHurt.v) {
                         e.comp("health").hurt(dmg);
                         scene.rm(o);
                         if(asWell) asWell(e);
@@ -738,6 +746,7 @@ scene.start(() => {
     scene.bg("#003764");
     coins.forEach(c => c.render());
     shop.forEach(s => s.render());
+    console.log(gsi.x, gsi.y);
     // failsafe for y going over anyway
     if(gsi.y >= pss[gsi.x].length) gsi.y = 0;
     try {
