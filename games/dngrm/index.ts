@@ -1,5 +1,6 @@
 import { DebugRay, Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Raycast, Cooldown, random, Img, chance, ButtonUI, SceneUI, TextUI, Local, FilePicker } from "../../phantom2d.js";
 Img.config.set("root", "assets");
+window.addEventListener("error", (e) => alert(`${e.message}, ${e.lineno}`))
 /**
  * TODO:
  * procedual gen
@@ -76,7 +77,7 @@ interface Stat {
     ap: number;
 }
 const nextXP = () => Math.floor(Math.pow(stat.lvl, 1.25));
-var stat: Stat = JSON.parse(Local.get("stat") ?? `{ xp: 0, lvl: 1, dmg: 1, spd: 3, bspd: 4, hp: 5, mhp: 5, crit: 0, luck: 0, armor: 0,dodge: 0,mon: 0, perks: [], skill: [], ap: 0 }`) as Stat;
+var stat: Stat = JSON.parse(Local.get("stat") ?? `{ "xp": 0, "lvl": 1, "dmg": 1, "spd": 3, "bspd": 4, "hp": 5, "mhp": 5, "crit": 0, "luck": 0, "armor": 0, "dodge": 0, "mon": 0, "perks": [], "skill": [], "ap": 0 }`) as Stat;
 function dodged() {
     return stat.dodge && chance(stat.dodge);
 }
