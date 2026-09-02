@@ -1,6 +1,5 @@
 import { Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Cooldown, random, Img, chance, ButtonUI, SceneUI, TextUI, Local, FilePicker } from "../../phantom2d.js";
 Img.config.set("root", "assets");
-window.addEventListener("error", (e) => alert(`${e.message} (${e.lineno})`));
 /**
  * TODO:
  * procedual gen
@@ -13,75 +12,18 @@ window.addEventListener("error", (e) => alert(`${e.message} (${e.lineno})`));
 const scene = new Scene({ canvas: "dng", w: 700, h: 700 });
 const size = 10;
 const nextXP = () => Math.floor(Math.pow(stat.lvl, 1.25));
-var stat = {
-    /**
-     * The current XP points.
-     */
-    xp: 0,
-    /**
-     * The current player level.
-     *
-     * Required xp is `Math.floor(Math.pow(lvl, 1.25))`.
-     */
-    lvl: 1,
-    /**
-     * The amount of damage dealt per bullet.
-     */
-    dmg: 1,
-    /**
-     * The movement speed.
-     */
-    spd: 3,
-    /**
-     * The speed the bullet travels at.
-     */
-    bspd: 4,
-    /**
-     * The current HP.
-     */
-    hp: 5,
-    /**
-     * The max HP.
-     */
-    mhp: 5,
-    /**
-     * The chance to land a critical hit. (dmg x2)
-     */
-    crit: 0,
-    /**
-     * Luck to get better items for purchase.
-     */
-    luck: 0,
-    /**
-     * Damage resistence. Armor-piercing attacks ignore armor.
-     */
-    armor: 0,
-    /**
-     * The chance to dodge an attack.
-     */
-    dodge: 0,
-    /**
-     * Currency. Money dropped from enemy kills.
-     */
-    mon: 0,
-    /**
-     * Perks unlocked during battle.
-     */
-    perks: [],
-    /**
-     * Permanent skills.
-     */
-    skill: [],
-    /**
-     * Adventure points (AP). Used to level up skills.
-     */
-    ap: 0
-};
+var stat = JSON.parse(Local.get("stat") ?? `{ xp: 0, lvl: 1, dmg: 1, spd: 3, bspd: 4, hp: 5, mhp: 5, crit: 0, luck: 0, armor: 0,dodge: 0,mon: 0, perks: [], skill: [], ap: 0 }`);
 function dodged() {
     return stat.dodge && chance(stat.dodge);
 }
 const statDisp = document.getElementById("stat-disp");
 statDisp.style.whiteSpace = "pre-wrap";
+const lst = document.getElementById("lst");
+lclSave();
+const lsB = document.getElementById("ls");
+lsB.addEventListener("click", lclSave);
+const pcsB = document.getElementById("pcs");
+pcsB.addEventListener("click", pcSave);
 function dispStat() {
     const none = (a) => !a.length ? "none" : a;
     statDisp.textContent = `Level ${stat.lvl} (${stat.xp} / ${nextXP()} xp)\n
@@ -716,8 +658,13 @@ function genStatText(s) {
     return out;
 }
 var gmRn = false;
+function nextSave() {
+    Local.set("lst", (new Date()).toISOString());
+    lst.textContent = Local.get("lst") ?? "never";
+}
 function lclSave() {
     Local.set("stat", stat);
+    nextSave();
 }
 function pcSave() {
     (new FilePicker()).handle({ accept: [{ accept: { "text/json": ["*.json"] } }], all: true, mult: false })
@@ -728,6 +675,7 @@ function pcSave() {
         return w;
     })
         .then(w => w.close());
+    nextSave();
 }
 // leave this cmtd until testing
 // pcSave();

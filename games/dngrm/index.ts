@@ -82,6 +82,12 @@ function dodged() {
 }
 const statDisp = document.getElementById("stat-disp") as HTMLDivElement;
 statDisp.style.whiteSpace = "pre-wrap";
+const lst = document.getElementById("lst") as HTMLDivElement;
+lclSave();
+const lsB = document.getElementById("ls") as HTMLButtonElement;
+lsB.addEventListener("click", lclSave)
+const pcsB = document.getElementById("pcs") as HTMLButtonElement;
+pcsB.addEventListener("click", pcSave);
 function dispStat() {
     const none = (a: any[]) => !a.length ? "none" : a;
     statDisp.textContent = `Level ${stat.lvl} (${stat.xp} / ${nextXP()} xp)\n
@@ -748,8 +754,13 @@ function genStatText(s: RunStat) {
 
 var gmRn = false;
 
+function nextSave() {
+    Local.set("lst", (new Date()).toISOString());
+    lst.textContent = Local.get("lst") ?? "never";
+}
 function lclSave() {
     Local.set("stat", stat);
+    nextSave();
 }
 function pcSave() {
     (new FilePicker()).handle({ accept: [{ accept: { "text/json": ["*.json"] } }], all: true, mult: false })
@@ -760,6 +771,7 @@ function pcSave() {
             return w;
         })
         .then(w => w.close());
+    nextSave();
 }
 // leave this cmtd until testing
 // pcSave();
