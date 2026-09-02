@@ -20,7 +20,7 @@ interface Stat {
     /**
      * The current player level.
      * 
-     * Required xp is `Math.floor(Math.pow(lvl, 1.25))`.
+     * Required xp is `Math.floor(Math.pow(lvl, 1.85)) + 1`.
      */
     lvl: number;
     /**
@@ -76,7 +76,7 @@ interface Stat {
      */
     ap: number;
 }
-const nextXP = () => Math.floor(Math.pow(stat.lvl, 1.25));
+const nextXP = () => Math.floor(Math.pow(stat.lvl, 1.85)) + 1;
 var stat: Stat = JSON.parse(Local.get("stat") ?? `{ "xp": 0, "lvl": 1, "dmg": 1, "spd": 3, "bspd": 4, "hp": 5, "mhp": 5, "crit": 0, "luck": 0, "armor": 0, "dodge": 0, "mon": 0, "perks": [], "skill": [], "ap": 0 }`) as Stat;
 function dodged() {
     return stat.dodge && chance(stat.dodge);
@@ -291,7 +291,8 @@ interface Room {
 }
 class Enemy extends Entity {
     atkCd: Cooldown;
-    constructor(x: number, y: number, w: number, h: number, c: string, hp: number, atk: Function, cd: number, spd = 1, sight = 300) {
+    val: number;
+    constructor(x: number, y: number, w: number, h: number, c: string, hp: number, atk: Function, cd: number, spd = 1, sight = 300, val = 1) {
         super({ x, y, width: size * w, height: size * h, color: c, upd: () => {
             if(this.dp() <= sight) {
                 const dx = plr.x - this.x;
@@ -310,6 +311,7 @@ class Enemy extends Entity {
         } });
         this.use("health", healthOpts(this, hp, () => this.kill(), c));
         this.atkCd = new Cooldown(cd, false);
+        this.val = val;
     }
     dp() {
         return Vector.dist(this.getPos(), plr.getPos());
@@ -320,6 +322,11 @@ class Enemy extends Entity {
             new Coin(this.x, this.y);
         }
         if(rm?.e.length == 0) ldExs();
+        stat.xp += this.val;
+        if(stat.xp >= nextXP()) {
+            stat.xp -= nextXP();
+            stat.lvl++;
+        }
     }
     rs() {
         scene.rm(this);
@@ -330,18 +337,18 @@ class Enemy extends Entity {
     }
 }
 class MeleeEnemy extends Enemy {
-    constructor(x: number, y: number, w: number, h: number, c: string, hp: number, dmg: number, range: number, cd: number, spd = 1, sight?: number) {
+    constructor(x: number, y: number, w: number, h: number, c: string, hp: number, dmg: number, range: number, cd: number, spd = 1, sight?: number, val?: number) {
         super(x, y, w, h, c, hp, () => {
             if(this.dp() <= range && pCanHurt.v) {
                 if(dodged()) return;
                 plr.comp("health").hurt(dmg);
             }
-        }, cd, spd, sight);
+        }, cd, spd, sight, val);
     }
 }
 class GunEnemy extends Enemy {
     bls: BulletObject[];
-    constructor(x: number, y: number, w: number, h: number, c: string, hp: number, dmg: number, getRot: () => number, bspd: number, cd: number, asWell?: (e: Entity) => void, atkCount = 1, spd = 1, sight?: number) {
+    constructor(x: number, y: number, w: number, h: number, c: string, hp: number, dmg: number, getRot: () => number, bspd: number, cd: number, asWell?: (e: Entity) => void, atkCount = 1, spd = 1, sight?: number, val?: number) {
         super(x, y, w, h, c, hp, () => {
             for(let i = 0; i < atkCount; i++) {
                 const o = bulGenr(this.x, this.y, getRot(), (e) => {
@@ -357,7 +364,7 @@ class GunEnemy extends Enemy {
                 o.expire(5000, scene);
                 this.bls.push(o);
             }
-        }, cd, spd, sight);
+        }, cd, spd, sight, val);
         this.bls = [];
     }
 }
@@ -368,8 +375,8 @@ class BasicMeleeEnemy extends MeleeEnemy {
 }
 class CoreGunEnemy extends GunEnemy {
     rf: number;
-    constructor(x: number, y: number, w: number, h: number, c: string, hp: number, dmg: number, bspd: number, cd: number, roff = 10, asWell?: (e: Entity) => void, atkCount = 1, spd = 1) {
-        super(x, y, w, h, c, hp, dmg, () => this.bulRot(), bspd, cd, asWell, atkCount, spd);
+    constructor(x: number, y: number, w: number, h: number, c: string, hp: number, dmg: number, bspd: number, cd: number, roff = 10, asWell?: (e: Entity) => void, atkCount = 1, spd = 1, sight?: number, val?: number) {
+        super(x, y, w, h, c, hp, dmg, () => this.bulRot(), bspd, cd, asWell, atkCount, spd, sight, val);
         this.rf = roff;
     }
     bulRot() {
@@ -393,8 +400,8 @@ class SprintMeleeEnemy extends MeleeEnemy {
     }
 }
 class MeleeBoss extends MeleeEnemy {
-    constructor(x: number, y: number, w: number, h: number, c: string, hp = 50, dmg = 3, spd = 1) {
-        super(x, y, w, h, c, hp, dmg, 100, 100, spd, 500);
+    constructor(x: number, y: number, w: number, h: number, c: string, hp = 50, dmg = 3, spd = 1, val = 3) {
+        super(x, y, w, h, c, hp, dmg, 100, 100, spd, 500, val);
     }
     kill() {
         scene.rm(this);
