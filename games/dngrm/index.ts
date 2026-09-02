@@ -12,87 +12,71 @@ Img.config.set("root", "assets");
 const scene = new Scene({ canvas: "dng", w: 700, h: 700 });
 const size = 10;
 interface Stat {
-    xp: number;
-    lvl: number;
-    dmg: number;
-    spd: number;
-    bspd: number;
-    hp: number;
-    mhp: number;
-    crit: number;
-    luck: number;
-    armor: number;
-    dodge: number;
-    mon: number;
-    perks: Shop[];
-    skill: never[];
-    ap: number;
-}
-const nextXP = () => Math.floor(Math.pow(stat.lvl, 1.25));
-var stat: Stat = {
     /**
      * The current XP points.
      */
-    xp: 0,
+    xp: number;
     /**
      * The current player level.
      * 
      * Required xp is `Math.floor(Math.pow(lvl, 1.25))`.
      */
-    lvl: 1,
+    lvl: number;
     /**
      * The amount of damage dealt per bullet.
      */
-    dmg: 1,
+    dmg: number;
     /**
      * The movement speed.
      */
-    spd: 3,
+    spd: number;
     /**
      * The speed the bullet travels at.
      */
-    bspd: 4,
+    bspd: number;
     /**
      * The current HP.
      */
-    hp: 5,
+    hp: number;
     /**
      * The max HP.
      */
-    mhp: 5,
+    mhp: number;
     /**
      * The chance to land a critical hit. (dmg x2)
      */
-    crit: 0,
+    crit: number;
     /**
      * Luck to get better items for purchase.
      */
-    luck: 0,
+    luck: number;
     /**
      * Damage resistence. Armor-piercing attacks ignore armor.
      */
-    armor: 0,
+    armor: number;
     /**
      * The chance to dodge an attack.
      */
-    dodge: 0,
+    dodge: number;
     /**
      * Currency. Money dropped from enemy kills.
      */
-    mon: 0,
+    mon: number;
     /**
      * Perks unlocked during battle.
      */
-    perks: [],
+    perks: Shop[];
     /**
      * Permanent skills.
      */
-    skill: [],
+    skill: never[];
     /**
      * Adventure points (AP). Used to level up skills.
      */
-    ap: 0
-};
+    ap: number;
+}
+const nextXP = () => Math.floor(Math.pow(stat.lvl, 1.25));
+var stat: Stat = JSON.parse(Local.get("stat") ?? `{ xp: 0, lvl: 1, dmg: 1, spd: 3, bspd: 4, hp: 5, mhp: 5, crit: 0, luck: 0, armor: 0,dodge: 0,mon: 0, perks: [], skill: [], ap: 0 }`) as Stat;
 function dodged() {
     return stat.dodge && chance(stat.dodge);
 }

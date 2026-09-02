@@ -1,5 +1,6 @@
 import { Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Cooldown, random, Img, chance, ButtonUI, SceneUI, TextUI, Local, FilePicker } from "../../phantom2d.js";
 Img.config.set("root", "assets");
+window.addEventListener("error", (e) => alert(`${e.message} (${e.lineno})`));
 /**
  * TODO:
  * procedual gen
