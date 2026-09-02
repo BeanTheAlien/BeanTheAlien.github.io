@@ -9,7 +9,7 @@ Img.config.set("root", "assets");
  * objects that block vision
  * sprites
  */
-const scene = new Scene({ canvas: "dng", w: 500, h: 500 });
+const scene = new Scene({ canvas: "dng", w: 700, h: 700 });
 const size = 10;
 interface Stat {
     xp: number;
@@ -28,6 +28,7 @@ interface Stat {
     skill: never[];
     ap: number;
 }
+const nextXP = () => Math.floor(Math.pow(stat.lvl, 1.25));
 var stat: Stat = {
     /**
      * The current XP points.
@@ -36,7 +37,7 @@ var stat: Stat = {
     /**
      * The current player level.
      * 
-     * Required xp is Math.floor(Math.pow(lvl, 1.25)).
+     * Required xp is `Math.floor(Math.pow(lvl, 1.25))`.
      */
     lvl: 1,
     /**
@@ -92,6 +93,25 @@ var stat: Stat = {
      */
     ap: 0
 };
+function dodged() {
+    return stat.dodge && chance(stat.dodge);
+}
+const statDisp = document.getElementById("stat-disp") as HTMLDivElement;
+statDisp.style.whiteSpace = "pre-wrap";
+function dispStat() {
+    const none = (a: any[]) => !a.length ? "none" : a;
+    statDisp.textContent = `Level ${stat.lvl} (${stat.xp} / ${nextXP()} xp)\n
+Damage: ${stat.dmg} (crit ${stat.crit})\n
+Health: ${stat.hp} (max ${stat.mhp})\n
+Armor: ${stat.armor} (dodge: ${stat.dodge})\n
+Speed: ${stat.spd} / B-speed: ${stat.bspd}\n
+Luck: ${stat.luck}\n
+Money: ${stat.mon}\n
+Perks: ${none(stat.perks)}\n
+Skills: ${none(stat.skill)}\n
+Adventure Points: ${stat.ap}`;
+}
+dispStat();
 var rStat = resetRS();
 function resetRS(): RunStat {
     return {
@@ -322,6 +342,7 @@ class MeleeEnemy extends Enemy {
     constructor(x: number, y: number, w: number, h: number, c: string, hp: number, dmg: number, range: number, cd: number, spd = 1, sight?: number) {
         super(x, y, w, h, c, hp, () => {
             if(this.dp() <= range && pCanHurt.v) {
+                if(dodged()) return;
                 plr.comp("health").hurt(dmg);
             }
         }, cd, spd, sight);
@@ -334,9 +355,10 @@ class GunEnemy extends Enemy {
             for(let i = 0; i < atkCount; i++) {
                 const o = bulGenr(this.x, this.y, getRot(), (e) => {
                     if(e == plr && pCanHurt.v) {
-                        e.comp("health").hurt(dmg);
                         scene.rm(o);
                         if(asWell) asWell(e);
+                        if(dodged()) return;
+                        e.comp("health").hurt(dmg);
                     }
                 }, bspd);
                 scene.add(o);
@@ -567,6 +589,8 @@ function fdRmIdx(where?: Vector) {
 function ldRm() {
     const rm = fdRm();
     coins = [];
+    scene.rm(...plrBuls);
+    plrBuls.splice(0);
     if(rm) {
         if(rm.e.length) scene.add(...rm.e);
         else ldExs();
@@ -756,11 +780,14 @@ function pcSave() {
 // leave this cmtd until testing
 // pcSave();
 
+const plrBuls: BulletObject[] = [];
+
 scene.add(plr);
 scene.on("click", () => {
     if(!gmRn) return;
     const o = bulGenr(plr.x, plr.y, scene.rotToMouse(plr), (e) => { if(objIs(e, Enemy)) { e.comp("health").hurt(stat.dmg); scene.rm(o); } }, stat.bspd);
     scene.add(o);
+    plrBuls.push(o);
 });
 scene.start(() => {
     scene.bg("#003764");
@@ -778,6 +805,7 @@ scene.start(() => {
     if(gsi.x == 9 && gsi.y == pss[gsi.x].length - 1) {
         setTimeout(gss, 1000);
     }
+    dispStat();
     // TEST ONLY
     // scene.img(pss[gsi.x][gsi.y], 70, scene.height - 70, 50, 50);
 });
