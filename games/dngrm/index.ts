@@ -294,7 +294,13 @@ class Enemy extends Entity {
     val: number;
     constructor(x: number, y: number, w: number, h: number, c: string, hp: number, atk: Function, cd: number, spd = 1, sight = 300, val = 1) {
         super({ x, y, width: size * w, height: size * h, color: c, upd: () => {
-            if(this.dp() <= sight) {
+            const ray = new Raycast({
+                scene, dist: sight, origin: this.getPos(), angle: scene.rotBtwn(this, plr),
+                hs: true, self: this
+            });
+            const res = ray.cast();
+            (new DebugRay({ scene, dist: sight, origin: this.getPos(), angle: scene.rotBtwn(this, plr), color: "red", life: 1000 })).cast();
+            if(this.dp() <= sight && res && res.obj == plr) {
                 const dx = plr.x - this.x;
                 const dy = plr.y - this.y;
                 const d = Math.hypot(dx, dy);
@@ -303,7 +309,7 @@ class Enemy extends Entity {
                     this.x += (dx / d) * md;
                     this.y += (dy / d) * md;
                 }
-            }
+            } else {alert(res + " " + res?.obj)}
             if(this.atkCd.ready) {
                 atk();
                 this.atkCd.consume();
@@ -613,17 +619,16 @@ function bulGenr(x: number, y: number, rot: number, collide: (e: Entity) => void
 
 abstract class WorldObj extends Entity {
     a: WorldObj[];
-    constructor(x: number, y: number, width: number, height: number, col: (e: Entity) => void, a: WorldObj[], auto = true, verif?: (e: Entity) => boolean) {
+    constructor(x: number, y: number, width: number, height: number, col: (e: Entity) => void, render: Function, a: WorldObj[], auto = true, verif?: (e: Entity) => boolean) {
         super({ x, y, width, height, color: invis, collide: (e) => {
             if(e == plr && ((verif ?? (() => true))(e))) {
                 this.rm();
                 col(e);
             }
-        } });
+        }, render });
         this.a = a;
         if(auto) this.add();
     }
-    abstract render(): void;
     rm() {
         scene.rm(this);
         this.a.splice(this.a.indexOf(this), 1);
@@ -637,14 +642,14 @@ var coins: Coin[] = [];
 class Coin extends WorldObj {
     static img: Img = new Img("coin.png");
     constructor(x: number, y: number) {
-        super(x, y, 10, 10, () => stat.mon++, coins);
+        super(x, y, 10, 10, () => stat.mon++, () => this.rend(), coins);
         this.use("enhancedphys", { scene });
         const dir = Angle.toVector(Angle.rad(random(0, 361)));
         const v = 60;
         dir.scale(random(-v, v+1));
         this.lerp("pos", scene, new Vector(this.x + dir.x, this.y + dir.y), "once", 0.25);
     }
-    render() {
+    rend() {
         scene.img(Coin.img, this.x, this.y, this.width, this.height);
     }
 }
@@ -652,10 +657,10 @@ var shop: Shop[] = [];
 class Shop extends WorldObj {
     img: Img;
     constructor(x: number, y: number, cost: number, spr: string) {
-        super(x, y, 20, 20, () => { stat.mon -= cost; stat.perks.push(this); }, shop, false, () => stat.mon >= cost);
+        super(x, y, 20, 20, () => { stat.mon -= cost; stat.perks.push(this); }, () => this.rend(), shop, false, () => stat.mon >= cost);
         this.img = new Img(spr);
     }
-    render() {
+    rend() {
         scene.img(this.img, this.x, this.y, this.width, this.height);
     }
 }

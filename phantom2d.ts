@@ -187,6 +187,12 @@ type Pair<A, B> = [A, B];
 type PCExecCDPair = Pair<Function, Cooldown>;
 type Real<T> = Exclude<T, null | undefined>;
 type Nullish<T> = T | null | undefined;
+interface Equals<T = unknown> {
+    equals: (obj: T) => boolean;
+}
+interface CompareTo<T = unknown> {
+    compareTo: (obj: T) => number;
+}
 /**
  * A simple, no-exec function shorthand.
  * @since v0.0.0
@@ -476,6 +482,11 @@ interface EntityOptions {
      * @since v2.2.0
      */
     legCol?: boolean;
+    /**
+     * A custom rendering function to be used.
+     * @since v2.2.9
+     */
+    render?: Function;
 }
 interface ExpiringEntityOptions extends EntityOptions {
     expr: number;
@@ -756,6 +767,10 @@ interface RaycastOptions {
      * @since v0.0.0
      */
     scene: Scene;
+    ign?: Constructor<unknown>[];
+}
+interface NoHitSelfRaycastOptions extends RaycastOptions {
+    self: Entity;
 }
 /**
  * The map for `Comp`.
@@ -903,6 +918,11 @@ interface ArcMoveOrbitOptions extends ArcMoveOptions {
 }
 interface ArcMoveSlingOptions extends ArcMoveOptions {
     strength?: number;
+}
+interface EntityVisionOptions extends CompOptions {
+    scene?: Scene;
+    len?: number;
+    clrrt?: number;
 }
 /**
  * The options for a `SceneComp`.
@@ -1307,6 +1327,33 @@ class ArcMoveSlingComp extends Comp {
         this.ent.y += this.vy;
     }
 }
+class EntityVisionComp extends Comp {
+    scene: Scene;
+    len: number;
+    entList: Entity[];
+    constructor(ent: Entity, opts: EntityVisionOptions) {
+        super(ent);
+        this.scene = opts.scene ?? shallow<Scene>();
+        this.len = opts.len ?? 0;
+        this.entList = [];
+        if(opts.clrrt) setInterval(this.clear, opts.clrrt);
+    }
+    upd() {
+        this.scene.items.forEach(i => {
+            const c = (new Raycast({ scene: this.scene, origin: this.ent.getPos(), angle: this.ent.rot, dist: this.len })).cast();
+            if(c && !this.entList.includes(c.obj)) this.entList.push(c.obj);
+        });
+    }
+    clear() {
+        this.entList = [];
+    }
+    get seesEnt() {
+        return !!this.entList.length;
+    }
+    get sees() {
+        return this.entList;
+    }
+}
 /**
  * The record used to create components.
  * @since v0.0.0
@@ -1320,7 +1367,8 @@ const PhantomCompRecord: CompRecord<Entity, CompOptions, Comp> = {
     enhancedphys: EnhancedPhysicsComp,
     grav: GravityComp,
     arcmoveorbit: ArcMoveOrbitComp,
-    arcmovesling: ArcMoveSlingComp
+    arcmovesling: ArcMoveSlingComp,
+    vis: EntityVisionComp
 };
 /**
  * Maps components to their respective option interface.
@@ -1336,6 +1384,7 @@ interface PhantomCompOptionsMap {
     grav: GravityCompOptions;
     arcmoveorbit: ArcMoveOrbitOptions;
     arcmovesling: ArcMoveSlingOptions;
+    vis: EntityVisionOptions;
 }
 /**
  * The class used for creating components for the scene.
@@ -1483,6 +1532,7 @@ class Entity {
      * @default false
      */
     legCol: boolean;
+    render: Function;
     constructor();
     constructor(opts: EntityOptions);
     constructor(opts: ExpiringEntityOptions);
@@ -1510,6 +1560,7 @@ class Entity {
         if(opts && "expr" in opts) {
             this.expire(opts.expr, opts.scene);
         }
+        this.render = opts?.render ?? NoFunc;
     }
     /**
      * Sets the position, based on a `Vector`.
@@ -1912,6 +1963,13 @@ class Entity {
      */
     expire(time: number, scene: Scene) {
         setTimeout(() => scene.rm(this), time);
+    }
+    goTo(tg: Entity, spd = 1) {
+        const dx = tg.x - this.x;
+        const dy = tg.y - this.y;
+        const d = Math.sqrt(dx * dx + dy * dy);
+        this.x += (dx / d) * spd;
+        this.y += (dy / d) * spd;
     }
 }
 /**
@@ -2332,6 +2390,18 @@ class Character extends Entity {
  * @since v0.0.0
  */
 class PlayableCharacter extends Character {
+    static QBind = {
+        Move: {
+            __core: (t: PlayableCharacter, set: [KeyCode, KeyCode, KeyCode] | [KeyCode, KeyCode, KeyCode, KeyCode], spd: number) => {
+                t.bind(set[0], () => t.moveX(-spd));
+                t.bind(set[1], () => t.moveX(spd));
+                t.bind(set[2], () => t.moveY(-spd));
+                if(set[3]) t.bind(set[3], () => t.moveY(-spd));
+            },
+            WASD: (t: PlayableCharacter, spd: number) => this.QBind.Move.__core(t, ["w", "a", "s", "d"], spd),
+            WAS: (t: PlayableCharacter, spd: number) => this.QBind.Move.__core(t, ["w", "a", "s"], spd)
+        }
+    } as const;
     key: KeyInputs;
     // binds: Store<KeyCode, Function>;
     // keys: Store<string, boolean>;
@@ -2643,6 +2713,22 @@ class Vector {
     dot(vec: Vector) {
         return this.x * vec.x + this.y * vec.y;
     }
+    /**
+     * Returns whether `this == vec`.
+     * @param vec The other `Vector` to test.
+     * @returns Whether they are equivalent.
+     */
+    equals(vec: Vector) {
+        return this.x == vec.x && this.y == vec.y;
+    }
+    /**
+     * Returns the distance between `this` and `vec`.
+     * @param vec The other `Vector` to test.
+     * @returns The distance between them.
+     */
+    compareTo(vec: Vector) {
+        return Math.hypot(vec.x - this.x, vec.y - this.y);
+    }
 }
 type LerpDeviceLerpMode = "once" | "bounce";
 abstract class DualLerpDevice<P, T> {
@@ -2861,6 +2947,12 @@ class Img {
     }
     static from(src: string): Img {
         return new Img(src);
+    }
+    get w() {
+        return this.img.width;
+    }
+    get h() {
+        return this.img.height;
     }
 }
 /**
@@ -3843,16 +3935,26 @@ class Preset {
         return new Entity(this.atts);
     }
 }
+interface AllowHitSelf<T extends boolean> {
+    hs: T;
+}
 class RaycastBase {
     origin: Vector;
     angle: number;
     dist: number;
     scene: Scene;
-    constructor(opts: RaycastOptions) {
+    ign: Constructor<unknown>[];
+    self?: Entity;
+    constructor(opts: RaycastOptions);
+    constructor(opts: RaycastOptions & AllowHitSelf<false>);
+    constructor(opts: NoHitSelfRaycastOptions & AllowHitSelf<true>);
+    constructor(opts: RaycastOptions | NoHitSelfRaycastOptions) {
         this.origin = opts.origin;
         this.angle = opts.angle;
         this.dist = opts.dist;
         this.scene = opts.scene;
+        this.ign = opts.ign ?? [];
+        if("self" in opts) this.self = opts.self;
     }
     dir() {
         return new Vector(Math.cos(this.angle), Math.sin(this.angle));
@@ -3861,7 +3963,7 @@ class RaycastBase {
         const dir = this.dir();
         for(const i of this.scene.items.stuff) {
             const hit = rayInterRect(this.origin, dir, i, this.scene);
-            if(hit) {
+            if(hit && !this.ign.some(c => objIs(i, c))) {
                 onHit(i, hit, dir);
             }
         }
@@ -3893,13 +3995,10 @@ class MultiRaycast extends RaycastBase {
  * @since v0.0.0
  */
 class Raycast extends RaycastBase {
-    constructor(opts: RaycastOptions) {
-        super(opts);
-    }
     cast(): RaycastIntersecton | null {
         let res: RaycastIntersecton | null = null;
         super.cast((i, hit, dir) => {
-            if((res && hit < res.dist) || (res == null)) res = new RaycastIntersecton(hit, i, new Vector(this.origin.x + dir.x * hit, this.origin.y + dir.y * hit));
+            if((res && hit < res.dist) || (res == null) && (!this.self || i != this.self)) res = new RaycastIntersecton(hit, i, new Vector(this.origin.x + dir.x * hit, this.origin.y + dir.y * hit));
         });
         return res;
     }
@@ -4240,6 +4339,15 @@ class Angle {
     static toVector(rad: number): Vector {
         return new Vector(Math.cos(rad), Math.sin(rad));
     }
+    /**
+     * Returns a random offset angle of `roffVal`, converted to radians.
+     * @param inRadSource The source angle (in radians).
+     * @param roffVal The amount to offset by.
+     * @returns An angle +-`roffVal` from `inRadSource` (in radians).
+     */
+    static roff(inRadSource: number, roffVal: number) {
+        return Angle.rad(random(Angle.deg(inRadSource - roffVal), Angle.deg(inRadSource + roffVal)));
+    }
 }
 type ConfigOnValueSetHandler<T> = (k: keyof T, v: T[keyof T]) => void;
 class Config<T extends Record<string, any>> {
@@ -4494,6 +4602,9 @@ interface FilePickerBaseFinalOptions extends PickerCleanedOptions {
 interface FilePickerOptions extends FilePickerBaseOptions {
     mult?: boolean;
 }
+interface FilePickerWritingOptions extends FilePickerBaseOptions {
+    tx: string;
+}
 interface FilePickerFinalOptions extends FilePickerBaseFinalOptions {
     multiple?: boolean;
 }
@@ -4554,6 +4665,12 @@ class FilePicker extends FilePickerBase<FilePickerPickType, FilePickerHandleType
     async handle(opts: FilePickerOptions): Promise<FilePickerHandleType> {
         const [...handles]: FilePickerHandleType = await (window as any).showOpenFilePicker({ ...this.cleanOpts(opts), multiple: opts.mult });
         return handles;
+    }
+    async write(opts: FilePickerWritingOptions) {
+        const [h] = await this.handle(opts);
+        const w = await h.createWritable();
+        await w.write(opts.tx);
+        await w.close();
     }
 }
 class SaveFilePicker extends FilePickerBase<FileSystemHandle, FileSystemHandle, FilePickerSaveOptions, FilePickerSaveFinalOptions> {
@@ -4904,6 +5021,8 @@ class ButtonUI extends SceneUI {
         this.cdTime = 250;
         this.disabled = false;
         this.scene.on("click", () => {
+            // CRITICAL BUGFIX:
+            // ONLY ACCEPT CLICK WHEN PRESENT
             if(!this.scene.hasUI(this)) return;
             if(this.#boundsTest()) {
                 if(!this.disabled) {
@@ -5129,6 +5248,29 @@ class PagedUI extends SceneUI {
         this.pgs[index].push(...pg);
     }
 }
+type CostMap = Record<string, number>;
+interface UpgradeMenuUIOptions<C extends CostMap> extends SceneUIOptions {
+    cm: C;
+    bopt: ButtonUIOptions;
+    kopt: KeyedTextUIOptions<number>;
+    topt: TextUIOptions;
+    mult: number;
+}
+class UpgradeMenuUI<C extends CostMap> extends SceneUI {
+    cm: C;
+    bopt: ButtonUIOptions;
+    kopt: KeyedTextUIOptions<number>;
+    topt: TextUIOptions;
+    mult: number;
+    constructor(opt: UpgradeMenuUIOptions<C>) {
+        super(opt);
+        this.cm = opt.cm;
+        this.bopt = opt.bopt;
+        this.kopt = opt.kopt;
+        this.topt = opt.topt;
+        this.mult = opt.mult;
+    }
+}
 
 class Itvl {
     id: number;
@@ -5316,6 +5458,34 @@ class ParamKey<T extends readonly string[], D extends itemof<T>> {
         return this.param.get(this.key);
     }
 }
+interface AIControllerOptions {
+    tg: Entity;
+}
+class AIController {
+    tg: Entity;
+    constructor(opts: AIControllerOptions) {
+        this.tg = opts.tg;
+    }
+}
+// type HistoryCache<T> = [keyof T, T[keyof T], T[keyof T]];
+// class History<T> {
+//     hist: HistoryCache<T>[];
+//     ptr: number;
+//     constructor() {
+//         this.hist = [];
+//         this.ptr = 0;
+//     }
+//     cache(cache: HistoryCache<T>) {
+//         this.hist.push(cache);
+//         this.ptr++;
+//     }
+//     point(pointer: number) {
+//         this.ptr = pointer;
+//     }
+//     read() {
+//         return this.hist[this.ptr];
+//     }
+// }
 
 /**
  * Returns whether 2 objects are in collision.

@@ -1,4 +1,4 @@
-import { Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Cooldown, random, Img, chance, ButtonUI, SceneUI, TextUI, Local, FilePicker } from "../../phantom2d.js";
+import { DebugRay, Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Raycast, Cooldown, random, Img, chance, ButtonUI, SceneUI, TextUI, Local, FilePicker } from "../../phantom2d.js";
 Img.config.set("root", "assets");
 window.addEventListener("error", (e) => alert(`${e.message}, ${e.lineno}`));
 /**
@@ -219,7 +219,13 @@ class Enemy extends Entity {
     val;
     constructor(x, y, w, h, c, hp, atk, cd, spd = 1, sight = 300, val = 1) {
         super({ x, y, width: size * w, height: size * h, color: c, upd: () => {
-                if (this.dp() <= sight) {
+                const ray = new Raycast({
+                    scene, dist: sight, origin: this.getPos(), angle: scene.rotBtwn(this, plr),
+                    hs: true, self: this
+                });
+                const res = ray.cast();
+                (new DebugRay({ scene, dist: sight, origin: this.getPos(), angle: scene.rotBtwn(this, plr), color: "red", life: 1000 })).cast();
+                if (this.dp() <= sight && res && res.obj == plr) {
                     const dx = plr.x - this.x;
                     const dy = plr.y - this.y;
                     const d = Math.hypot(dx, dy);
@@ -528,13 +534,13 @@ function bulGenr(x, y, rot, collide, spd) {
 }
 class WorldObj extends Entity {
     a;
-    constructor(x, y, width, height, col, a, auto = true, verif) {
+    constructor(x, y, width, height, col, render, a, auto = true, verif) {
         super({ x, y, width, height, color: invis, collide: (e) => {
                 if (e == plr && ((verif ?? (() => true))(e))) {
                     this.rm();
                     col(e);
                 }
-            } });
+            }, render });
         this.a = a;
         if (auto)
             this.add();
@@ -552,14 +558,14 @@ var coins = [];
 class Coin extends WorldObj {
     static img = new Img("coin.png");
     constructor(x, y) {
-        super(x, y, 10, 10, () => stat.mon++, coins);
+        super(x, y, 10, 10, () => stat.mon++, () => this.rend(), coins);
         this.use("enhancedphys", { scene });
         const dir = Angle.toVector(Angle.rad(random(0, 361)));
         const v = 60;
         dir.scale(random(-v, v + 1));
         this.lerp("pos", scene, new Vector(this.x + dir.x, this.y + dir.y), "once", 0.25);
     }
-    render() {
+    rend() {
         scene.img(Coin.img, this.x, this.y, this.width, this.height);
     }
 }
@@ -567,10 +573,10 @@ var shop = [];
 class Shop extends WorldObj {
     img;
     constructor(x, y, cost, spr) {
-        super(x, y, 20, 20, () => { stat.mon -= cost; stat.perks.push(this); }, shop, false, () => stat.mon >= cost);
+        super(x, y, 20, 20, () => { stat.mon -= cost; stat.perks.push(this); }, () => this.rend(), shop, false, () => stat.mon >= cost);
         this.img = new Img(spr);
     }
-    render() {
+    rend() {
         scene.img(this.img, this.x, this.y, this.width, this.height);
     }
 }
