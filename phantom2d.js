@@ -3095,7 +3095,7 @@ class Raycast extends RaycastBase {
     cast() {
         let res = null;
         super.cast((i, hit, dir) => {
-            if ((res && hit < res.dist) || (res == null) && (!this.self || i != this.self))
+            if ((!this.self || i != this.self) && (res == null || hit < res.dist))
                 res = new RaycastIntersecton(hit, i, new Vector(this.origin.x + dir.x * hit, this.origin.y + dir.y * hit));
         });
         return res;

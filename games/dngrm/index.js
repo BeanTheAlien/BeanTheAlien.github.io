@@ -1,4 +1,4 @@
-import { DebugRay, Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Raycast, Cooldown, random, Img, chance, ButtonUI, SceneUI, TextUI, Local, FilePicker } from "../../phantom2d.js";
+import { Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Cooldown, random, Img, chance, ButtonUI, SceneUI, TextUI, Local, FilePicker } from "../../phantom2d.js";
 Img.config.set("root", "assets");
 window.addEventListener("error", (e) => alert(`${e.message}, ${e.lineno}`));
 /**
@@ -219,13 +219,7 @@ class Enemy extends Entity {
     val;
     constructor(x, y, w, h, c, hp, atk, cd, spd = 1, sight = 300, val = 1) {
         super({ x, y, width: size * w, height: size * h, color: c, upd: () => {
-                const ray = new Raycast({
-                    scene, dist: sight, origin: this.getPos(), angle: scene.rotBtwn(this, plr),
-                    hs: true, self: this
-                });
-                const res = ray.cast();
-                (new DebugRay({ scene, dist: sight, origin: this.getPos(), angle: scene.rotBtwn(this, plr), color: "red", life: 1000 })).cast();
-                if (this.dp() <= sight && res && res.obj == plr) {
+                if (this.dp() <= sight) {
                     const dx = plr.x - this.x;
                     const dy = plr.y - this.y;
                     const d = Math.hypot(dx, dy);

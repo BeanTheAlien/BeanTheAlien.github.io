@@ -294,13 +294,7 @@ class Enemy extends Entity {
     val: number;
     constructor(x: number, y: number, w: number, h: number, c: string, hp: number, atk: Function, cd: number, spd = 1, sight = 300, val = 1) {
         super({ x, y, width: size * w, height: size * h, color: c, upd: () => {
-            const ray = new Raycast({
-                scene, dist: sight, origin: this.getPos(), angle: scene.rotBtwn(this, plr),
-                hs: true, self: this
-            });
-            const res = ray.cast();
-            (new DebugRay({ scene, dist: sight, origin: this.getPos(), angle: scene.rotBtwn(this, plr), color: "red", life: 1000 })).cast();
-            if(this.dp() <= sight && res && res.obj == plr) {
+            if(this.dp() <= sight) {
                 const dx = plr.x - this.x;
                 const dy = plr.y - this.y;
                 const d = Math.hypot(dx, dy);
@@ -309,7 +303,7 @@ class Enemy extends Entity {
                     this.x += (dx / d) * md;
                     this.y += (dy / d) * md;
                 }
-            } else {alert(res + " " + res?.obj)}
+            }
             if(this.atkCd.ready) {
                 atk();
                 this.atkCd.consume();
