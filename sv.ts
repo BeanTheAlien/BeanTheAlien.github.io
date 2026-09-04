@@ -60,8 +60,17 @@ interface CommunityRoutes {
     pin: [Title, SSM];
     unpin: [Title, SSM];
 }
+interface Ann {
+    title: string;
+    body: string;
+}
+interface AnnRoutes {
+    select: (Suc & { data: Ann[] }) | SucMsg;
+    new: [Ann, SSM];
+}
 const url = "https://beanthealien-server.onrender.com/";
 const net = new AdvancedNetMap<Routes>(url);
 const adminNet = new AdvancedNetMap<AdminRoutes>(url + "admin/");
 const comNet = new AdvancedNetMap<CommunityRoutes>(url + "com/");
+const annNet = new AdvancedNetMap<AnnRoutes>(url + "anns/");
 export { net, adminNet, comNet };

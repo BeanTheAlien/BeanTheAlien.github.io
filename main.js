@@ -1,5 +1,6 @@
 import "/utils.js";
 import { random, chance, getEl, wait, isTrue, isFalse, RandomNums, ClickRegion, copyToClipboard, dist, mouse, lsGet, lsSet, quadratic, getQuerys } from "/utils.js";
+import { annNet } from "./sv.js";
 
 const title = document.getElementById("title");
 var epic = 0;
@@ -28,3 +29,7 @@ title.addEventListener("click", () => {
         if(x) clearInterval(x);
     }
 });
+const res = await annNet.json("select");
+const anns = document.getElementById("anns");
+if("data" in res) anns.innerHTML = `<h3>${res.data[0].title}</h3><p>${res.data[0].body}</p>`;
+else anns.textContent = "Failed to fetch announcements.";
