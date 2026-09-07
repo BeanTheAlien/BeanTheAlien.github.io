@@ -1,6 +1,6 @@
-import { Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Cooldown, random, Img, chance, ButtonUI, SceneUI, TextUI, Local, FilePicker } from "../../phantom2d.js";
+import { Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Cooldown, random, Img, chance, ButtonUI, SceneUI, TextUI, Local, FilePicker, ImgUI } from "../../phantom2d.js";
 Img.config.set("root", "assets");
-window.addEventListener("error", (e) => alert(`${e.message}, ${e.lineno}`));
+//window.addEventListener("error", (e) => alert(`${e.message}, ${e.lineno}`))
 /**
  * TODO:
  * procedual gen
@@ -156,21 +156,25 @@ plr.binds(["w", () => {
             return;
         plr.moveY(-stat.spd);
         gsi.x = 4;
+        gsi.y = 0;
     }], ["a", () => {
         if (pDed)
             return;
         plr.moveX(-stat.spd);
         gsi.x = 1;
+        gsi.y = 0;
     }], ["s", () => {
         if (pDed)
             return;
         plr.moveY(stat.spd);
         gsi.x = 3;
+        gsi.y = 0;
     }], ["d", () => {
         if (pDed)
             return;
         plr.moveX(stat.spd);
         gsi.x = 2;
+        gsi.y = 0;
     }]);
 const heroGunFred = {
     nm: "Gun Fred",
@@ -190,6 +194,34 @@ const heroGunFred = {
     path: "gunfred",
     ico: "fireright0"
 };
+const heroGeorge = {
+    nm: "George",
+    ds: "G e o r g e",
+    spr: [
+        { id: "idle", cnt: 1 },
+        { id: "left", cnt: 1 },
+        { id: "right", cnt: 1 },
+        { id: "down", cnt: 1 },
+        { id: "up", cnt: 1 },
+        { id: "hurt", cnt: 1 },
+        { id: "die", cnt: 4 }
+    ],
+    path: "george",
+    ico: "idle0"
+};
+const heroSet = [
+    heroGunFred,
+    heroGeorge
+];
+const cycle = () => {
+    const i = heroSet.indexOf(hero) + 1;
+    if (i >= heroSet.length)
+        hero = heroSet[0];
+    else
+        hero = heroSet[i];
+    setPSS();
+};
+var hero = heroGunFred;
 /**
  * Player sprite sheet IDs.
  */
@@ -205,12 +237,13 @@ const pssID = [
     { id: "pain", cnt: 1 },
     { id: "die", cnt: 6 }
 ];
-const pss = pssID.map(s => {
+const setPSS = () => hero.spr.map(s => {
     const img = [];
     for (let i = 0; i < s.cnt; i++)
-        img.push(new Img(`gunfred/${s.id}${i}.png`));
+        img.push(new Img(`${hero.path}/${s.id}${i}.png`));
     return img;
 });
+var pss = setPSS();
 /**
  * The global frames per second for updating sprites.
  *
@@ -624,6 +657,8 @@ const shopBtn = btn(showShop, 100, "Shop", 0, -50);
 const treeBtn = btn(showTree, 200, "Tree", 0, -50);
 const shopBk = btn(hideShop, 200, "Back", 50);
 const treeBk = btn(hideTree, 200, "Back", 50);
+const heroUIImg = new ImgUI({ img: pss[0][0], scene, x: scene.width - 100, y: 100, w: size * 3, h: size * 3 });
+const heroUIImgBtn = new ButtonUI({ scene, color: invis, x: heroUIImg.x, y: heroUIImg.y, w: heroUIImg.width, h: heroUIImg.height, click: cycle });
 function showShop() {
     hideSS();
     showOvr();
@@ -649,7 +684,7 @@ function showOvr() {
 function hideOvr() {
     scene.rmUI(ovr);
 }
-const ssBtns = [ssStartBtn, shopBtn, treeBtn];
+const ssBtns = [ssStartBtn, shopBtn, treeBtn, heroUIImg, heroUIImgBtn];
 function hideSS() {
     hideOvr();
     scene.rmUI(...ssBtns);
@@ -699,7 +734,7 @@ function lclSave() {
     nextSave();
 }
 function pcSave() {
-    (new FilePicker()).handle({ accept: [{ accept: { "text/json": [".json"] } }], all: true, mult: false })
+    (new FilePicker()).handle({ accept: [{ accept: { "text/json": [".json"] } }], all: false, mult: false })
         .then(h => h[0])
         .then(h => h.createWritable())
         .then(w => {
@@ -714,7 +749,6 @@ function pcSave() {
 const plrBuls = [];
 scene.add(plr);
 scene.on("click", () => {
-    pcSave();
     if (!gmRn)
         return;
     const o = bulGenr(plr.x, plr.y, scene.rotToMouse(plr), (e) => { if (objIs(e, Enemy)) {
@@ -736,10 +770,10 @@ scene.start(() => {
     }
     catch (e) {
         if (objIs(e, TypeError)) {
-            console.warn(`Scene Sprite Rendering Error:\n${e.message}\n${e.stack}\nValues at time:\nx=${gsi.x}, y=${gsi.y}\nsheets=${pssID.length}`);
+            console.warn(`Scene Sprite Rendering Error:\n${e.message}\n${e.stack}\nValues at time:\nx=${gsi.x}, y=${gsi.y}\nsheets=${pss.length}`);
         }
     }
-    if (gsi.x == 9 && gsi.y == pss[gsi.x].length - 1) {
+    if (gsi.x == hero.spr.length - 1 && gsi.y == pss[gsi.x].length - 1) {
         setTimeout(gss, 1000);
     }
     dispStat();
