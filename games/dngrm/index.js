@@ -121,6 +121,12 @@ const plr = new PlayableCharacter({ strength: 0, width: size * 3, height: size *
         plr.y = bound(plr.y, 0, scene.height - plr.height);
     }, x: 50, y: 50 });
 var pDed = false;
+function worldInit() {
+    plr.x = 50;
+    plr.y = 50;
+    pDed = false;
+    pCanHurt.v = true;
+}
 /**
  * Global (player) sprite index.
  *
@@ -166,6 +172,24 @@ plr.binds(["w", () => {
         plr.moveX(stat.spd);
         gsi.x = 2;
     }]);
+const heroGunFred = {
+    nm: "Gun Fred",
+    ds: "A bald man with a short temper. No one knows how he got here.",
+    spr: [
+        { id: "idle", cnt: 2 },
+        { id: "left", cnt: 1 },
+        { id: "right", cnt: 1 },
+        { id: "down", cnt: 1 },
+        { id: "up", cnt: 1 },
+        { id: "fireleft", cnt: 1 },
+        { id: "fireright", cnt: 1 },
+        { id: "firedown", cnt: 1 },
+        { id: "pain", cnt: 1 },
+        { id: "die", cnt: 6 }
+    ],
+    path: "gunfred",
+    ico: "fireright0"
+};
 /**
  * Player sprite sheet IDs.
  */
@@ -675,7 +699,7 @@ function lclSave() {
     nextSave();
 }
 function pcSave() {
-    (new FilePicker()).handle({ accept: [{ accept: { "text/json": ["*.json"] } }], all: true, mult: false })
+    (new FilePicker()).handle({ accept: [{ accept: { "text/json": [".json"] } }], all: true, mult: false })
         .then(h => h[0])
         .then(h => h.createWritable())
         .then(w => {
@@ -690,6 +714,7 @@ function pcSave() {
 const plrBuls = [];
 scene.add(plr);
 scene.on("click", () => {
+    pcSave();
     if (!gmRn)
         return;
     const o = bulGenr(plr.x, plr.y, scene.rotToMouse(plr), (e) => { if (objIs(e, Enemy)) {

@@ -73,4 +73,4 @@ const net = new AdvancedNetMap<Routes>(url);
 const adminNet = new AdvancedNetMap<AdminRoutes>(url + "admin/");
 const comNet = new AdvancedNetMap<CommunityRoutes>(url + "com/");
 const annNet = new AdvancedNetMap<AnnRoutes>(url + "anns/");
-export { net, adminNet, comNet };
+export { net, adminNet, comNet, annNet };

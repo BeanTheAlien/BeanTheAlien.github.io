@@ -4,4 +4,4 @@ const net = new AdvancedNetMap(url);
 const adminNet = new AdvancedNetMap(url + "admin/");
 const comNet = new AdvancedNetMap(url + "com/");
 const annNet = new AdvancedNetMap(url + "anns/");
-export { net, adminNet, comNet };
+export { net, adminNet, comNet, annNet };

@@ -31,5 +31,5 @@ title.addEventListener("click", () => {
 });
 const res = await annNet.json("select");
 const anns = document.getElementById("anns");
-if("data" in res) anns.innerHTML = `<h3>${res.data[0].title}</h3><p>${res.data[0].body}</p>`;
+if("data" in res) anns.innerHTML = `<h3>${res.data[0]?.title ?? "No Announcements"}</h3><p>${res.data[0]?.body ?? ""}</p>`;
 else anns.textContent = "Failed to fetch announcements.";
