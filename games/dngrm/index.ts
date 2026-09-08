@@ -247,6 +247,15 @@ interface Hero {
     spr: SpriteSheetID[];
     path: string;
     ico: string;
+    atk: Function;
+}
+const heroGun = (shots: number, roff: number, life = 5000) => {
+    for(let i = 0; i < shots; i++) {
+        const o = bulGenr(plr.x, plr.y, Angle.roff(scene.rotToMouse(plr), roff), (e) => { if(objIs(e, Enemy)) { e.comp("health").hurt(stat.dmg); scene.rm(o); } }, stat.bspd);
+        scene.add(o);
+        plrBuls.push(o);
+        o.expire(life, scene);
+    }
 }
 const heroGunFred: Hero = {
     nm: "Gun Fred",
@@ -264,7 +273,8 @@ const heroGunFred: Hero = {
         { id: "die", cnt: 6 }
     ],
     path: "gunfred",
-    ico: "fireright0"
+    ico: "fireright0",
+    atk: () => heroGun(1, 0)
 } as const;
 const heroGeorge: Hero = {
     nm: "George",
@@ -279,7 +289,8 @@ const heroGeorge: Hero = {
         { id: "die", cnt: 4 }
     ],
     path: "george",
-    ico: "idle0"
+    ico: "idle0",
+    atk: () => heroGun(1, 0)
 } as const;
 const heroSet = [
     heroGunFred,
