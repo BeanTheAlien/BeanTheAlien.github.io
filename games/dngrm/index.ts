@@ -285,7 +285,8 @@ const cycle = () => {
     const i = heroSet.indexOf(hero) + 1;
     if(i >= heroSet.length) hero = heroSet[0];
     else hero = heroSet[i];
-    setPSS();
+    pss = setPSS();
+    heroUIImg.img = pss[0][0];
 }
 var hero = heroGunFred;
 interface SpriteSheetIDr {

@@ -219,7 +219,7 @@ const cycle = () => {
         hero = heroSet[0];
     else
         hero = heroSet[i];
-    setPSS();
+    pss = setPSS();
 };
 var hero = heroGunFred;
 /**
@@ -777,6 +777,7 @@ scene.start(() => {
         setTimeout(gss, 1000);
     }
     dispStat();
+    console.log(pss.length);
     // TEST ONLY
     // scene.img(pss[gsi.x][gsi.y], 70, scene.height - 70, 50, 50);
 });
