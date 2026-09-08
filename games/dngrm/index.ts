@@ -252,16 +252,16 @@ interface Hero {
     ico: string;
     atk: Function;
 }
-const buller = (cnt: number, rot: () => number, life: number, spd: number) => {
+const buller = (func: (...args: any[]) => BulletObject, cnt: number, rot: () => number, life: number, spd: number) => {
     for(let i = 0; i < cnt; i++) {
-        const o = bulGenr(plr.x, plr.y, rot(), (e) => { if(objIs(e, Enemy)) { e.comp("health").hurt(stat.dmg); scene.rm(o); } }, spd);
+        const o = func(plr.x, plr.y, rot(), (e: Entity) => { if(objIs(e, Enemy)) { e.comp("health").hurt(stat.dmg); scene.rm(o); } }, spd);
         scene.add(o);
         plrBuls.push(o);
         o.expire(life, scene);
     }
 }
-const heroGun = (shots: number, roff: number, life = 5000) => buller(shots, () => Angle.roff(scene.rotToMouse(plr), roff), life, stat.bspd);
-const heroMel = (swings: number, life = 100) => buller(swings, () => scene.rotToMouse(plr), life, stat.bspd * 3);
+const heroGun = (shots: number, roff: number, life = 5000) => buller(bulGenr, shots, () => Angle.roff(scene.rotToMouse(plr), roff), life, stat.bspd);
+const heroMel = (swings: number, life = 70) => buller(melGenr, swings, () => scene.rotToMouse(plr), life, stat.bspd * 1.25);
 const heroGunFred: Hero = {
     nm: "Gun Fred",
     ds: "A bald man with a short temper. No one knows how he got here.",
@@ -698,7 +698,7 @@ function bulGenr(x: number, y: number, rot: number, collide: (e: Entity) => void
     return new BulletObject({ x, y, rot, height: 6, width: 18, scene, color: "#e2e603", collide, extLeft: 0, extRight: scene.width, extTop: 0, extBtm: scene.height, spd });
 }
 function melGenr(x: number, y: number, rot: number, collide: (e: Entity) => void, spd: number) {
-    return new BulletObject({ x, y, rot, height: 18, width: 3, scene, color: "#a7a7a7", collide, extLeft: 0, extRight: scene.width, extTop: 0, extBtm: scene.height, spd });
+    return new BulletObject({ x, y, rot, height: 25, width: 4, scene, color: "#a7a7a7", collide, extLeft: 0, extRight: scene.width, extTop: 0, extBtm: scene.height, spd });
 }
 
 abstract class WorldObj extends Entity {

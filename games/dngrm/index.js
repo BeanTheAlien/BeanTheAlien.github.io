@@ -183,9 +183,9 @@ plr.binds(["w", () => {
         gsi.x = getSI("right");
         gsi.y = 0;
     }]);
-const buller = (cnt, rot, life, spd) => {
+const buller = (func, cnt, rot, life, spd) => {
     for (let i = 0; i < cnt; i++) {
-        const o = bulGenr(plr.x, plr.y, rot(), (e) => { if (objIs(e, Enemy)) {
+        const o = func(plr.x, plr.y, rot(), (e) => { if (objIs(e, Enemy)) {
             e.comp("health").hurt(stat.dmg);
             scene.rm(o);
         } }, spd);
@@ -194,8 +194,8 @@ const buller = (cnt, rot, life, spd) => {
         o.expire(life, scene);
     }
 };
-const heroGun = (shots, roff, life = 5000) => buller(shots, () => Angle.roff(scene.rotToMouse(plr), roff), life, stat.bspd);
-const heroMel = (swings, life = 100) => buller(swings, () => scene.rotToMouse(plr), life, stat.bspd * 3);
+const heroGun = (shots, roff, life = 5000) => buller(bulGenr, shots, () => Angle.roff(scene.rotToMouse(plr), roff), life, stat.bspd);
+const heroMel = (swings, life = 70) => buller(melGenr, swings, () => scene.rotToMouse(plr), life, stat.bspd * 1.25);
 const heroGunFred = {
     nm: "Gun Fred",
     ds: "A bald man with a short temper. No one knows how he got here.",
@@ -611,7 +611,7 @@ function bulGenr(x, y, rot, collide, spd) {
     return new BulletObject({ x, y, rot, height: 6, width: 18, scene, color: "#e2e603", collide, extLeft: 0, extRight: scene.width, extTop: 0, extBtm: scene.height, spd });
 }
 function melGenr(x, y, rot, collide, spd) {
-    return new BulletObject({ x, y, rot, height: 18, width: 3, scene, color: "#a7a7a7", collide, extLeft: 0, extRight: scene.width, extTop: 0, extBtm: scene.height, spd });
+    return new BulletObject({ x, y, rot, height: 25, width: 4, scene, color: "#a7a7a7", collide, extLeft: 0, extRight: scene.width, extTop: 0, extBtm: scene.height, spd });
 }
 class WorldObj extends Entity {
     a;
