@@ -220,6 +220,7 @@ const cycle = () => {
     else
         hero = heroSet[i];
     pss = setPSS();
+    heroUIImg.img = pss[0][0];
 };
 var hero = heroGunFred;
 /**
@@ -244,6 +245,10 @@ const setPSS = () => hero.spr.map(s => {
     return img;
 });
 var pss = setPSS();
+const applyPSS = () => {
+    pss = setPSS();
+    heroUIImg.img = pss[0][0];
+};
 /**
  * The global frames per second for updating sprites.
  *
@@ -658,7 +663,29 @@ const treeBtn = btn(showTree, 200, "Tree", 0, -50);
 const shopBk = btn(hideShop, 200, "Back", 50);
 const treeBk = btn(hideTree, 200, "Back", 50);
 const heroUIImg = new ImgUI({ img: pss[0][0], scene, x: scene.width - 100, y: 100, w: size * 3, h: size * 3 });
-const heroUIImgBtn = new ButtonUI({ scene, color: invis, x: heroUIImg.x, y: heroUIImg.y, w: heroUIImg.width, h: heroUIImg.height, click: cycle });
+const heroUIImgBtn = new ButtonUI({ scene, color: invis, x: heroUIImg.x, y: heroUIImg.y, w: heroUIImg.width, h: heroUIImg.height, click: showHero });
+const heroBk = btn(hideHero, 200, "Back", 50);
+const heroUISet = [];
+const columns = 3;
+const spacingX = 250;
+const spacingY = 40;
+for (let i = 0; i < heroSet.length; i++) {
+    const h = heroSet[i];
+    const col = i % columns;
+    const row = Math.floor(i / columns);
+    const w = size * 5;
+    const x = col * (w + spacingX);
+    const y = row * (w + spacingY + 100);
+    heroUISet.push([
+        new ImgUI({ img: new Img(h.path + "/" + h.ico + ".png"), scene, x, y, w, h: w }),
+        new TextUI({ scene, x: x + w / 2, y: y + w + 50, tx: h.nm }),
+        //new TextUI({ scene, x: x + w / 2, y: y + w + 100, tx: h.ds }),
+        new ButtonUI({ scene, x, y, w, h: w, color: "red", click: () => {
+                hero = h;
+                applyPSS();
+            } })
+    ]);
+}
 function showShop() {
     hideSS();
     showOvr();
@@ -675,6 +702,17 @@ function showTree() {
 }
 function hideTree() {
     scene.rmUI(treeBk);
+    showSS();
+}
+function showHero() {
+    hideSS();
+    showOvr();
+    scene.addUI(heroBk);
+    heroUISet.forEach(x => scene.addUI(...x));
+}
+function hideHero() {
+    scene.rmUI(heroBk);
+    heroUISet.forEach(x => scene.rmUI(...x));
     showSS();
 }
 scene.font = "16px Comic Sans MS";
@@ -777,7 +815,6 @@ scene.start(() => {
         setTimeout(gss, 1000);
     }
     dispStat();
-    console.log(pss.length);
     // TEST ONLY
     // scene.img(pss[gsi.x][gsi.y], 70, scene.height - 70, 50, 50);
 });
