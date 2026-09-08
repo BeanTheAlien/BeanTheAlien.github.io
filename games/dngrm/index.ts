@@ -123,7 +123,8 @@ const sHealthOpts = (hp: number, onDie: Function, controller: Vector, idleFrm: n
         controller.x = painFrm;
         setTimeout(() => {
             if(!pDed) controller.x = idleFrm;
-        }, 125); 
+        }, 125);
+        stat.hp = plr.comp("health").hp;
     } } as any;
 };
 const healthOpts = (self: Entity, hp: number, onDie: Function, c1: string, c2: string = "#8b0b0b") => {
@@ -191,6 +192,9 @@ function worldInit() {
     plr.y = 50;
     pDed = false;
     pCanHurt.v = true;
+    plr.comp("health").hp = stat.mhp;
+    stat.hp = stat.mhp;
+    genRms();
 }
 /**
  * Global (player) sprite index.
@@ -726,7 +730,7 @@ class Shop extends WorldObj {
     }
 }
 function ShopEx(x: number, y: number) { return new Shop(x, y, 1, "coin.png"); }
-genRms();
+// genRms();
 // ldRm();
 
 const ovr = new SceneUI({ scene, w: scene.width, h: scene.height, color: "#000c49" });
@@ -744,6 +748,7 @@ const ssStartBtn = btn(() => {
     // const r = fdRm(new Vector());
     // // remove all enemies from first room
     // if(r) r.e = [];
+    worldInit();
     ldRm();
     hideSS();
     gmRn = true;
