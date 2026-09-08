@@ -524,6 +524,13 @@ function genRmCoords() {
     }
     return cord;
 }
+/**
+ * Generates a random 32-bit integer seed for generating dungeons.
+ * @returns A 32-bit integer.
+ */
+function genDungSeed() {
+    return Math.floor(Math.random() * 0x100000000) >>> 0;
+}
 function genRms() {
     rooms.splice(0);
     pos = new Vector();
