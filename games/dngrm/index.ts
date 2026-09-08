@@ -261,7 +261,7 @@ const buller = (func: (...args: any[]) => BulletObject, cnt: number, rot: () => 
     }
 }
 const heroGun = (shots: number, roff: number, life = 5000) => buller(bulGenr, shots, () => Angle.roff(scene.rotToMouse(plr), roff), life, stat.bspd);
-const heroMel = (swings: number, life = 70) => buller(melGenr, swings, () => scene.rotToMouse(plr), life, stat.bspd * 1.25);
+const heroMel = (swings: number, life = 90) => buller(melGenr, swings, () => scene.rotToMouse(plr), life, stat.bspd * 1.5);
 const heroGunFred: Hero = {
     nm: "Gun Fred",
     ds: "A bald man with a short temper. No one knows how he got here.",
@@ -859,8 +859,7 @@ function gss() {
     }
     const b = btn(() => {
         hideAll();
-        genRms();
-        ldRm();
+        worldInit();
     }, 120, "Continue");
     const b2 = btn(() => {
         hideAll();
