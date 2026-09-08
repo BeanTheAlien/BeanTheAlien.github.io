@@ -3,12 +3,12 @@ Img.config.set("root", "assets");
 //window.addEventListener("error", (e) => alert(`${e.message}, ${e.lineno}`))
 /**
  * TODO:
- * procedual gen
  * stat
  * shop
  * skill tree
  * objects that block vision
  * sprites
+ * game init func
  */
 const scene = new Scene({ canvas: "dng", w: 700, h: 700 });
 const size = 10;
