@@ -117,10 +117,10 @@ function resetRS(): RunStat {
 interface BObj {
     v: boolean;
 }
-const sHealthOpts = (hp: number, onDie: Function, controller: Vector, idleFrm: number, painFrm: number, invince?: BObj) => {
+const sHealthOpts = (hp: number, onDie: Function, controller: Vector, idleFrm: number, painFrm: () => number, invince?: BObj) => {
     return { hp, onDie, onHurt: () => {
         if(pDed || (invince && !invince.v)) return;
-        controller.x = painFrm;
+        controller.x = painFrm();
         setTimeout(() => {
             if(!pDed) controller.x = idleFrm;
         }, 125);
@@ -203,6 +203,9 @@ function worldInit() {
  */
 var gsi = new Vector();
 var pCanHurt: BObj = { v: true };
+function getSI(...names: string[]) {
+    return hero.spr.findIndex(s => names.some(n => s.id.startsWith(n)));
+}
 plr.use("health", sHealthOpts(stat.hp, () => {
     pDed = true;
     const rm = fdRm();
@@ -214,31 +217,31 @@ plr.use("health", sHealthOpts(stat.hp, () => {
     plr.setMoveMode("fixed");
     scene.follow(plr);
     pCanHurt.v = false;
-    gsi.x = 9;
+    gsi.x = hero.spr.length - 1;
     gsi.y = 0;
     noSFU();
     fps = 1.5;
     sfu = setSFU(false);
-}, gsi, 0, 8, pCanHurt));
+}, gsi, 0, () => getSI("hurt", "pain"), pCanHurt));
 plr.binds(["w", () => {
     if(pDed) return;
     plr.moveY(-stat.spd);
-    gsi.x = 4;
+    gsi.x = getSI("up");
     gsi.y = 0;
 }], ["a", () => {
     if(pDed) return;
     plr.moveX(-stat.spd);
-    gsi.x = 1;
+    gsi.x = getSI("left");
     gsi.y = 0;
 }], ["s", () => {
     if(pDed) return;
     plr.moveY(stat.spd);
-    gsi.x = 3;
+    gsi.x = getSI("down");
     gsi.y = 0;
 }], ["d", () => {
     if(pDed) return;
     plr.moveX(stat.spd);
-    gsi.x = 2;
+    gsi.x = getSI("right");
     gsi.y = 0;
 }]);
 interface Hero {
@@ -249,14 +252,16 @@ interface Hero {
     ico: string;
     atk: Function;
 }
-const heroGun = (shots: number, roff: number, life = 5000) => {
-    for(let i = 0; i < shots; i++) {
-        const o = bulGenr(plr.x, plr.y, Angle.roff(scene.rotToMouse(plr), roff), (e) => { if(objIs(e, Enemy)) { e.comp("health").hurt(stat.dmg); scene.rm(o); } }, stat.bspd);
+const buller = (cnt: number, rot: () => number, life: number, spd: number) => {
+    for(let i = 0; i < cnt; i++) {
+        const o = bulGenr(plr.x, plr.y, rot(), (e) => { if(objIs(e, Enemy)) { e.comp("health").hurt(stat.dmg); scene.rm(o); } }, spd);
         scene.add(o);
         plrBuls.push(o);
         o.expire(life, scene);
     }
 }
+const heroGun = (shots: number, roff: number, life = 5000) => buller(shots, () => Angle.roff(scene.rotToMouse(plr), roff), life, stat.bspd);
+const heroMel = (swings: number, life = 100) => buller(swings, () => scene.rotToMouse(plr), life, stat.bspd * 3);
 const heroGunFred: Hero = {
     nm: "Gun Fred",
     ds: "A bald man with a short temper. No one knows how he got here.",
@@ -290,7 +295,7 @@ const heroGeorge: Hero = {
     ],
     path: "george",
     ico: "idle0",
-    atk: () => heroGun(1, 0)
+    atk: () => heroMel(1)
 } as const;
 const heroSet = [
     heroGunFred,
@@ -692,6 +697,9 @@ function ldExs() {
 function bulGenr(x: number, y: number, rot: number, collide: (e: Entity) => void, spd: number) {
     return new BulletObject({ x, y, rot, height: 6, width: 18, scene, color: "#e2e603", collide, extLeft: 0, extRight: scene.width, extTop: 0, extBtm: scene.height, spd });
 }
+function melGenr(x: number, y: number, rot: number, collide: (e: Entity) => void, spd: number) {
+    return new BulletObject({ x, y, rot, height: 18, width: 3, scene, color: "#a7a7a7", collide, extLeft: 0, extRight: scene.width, extTop: 0, extBtm: scene.height, spd });
+}
 
 abstract class WorldObj extends Entity {
     a: WorldObj[];
@@ -762,6 +770,7 @@ const ssStartBtn = btn(() => {
     worldInit();
     ldRm();
     hideSS();
+    hideOvr();
     gmRn = true;
 }, 0, "Enter The Dungeon");
 const shopBtn = btn(showShop, 100, "Shop", 0, -50);
@@ -782,11 +791,13 @@ for(let i = 0; i < heroSet.length; i++) {
     const w = size * 5;
     const x = col * (w + spacingX);
     const y = row * (w + spacingY + 100);
+    const ix = x + 27;
+    const iy = y + 20;
     heroUISet.push([
-        new ImgUI({ img: new Img(h.path + "/" + h.ico + ".png"), scene, x: x + 27, y: y + 20, w, h: w, color: invis }),
+        new ImgUI({ img: new Img(h.path + "/" + h.ico + ".png"), scene, x: ix, y: iy, w, h: w, color: invis }),
         new TextUI({ scene, x: x + w / 2, y: y + w + 50, tx: h.nm }),
         //new TextUI({ scene, x: x + w / 2, y: y + w + 100, tx: h.ds }),
-        new ButtonUI({ scene, x, y, w, h: w, color: invis, click: () => {
+        new ButtonUI({ scene, x: ix, y: iy, w, h: w, color: invis, click: () => {
                 hero = h;
                 applyPSS();
             } })
@@ -819,6 +830,7 @@ function showHero() {
 function hideHero() {
     scene.rmUI(heroBk);
     heroUISet.forEach(x => scene.rmUI(...x));
+    applyPSS();
     showSS();
 }
 scene.font = "16px Comic Sans MS";
@@ -906,9 +918,7 @@ const plrBuls: BulletObject[] = [];
 scene.add(plr);
 scene.on("click", () => {
     if(!gmRn) return;
-    const o = bulGenr(plr.x, plr.y, scene.rotToMouse(plr), (e) => { if(objIs(e, Enemy)) { e.comp("health").hurt(stat.dmg); scene.rm(o); } }, stat.bspd);
-    scene.add(o);
-    plrBuls.push(o);
+    hero.atk();
 });
 scene.start(() => {
     scene.bg("#003764");
@@ -921,7 +931,7 @@ scene.start(() => {
     } catch(e) {
         if(objIs(e, TypeError)) {
             console.warn(`Scene Sprite Rendering Error:\n${e.message}\n${e.stack}\nValues at time:\nx=${gsi.x}, y=${gsi.y}\nsheets=${pss.length}`);
-        }
+        } else console.error(e);
     }
     if(gsi.x == hero.spr.length - 1 && gsi.y == pss[gsi.x].length - 1) {
         setTimeout(gss, 1000);
