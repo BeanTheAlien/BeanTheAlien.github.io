@@ -662,7 +662,7 @@ const shopBtn = btn(showShop, 100, "Shop", 0, -50);
 const treeBtn = btn(showTree, 200, "Tree", 0, -50);
 const shopBk = btn(hideShop, 200, "Back", 50);
 const treeBk = btn(hideTree, 200, "Back", 50);
-const heroUIImg = new ImgUI({ img: pss[0][0], scene, x: scene.width - 100, y: 100, w: size * 3, h: size * 3 });
+const heroUIImg = new ImgUI({ img: pss[0][0], scene, x: scene.width - 100, y: 100, w: size * 5, h: size * 5, color: invis });
 const heroUIImgBtn = new ButtonUI({ scene, color: invis, x: heroUIImg.x, y: heroUIImg.y, w: heroUIImg.width, h: heroUIImg.height, click: showHero });
 const heroBk = btn(hideHero, 200, "Back", 50);
 const heroUISet = [];
@@ -677,10 +677,10 @@ for (let i = 0; i < heroSet.length; i++) {
     const x = col * (w + spacingX);
     const y = row * (w + spacingY + 100);
     heroUISet.push([
-        new ImgUI({ img: new Img(h.path + "/" + h.ico + ".png"), scene, x, y, w, h: w }),
+        new ImgUI({ img: new Img(h.path + "/" + h.ico + ".png"), scene, x: x + 27, y: y + 20, w, h: w, color: invis }),
         new TextUI({ scene, x: x + w / 2, y: y + w + 50, tx: h.nm }),
         //new TextUI({ scene, x: x + w / 2, y: y + w + 100, tx: h.ds }),
-        new ButtonUI({ scene, x, y, w, h: w, color: "red", click: () => {
+        new ButtonUI({ scene, x, y, w, h: w, color: invis, click: () => {
                 hero = h;
                 applyPSS();
             } })
