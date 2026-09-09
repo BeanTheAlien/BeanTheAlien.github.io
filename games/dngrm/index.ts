@@ -70,7 +70,7 @@ interface Stat {
     /**
      * Permanent skills.
      */
-    skill: never[];
+    skill: string[];
     /**
      * Adventure points (AP). Used to level up skills.
      */
@@ -819,13 +819,28 @@ function hideShop() {
     scene.rmUI(shopBk);
     showSS();
 }
+interface Tree {
+    nm: string;
+    ico: string;
+    fx: () => void;
+}
+const trees: Tree[] = [];
+const treeUIs: [ImgUI, TextUI][] = [];
 function showTree() {
     hideSS();
     showOvr();
     scene.addUI(treeBk);
+    for(let i = 0; i < trees.length; i++) {
+        const t = trees[i];
+        const y = i * 50;
+        treeUIs.push([new ImgUI({ img: new Img(`perks/${t.ico}`), scene, x: scene.width / 2, y, w: 50, h: 50 }), new TextUI({ scene, x: scene.width / 2, y: y + 60, tx: t.nm })]);
+    }
+    treeUIs.forEach(x => scene.addUI(...x));
+    scene.addUI();
 }
 function hideTree() {
     scene.rmUI(treeBk);
+    treeUIs.forEach(x => scene.rmUI(...x));
     showSS();
 }
 function showHero() {
