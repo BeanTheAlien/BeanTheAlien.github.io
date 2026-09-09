@@ -1,6 +1,6 @@
 import { Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Cooldown, random, Img, chance, ButtonUI, SceneUI, TextUI, Local, FilePicker, ImgUI } from "../../phantom2d.js";
 Img.config.set("root", "assets");
-//window.addEventListener("error", (e) => alert(`${e.message}, ${e.lineno}`))
+window.addEventListener("error", (e) => alert(`${e.message}, ${e.lineno}`));
 /**
  * TODO:
  * stat
@@ -731,13 +731,30 @@ function hideShop() {
     scene.rmUI(shopBk);
     showSS();
 }
+const trees = [
+    { nm: "hi", ico: "tree", fx: () => { } }
+];
+const treeUIs = [];
+const arwu = new ImgUI({ scene, img: new Img("icons/uparrow.png"), x: scene.width - 100, y: scene.height - 100, w: 50, h: 50 });
+const arwub = new ButtonUI({ scene, x: scene.width - 100, y: scene.height - 100, w: 50, h: 50, click: () => treeUIs.forEach(x => x.forEach(y => y.y += 5)) });
+const arwd = new ImgUI({ scene, img: new Img("icons/downarrow.png"), x: scene.width - 100, y: scene.height - 170, w: 50, h: 50 });
+const arwdb = new ButtonUI({ scene, x: scene.width - 100, y: scene.height - 170, w: 50, h: 50, click: () => treeUIs.forEach(x => x.forEach(y => y.y -= 5)) });
+for (let i = 0; i < trees.length; i++) {
+    const t = trees[i];
+    const y = 100 + i * 80; // Added top offset so items don't render off-screen at y=0
+    const imgUI = new ImgUI({ img: new Img(`perks/${t.ico}.png`), scene, x: scene.width / 2 - 25, y, w: 50, h: 50 });
+    const textUI = new TextUI({ scene, x: scene.width / 2 - 25, y: y + 55, tx: t.nm });
+    treeUIs.push([imgUI, textUI]);
+}
 function showTree() {
     hideSS();
-    showOvr();
-    scene.addUI(treeBk);
+    //showOvr();
+    scene.addUI(treeBk, arwu, arwub, arwd, arwdb);
+    treeUIs.forEach(x => scene.addUI(...x));
 }
 function hideTree() {
-    scene.rmUI(treeBk);
+    scene.rmUI(treeBk, arwu, arwub, arwd, arwdb);
+    treeUIs.forEach(x => scene.rmUI(...x));
     showSS();
 }
 function showHero() {
