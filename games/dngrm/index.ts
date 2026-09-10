@@ -829,9 +829,10 @@ const trees: Tree[] = [
 ] as const;
 const treeUIs: [ImgUI, TextUI][] = [];
 const arwu = new ImgUI({ scene, img: new Img("icons/uparrow.png"), x: scene.width - 100, y: scene.height - 100, w: 50, h: 50 });
-const arwub = new ButtonUI({ scene, x: scene.width - 100, y: scene.height - 100, w: 50, h: 50, click: () => treeUIs.forEach(x => x.forEach(y => y.y += 5)) });
+const shift = 15;
+const arwub = new ButtonUI({ scene, x: scene.width - 100, y: scene.height - 100, w: 50, h: 50, click: () => treeUIs.forEach(x => x.forEach(y => y.y += shift)) });
 const arwd = new ImgUI({ scene, img: new Img("icons/downarrow.png"), x: scene.width - 100, y: scene.height - 170, w: 50, h: 50 });
-const arwdb = new ButtonUI({ scene, x: scene.width - 100, y: scene.height - 170, w: 50, h: 50, click: () => treeUIs.forEach(x => x.forEach(y => y.y -= 5)) });
+const arwdb = new ButtonUI({ scene, x: scene.width - 100, y: scene.height - 170, w: 50, h: 50, click: () => treeUIs.forEach(x => x.forEach(y => y.y -= shift)) });
 for(let i = 0; i < trees.length; i++) {
     const t = trees[i];
     const y = 100 + i * 80; // Added top offset so items don't render off-screen at y=0
