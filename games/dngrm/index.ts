@@ -74,7 +74,7 @@ interface Stat {
     /**
      * Permanent game skills.
      */
-    dskill: Tree[];
+    dskill: DTree[];
     /**
      * Adventure points (AP). Used to level up skills.
      */
@@ -261,12 +261,13 @@ interface Hero {
     ico: string;
     atk: Function;
 }
-const buller = (func: (...args: any[]) => BulletObject, cnt: number, rot: () => number, life: number, spd: number) => {
-    for(let i = 0; i < cnt; i++) {
+const buller = (func: (...args: any[]) => BulletObject, cnt: number, rot: () => number, life: number, spd: number, then?: Function) => {
+    for(let j = 0; j < stat.sc; j++) for(let i = 0; i < cnt; i++) {
         const o = func(plr.x, plr.y, rot(), (e: Entity) => { if(objIs(e, Enemy)) { e.comp("health").hurt(stat.dmg); scene.rm(o); } }, spd);
         scene.add(o);
         plrBuls.push(o);
         o.expire(life, scene);
+        then?.();
     }
 }
 const heroGun = (shots: number, roff: number, life = 5000) => buller(bulGenr, shots, () => Angle.roff(scene.rotToMouse(plr), roff), life, stat.bspd);
@@ -835,6 +836,13 @@ interface Tree {
     fx: () => void;
     ct: number;
     typ: TreeSkillType;
+    sp?: DTreeExecutionScope;
+}
+type DTreeExecutionScope = "hurt" | "die" | "kill";
+interface DTree {
+    nm: string;
+    fn: () => void;
+    sp: DTreeExecutionScope;
 }
 const trees: Tree[] = [
     { nm: "hi", ico: "tree", ct: 1, fx: () => {}, typ: "sk" }
@@ -860,7 +868,9 @@ for(let i = 0; i < trees.length; i++) {
         } else if(t.typ == "gm") {
             // i need to add global events / stacks
             // like hurt, death, kill, etc
-            stat.dskill.push(t);
+            // handled with dtes; need to str/revive funcs tho
+            // (also need to actually find and execute...)
+            stat.dskill.push({ nm: t.nm, fn: t.fx, sp: t.sp as DTreeExecutionScope });
         }
         treeUIs.forEach(x => x[0].color = rfc());
     } });
