@@ -828,7 +828,7 @@ interface Tree {
 const trees: Tree[] = [
     { nm: "hi", ico: "tree", ct: 1, fx: () => {} }
 ] as const;
-const treeUIs: [ImgUI, ButtonUI, TextUI][] = [];
+const treeUIs: [SceneUI, ImgUI, ButtonUI, TextUI][] = [];
 const arwu = new ImgUI({ scene, img: new Img("icons/uparrow.png"), x: scene.width - 100, y: scene.height - 100, w: 50, h: 50 });
 const shift = 15;
 const arwub = new ButtonUI({ scene, x: scene.width - 100, y: scene.height - 100, w: 50, h: 50, click: () => treeUIs.forEach(x => x.forEach(y => y.y += shift)) });
@@ -836,16 +836,19 @@ const arwd = new ImgUI({ scene, img: new Img("icons/downarrow.png"), x: scene.wi
 const arwdb = new ButtonUI({ scene, x: scene.width - 100, y: scene.height - 170, w: 50, h: 50, click: () => treeUIs.forEach(x => x.forEach(y => y.y -= shift)) });
 for(let i = 0; i < trees.length; i++) {
     const t = trees[i];
+    const rfc = () => !!stat.skill.find(s => s == t.nm) ? "#056700" : invis;
     const y = 100 + i * 80; // Added top offset so items don't render off-screen at y=0
-    const imgUI = new ImgUI({ img: new Img(`perks/${t.ico}.png`), scene, x: scene.width / 2 - 25, y, w: 50, h: 50, color: !!stat.skill.find(s => s == t.nm) ? "#056700" : invis });
+    const backr = new SceneUI({ scene, x: scene.width / 2 - 32.5, y: y - 7.5, w: 65, h: 65, color: rfc() });
+    const imgUI = new ImgUI({ img: new Img(`perks/${t.ico}.png`), scene, x: scene.width / 2 - 25, y, w: 50, h: 50 });
     const btnUI = new ButtonUI({ scene, x: scene.width / 2 - 35, y, w: 50, h: 50, color: invis, click: () => {
         if(stat.ap < t.ct) return;
         stat.ap -= t.ct;
         t.fx();
         stat.skill.push(t.nm);
+        treeUIs.forEach(x => x[0].color = rfc());
     } });
-    const textUI = new TextUI({ scene, x: scene.width / 2 - 5, y: y + 65, tx: t.nm });
-    treeUIs.push([imgUI, btnUI, textUI]);
+    const textUI = new TextUI({ scene, x: scene.width / 2 - 5, y: y + 85, tx: t.nm });
+    treeUIs.push([backr, imgUI, btnUI, textUI]);
 }
 function showTree() {
     hideSS();
