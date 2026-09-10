@@ -13,7 +13,9 @@ window.addEventListener("error", (e) => alert(`${e.message}, ${e.lineno}`));
 const scene = new Scene({ canvas: "dng", w: 700, h: 700 });
 const size = 10;
 const nextXP = () => Math.floor(Math.pow(stat.lvl, 1.85)) + 1;
-var stat = JSON.parse(Local.get("stat") ?? `{ "xp": 0, "lvl": 1, "dmg": 1, "spd": 3, "bspd": 4, "hp": 5, "mhp": 5, "crit": 0, "luck": 0, "armor": 0, "dodge": 0, "mon": 0, "perks": [], "skill": [], "ap": 0 }`);
+var stat = JSON.parse(Local.get("stat") ?? `{ "xp": 0, "lvl": 1, "dmg": 1, "spd": 3, "bspd": 4, "hp": 5, "mhp": 5, "crit": 0, "luck": 0, "armor": 0, "dodge": 0, "mon": 0, "perks": [], "skill": [], "dskill": [], "ap": 0, "sc": 1 }`, (k, v) => {
+    return typeof v == "string" && (v.startsWith("function") || v.includes("=>")) ? eval(v) : v;
+});
 function dodged() {
     return stat.dodge && chance(stat.dodge);
 }
@@ -36,6 +38,7 @@ Luck: ${stat.luck}\n
 Money: ${stat.mon}\n
 Perks: ${none(stat.perks)}\n
 Skills: ${none(stat.skill)}\n
+DSkill: ${none(stat.dskill)}\n
 Adventure Points: ${stat.ap}`;
 }
 dispStat();
@@ -183,16 +186,18 @@ plr.binds(["w", () => {
         gsi.x = getSI("right");
         gsi.y = 0;
     }]);
-const buller = (func, cnt, rot, life, spd) => {
-    for (let i = 0; i < cnt; i++) {
-        const o = func(plr.x, plr.y, rot(), (e) => { if (objIs(e, Enemy)) {
-            e.comp("health").hurt(stat.dmg);
-            scene.rm(o);
-        } }, spd);
-        scene.add(o);
-        plrBuls.push(o);
-        o.expire(life, scene);
-    }
+const buller = (func, cnt, rot, life, spd, then) => {
+    for (let j = 0; j < stat.sc; j++)
+        for (let i = 0; i < cnt; i++) {
+            const o = func(plr.x, plr.y, rot(), (e) => { if (objIs(e, Enemy)) {
+                e.comp("health").hurt(stat.dmg);
+                scene.rm(o);
+            } }, spd);
+            scene.add(o);
+            plrBuls.push(o);
+            o.expire(life, scene);
+            then?.();
+        }
 };
 const heroGun = (shots, roff, life = 5000) => buller(bulGenr, shots, () => Angle.roff(scene.rotToMouse(plr), roff), life, stat.bspd);
 const heroMel = (swings, life = 90) => buller(melGenr, swings, () => scene.rotToMouse(plr), life, stat.bspd * 1.5);
@@ -732,7 +737,7 @@ function hideShop() {
     showSS();
 }
 const trees = [
-    { nm: "hi", ico: "tree", ct: 1, fx: () => { } }
+    { nm: "hi", ico: "tree", ct: 1, fx: () => { }, typ: "sk" }
 ];
 const treeUIs = [];
 const arwu = new ImgUI({ scene, img: new Img("icons/uparrow.png"), x: scene.width - 100, y: scene.height - 100, w: 50, h: 50 });
@@ -750,8 +755,17 @@ for (let i = 0; i < trees.length; i++) {
             if (stat.ap < t.ct)
                 return;
             stat.ap -= t.ct;
-            t.fx();
-            stat.skill.push(t.nm);
+            if (t.typ == "sk") {
+                t.fx();
+                stat.skill.push(t.nm);
+            }
+            else if (t.typ == "gm") {
+                // i need to add global events / stacks
+                // like hurt, death, kill, etc
+                // handled with dtes; need to str/revive funcs tho
+                // (also need to actually find and execute...)
+                stat.dskill.push({ nm: t.nm, fn: t.fx, sp: t.sp });
+            }
             treeUIs.forEach(x => x[0].color = rfc());
         } });
     const textUI = new TextUI({ scene, x: scene.width / 2 - 5, y: y + 85, tx: t.nm });
@@ -831,8 +845,11 @@ function nextSave() {
     Local.set("lst", (new Date()).toISOString());
     lst.textContent = Local.get("lst") ?? "never";
 }
+function statString() {
+    return JSON.stringify(stat, (k, v) => typeof v == "function" ? v.toString() : v);
+}
 function lclSave() {
-    Local.set("stat", stat);
+    Local.set("stat", statString());
     nextSave();
 }
 function pcSave() {
@@ -840,7 +857,7 @@ function pcSave() {
         .then(h => h[0])
         .then(h => h.createWritable())
         .then(w => {
-        w.write(JSON.stringify(stat));
+        w.write(statString());
         return w;
     })
         .then(w => w.close());

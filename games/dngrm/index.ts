@@ -85,7 +85,9 @@ interface Stat {
     sc: number;
 }
 const nextXP = () => Math.floor(Math.pow(stat.lvl, 1.85)) + 1;
-var stat: Stat = JSON.parse(Local.get("stat") ?? `{ "xp": 0, "lvl": 1, "dmg": 1, "spd": 3, "bspd": 4, "hp": 5, "mhp": 5, "crit": 0, "luck": 0, "armor": 0, "dodge": 0, "mon": 0, "perks": [], "skill": [], "dskill": [], "ap": 0, "sc": 1 }`) as Stat;
+var stat: Stat = JSON.parse(Local.get("stat") ?? `{ "xp": 0, "lvl": 1, "dmg": 1, "spd": 3, "bspd": 4, "hp": 5, "mhp": 5, "crit": 0, "luck": 0, "armor": 0, "dodge": 0, "mon": 0, "perks": [], "skill": [], "dskill": [], "ap": 0, "sc": 1 }`, (k, v) => {
+    return typeof v == "string" && (v.startsWith("function") || v.includes("=>")) ? eval(v) : v;
+}) as Stat;
 function dodged() {
     return stat.dodge && chance(stat.dodge);
 }
@@ -961,8 +963,11 @@ function nextSave() {
     Local.set("lst", (new Date()).toISOString());
     lst.textContent = Local.get("lst") ?? "never";
 }
+function statString() {
+    return JSON.stringify(stat, (k, v) => typeof v == "function" ? v.toString() : v);
+}
 function lclSave() {
-    Local.set("stat", stat);
+    Local.set("stat", statString());
     nextSave();
 }
 function pcSave() {
@@ -970,7 +975,7 @@ function pcSave() {
         .then(h => h[0])
         .then(h => h.createWritable())
         .then(w => {
-            w.write(JSON.stringify(stat));
+            w.write(statString());
             return w;
         })
         .then(w => w.close());
