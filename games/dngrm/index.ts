@@ -72,12 +72,20 @@ interface Stat {
      */
     skill: string[];
     /**
+     * Permanent game skills.
+     */
+    dskill: Tree[];
+    /**
      * Adventure points (AP). Used to level up skills.
      */
     ap: number;
+    /**
+     * Shot count. How many times to repeat attack.
+     */
+    sc: number;
 }
 const nextXP = () => Math.floor(Math.pow(stat.lvl, 1.85)) + 1;
-var stat: Stat = JSON.parse(Local.get("stat") ?? `{ "xp": 0, "lvl": 1, "dmg": 1, "spd": 3, "bspd": 4, "hp": 5, "mhp": 5, "crit": 0, "luck": 0, "armor": 0, "dodge": 0, "mon": 0, "perks": [], "skill": [], "ap": 0 }`) as Stat;
+var stat: Stat = JSON.parse(Local.get("stat") ?? `{ "xp": 0, "lvl": 1, "dmg": 1, "spd": 3, "bspd": 4, "hp": 5, "mhp": 5, "crit": 0, "luck": 0, "armor": 0, "dodge": 0, "mon": 0, "perks": [], "skill": [], "dskill": [], "ap": 0, "sc": 1 }`) as Stat;
 function dodged() {
     return stat.dodge && chance(stat.dodge);
 }
@@ -100,6 +108,7 @@ Luck: ${stat.luck}\n
 Money: ${stat.mon}\n
 Perks: ${none(stat.perks)}\n
 Skills: ${none(stat.skill)}\n
+DSkill: ${none(stat.dskill)}\n
 Adventure Points: ${stat.ap}`;
 }
 dispStat();
@@ -819,14 +828,16 @@ function hideShop() {
     scene.rmUI(shopBk);
     showSS();
 }
+type TreeSkillType = "sk" | "gm";
 interface Tree {
     nm: string;
     ico: string;
     fx: () => void;
     ct: number;
+    typ: TreeSkillType;
 }
 const trees: Tree[] = [
-    { nm: "hi", ico: "tree", ct: 1, fx: () => {} }
+    { nm: "hi", ico: "tree", ct: 1, fx: () => {}, typ: "sk" }
 ] as const;
 const treeUIs: [SceneUI, ImgUI, ButtonUI, TextUI][] = [];
 const arwu = new ImgUI({ scene, img: new Img("icons/uparrow.png"), x: scene.width - 100, y: scene.height - 100, w: 50, h: 50 });
@@ -843,8 +854,14 @@ for(let i = 0; i < trees.length; i++) {
     const btnUI = new ButtonUI({ scene, x: scene.width / 2 - 35, y, w: 50, h: 50, color: invis, click: () => {
         if(stat.ap < t.ct) return;
         stat.ap -= t.ct;
-        t.fx();
-        stat.skill.push(t.nm);
+        if(t.typ == "sk") {
+            t.fx();
+            stat.skill.push(t.nm);
+        } else if(t.typ == "gm") {
+            // i need to add global events / stacks
+            // like hurt, death, kill, etc
+            stat.dskill.push(t);
+        }
         treeUIs.forEach(x => x[0].color = rfc());
     } });
     const textUI = new TextUI({ scene, x: scene.width / 2 - 5, y: y + 85, tx: t.nm });
