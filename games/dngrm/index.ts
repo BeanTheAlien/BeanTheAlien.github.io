@@ -823,11 +823,12 @@ interface Tree {
     nm: string;
     ico: string;
     fx: () => void;
+    ct: number;
 }
 const trees: Tree[] = [
-    { nm: "hi", ico: "tree", fx: () => {} }
+    { nm: "hi", ico: "tree", ct: 1, fx: () => {} }
 ] as const;
-const treeUIs: [ImgUI, TextUI][] = [];
+const treeUIs: [ImgUI, ButtonUI, TextUI][] = [];
 const arwu = new ImgUI({ scene, img: new Img("icons/uparrow.png"), x: scene.width - 100, y: scene.height - 100, w: 50, h: 50 });
 const shift = 15;
 const arwub = new ButtonUI({ scene, x: scene.width - 100, y: scene.height - 100, w: 50, h: 50, click: () => treeUIs.forEach(x => x.forEach(y => y.y += shift)) });
@@ -837,8 +838,13 @@ for(let i = 0; i < trees.length; i++) {
     const t = trees[i];
     const y = 100 + i * 80; // Added top offset so items don't render off-screen at y=0
     const imgUI = new ImgUI({ img: new Img(`perks/${t.ico}.png`), scene, x: scene.width / 2 - 25, y, w: 50, h: 50 });
+    const btnUI = new ButtonUI({ scene, x: scene.width / 2 - 35, y, w: 50, h: 50, color: invis, click: () => {
+        if(stat.ap < t.ct) return;
+        stat.ap -= t.ct;
+        t.fx();
+    } });
     const textUI = new TextUI({ scene, x: scene.width / 2 - 5, y: y + 65, tx: t.nm });
-    treeUIs.push([imgUI, textUI]);
+    treeUIs.push([imgUI, btnUI, textUI]);
 }
 function showTree() {
     hideSS();
