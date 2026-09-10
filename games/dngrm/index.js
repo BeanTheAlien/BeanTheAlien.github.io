@@ -694,8 +694,8 @@ const ssStartBtn = btn(() => {
 }, 0, "Enter The Dungeon");
 const shopBtn = btn(showShop, 100, "Shop", 0, -50);
 const treeBtn = btn(showTree, 200, "Tree", 0, -50);
-const shopBk = btn(hideShop, 200, "Back", 50);
-const treeBk = btn(hideTree, 200, "Back", 50);
+const shopBk = btn(hideShop, 300, "Back", 230);
+const treeBk = btn(hideTree, 300, "Back", 230);
 const heroUIImg = new ImgUI({ img: pss[0][0], scene, x: scene.width - 100, y: 100, w: size * 5, h: size * 5, color: invis });
 const heroUIImgBtn = new ButtonUI({ scene, color: invis, x: heroUIImg.x, y: heroUIImg.y, w: heroUIImg.width, h: heroUIImg.height, click: showHero });
 const heroBk = btn(hideHero, 200, "Back", 50);
@@ -743,12 +743,12 @@ for (let i = 0; i < trees.length; i++) {
     const t = trees[i];
     const y = 100 + i * 80; // Added top offset so items don't render off-screen at y=0
     const imgUI = new ImgUI({ img: new Img(`perks/${t.ico}.png`), scene, x: scene.width / 2 - 25, y, w: 50, h: 50 });
-    const textUI = new TextUI({ scene, x: scene.width / 2 - 25, y: y + 55, tx: t.nm });
+    const textUI = new TextUI({ scene, x: scene.width / 2 + 1, y: y + 55, tx: t.nm });
     treeUIs.push([imgUI, textUI]);
 }
 function showTree() {
     hideSS();
-    //showOvr();
+    showOvr();
     scene.addUI(treeBk, arwu, arwub, arwd, arwdb);
     treeUIs.forEach(x => scene.addUI(...x));
 }
