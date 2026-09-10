@@ -836,7 +836,7 @@ for(let i = 0; i < trees.length; i++) {
     const t = trees[i];
     const y = 100 + i * 80; // Added top offset so items don't render off-screen at y=0
     const imgUI = new ImgUI({ img: new Img(`perks/${t.ico}.png`), scene, x: scene.width / 2 - 25, y, w: 50, h: 50 });
-    const textUI = new TextUI({ scene, x: scene.width / 2 + 1, y: y + 55, tx: t.nm });
+    const textUI = new TextUI({ scene, x: scene.width / 2 - 5, y: y + 65, tx: t.nm });
     treeUIs.push([imgUI, textUI]);
 }
 function showTree() {
