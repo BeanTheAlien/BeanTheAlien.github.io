@@ -742,7 +742,7 @@ function hideShop() {
 }
 const trees = [
     { nm: "hi", ico: "tree", ct: 1, fx: () => { }, typ: "sk" },
-    { nm: "alt", ico: "tree", ct: 0, fx: () => { }, typ: "gm", sp: "hurt" }
+    { nm: "alt", ico: "tree", ct: 0, fx: () => alert("AHHHHHHH"), typ: "gm", sp: "hurt" }
 ];
 const treeUIs = [];
 const arwu = new ImgUI({ scene, img: new Img("icons/uparrow.png"), x: scene.width - 100, y: scene.height - 100, w: 50, h: 50 });
@@ -794,6 +794,7 @@ function showTree() {
 function hideTree() {
     scene.rmUI(treeBk, arwu, arwub, arwd, arwdb);
     treeUIs.forEach(x => scene.rmUI(...x));
+    hideOvr();
     showSS();
 }
 function showHero() {
