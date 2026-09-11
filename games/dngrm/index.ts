@@ -4,12 +4,11 @@ window.addEventListener("error", (e) => alert(`${e.message}, ${e.lineno}`))
 // Local.del("stat");
 /**
  * TODO:
- * stat
  * shop
- * skill tree
  * objects that block vision
  * sprites
  * game init func
+ * fix cont / mm
  */
 const scene = new Scene({ canvas: "dng", w: 700, h: 700 });
 const size = 10;
@@ -275,8 +274,8 @@ const buller = (func: (...args: any[]) => BulletObject, cnt: number, rot: () => 
         then?.();
     }
 }
-const heroGun = (shots: number, roff: number, life = 5000) => buller(bulGenr, shots, () => Angle.roff(scene.rotToMouse(plr), roff), life, stat.bspd);
-const heroMel = (swings: number, life = 90) => buller(melGenr, swings, () => scene.rotToMouse(plr), life, stat.bspd * 1.5);
+const heroGun = (shots: number, roff: number, life = 5000, then?: Function) => buller(bulGenr, shots, () => Angle.roff(scene.rotToMouse(plr), roff), life, stat.bspd, then);
+const heroMel = (swings: number, life = 90, then?: Function) => buller(melGenr, swings, () => scene.rotToMouse(plr), life, stat.bspd * 1.5, then);
 const heroGunFred: Hero = {
     nm: "Gun Fred",
     ds: "A bald man with a short temper. No one knows how he got here.",
@@ -867,8 +866,9 @@ for(let i = 0; i < trees.length; i++) {
     const rfc2 = () => rfc(stat.dskill, x => x.nm == t.nm);
     const y = 100 + i * 125; // Added top offset so items don't render off-screen at y=0
     const backr = new SceneUI({ scene, x: scene.width / 2 - 32.5, y: y - 7.5, w: 65, h: 65, color: rfc(stat.skill, x => x == t.nm) });
-    const imgUI = new ImgUI({ img: new Img(`perks/${t.ico}.png`), scene, x: scene.width / 2 - 25, y, w: 50, h: 50 });
-    const btnUI = new ButtonUI({ scene, x: scene.width / 2 - 35, y, w: 50, h: 50, color: invis, click: () => {
+    const ix = scene.width / 2 - 25;
+    const imgUI = new ImgUI({ img: new Img(`perks/${t.ico}.png`), scene, x: ix, y, w: 50, h: 50 });
+    const btnUI = new ButtonUI({ scene, x: ix, y, w: 50, h: 50, color: invis, click: () => {
         if(stat.ap < t.ct) return;
         stat.ap -= t.ct;
         if(t.typ == "sk") {
