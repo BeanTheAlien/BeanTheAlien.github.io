@@ -1,6 +1,6 @@
 import { Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Cooldown, random, Img, chance, ButtonUI, SceneUI, TextUI, Local, FilePicker, ImgUI, isCol } from "../../phantom2d.js";
 Img.config.set("root", "assets");
-window.addEventListener("error", (e) => alert(`${e.message}, ${e.lineno}`));
+//window.addEventListener("error", (e) => alert(`${e.message}, ${e.lineno}`))
 // Local.del("stat");
 /**
  * TODO:
@@ -27,6 +27,8 @@ const lsB = document.getElementById("ls");
 lsB.addEventListener("click", lclSave);
 const pcsB = document.getElementById("pcs");
 pcsB.addEventListener("click", pcSave);
+const clsB = document.getElementById("cls");
+clsB.addEventListener("click", () => Local.del("stat"));
 function dispStat() {
     const none = (a) => !a.length ? "none" : a;
     statDisp.textContent = `Level ${stat.lvl} (${stat.xp} / ${nextXP()} xp)\n
@@ -38,7 +40,7 @@ Luck: ${stat.luck}\n
 Money: ${stat.mon}\n
 Perks: ${none(stat.perks)}\n
 Skills: ${none(stat.skill)}\n
-DSkill: ${none(stat.dskill)}\n
+DSkill: ${none(stat.dskill.map(x => x.nm))}\n
 Adventure Points: ${stat.ap}`;
 }
 dispStat();
@@ -126,14 +128,33 @@ const plr = new PlayableCharacter({ strength: 0, width: size * 3, height: size *
         plr.y = bound(plr.y, 0, scene.height - plr.height);
     }, x: 50, y: 50 });
 var pDed = false;
+var gssQue = false;
 function worldInit() {
+    scene.unfollow();
+    rooms.forEach(rm => {
+        scene.rm(...rm.exit, ...rm.e);
+        rm.e.filter(e => objIs(e, GunEnemy)).forEach(e => scene.rm(...e.bls));
+        scene.rm(...(rm.welt ?? []));
+    });
+    scene.rm(...plrBuls, ...coins);
+    plrBuls.splice(0);
+    coins = [];
+    shop = [];
+    noSFU();
+    fps = 5;
+    sfu = setSFU();
     plr.x = 50;
     plr.y = 50;
     pDed = false;
+    gssQue = false;
     pCanHurt.v = true;
-    plr.comp("health").hp = stat.mhp;
+    plr.comp("health").heal(stat.mhp);
     stat.hp = stat.mhp;
+    gsi = new Vector();
+    plr.setMoveMode("move");
+    gmRn = true;
     genRms();
+    ldRm();
 }
 /**
  * Global (player) sprite index.
@@ -192,7 +213,7 @@ const buller = (func, cnt, rot, life, spd, then) => {
     for (let j = 0; j < stat.sc; j++)
         for (let i = 0; i < cnt; i++) {
             const o = func(plr.x, plr.y, rot(), (e) => { if (objIs(e, Enemy)) {
-                e.comp("health").hurt(stat.dmg);
+                e.comp("health").hurt(stat.crit && chance(stat.crit) ? stat.dmg * 2 : stat.dmg);
                 scene.rm(o);
             } }, spd);
             scene.add(o);
@@ -471,8 +492,8 @@ class Exit extends Entity {
 }
 function LeftExit() { return new Exit(0, scene.height / 2, 0, new Vector(-1, 0), new Vector(scene.width - 25, scene.height / 2)); }
 function RightExit() { return new Exit(scene.width - 5, scene.height / 2, 0, new Vector(1, 0), new Vector(25, scene.height / 2)); }
-function TopExit() { return new Exit(scene.width / 2, 0, Angle.rad(90), new Vector(0, 1), new Vector(scene.width / 2, scene.height - 25)); }
-function BtmExit() { return new Exit(scene.width / 2, scene.height - 10, Angle.rad(90), new Vector(0, -1), new Vector(scene.width / 2, 25)); }
+function TopExit() { return new Exit(scene.width / 2, -20, Angle.rad(90), new Vector(0, 1), new Vector(scene.width / 2, scene.height - 25)); }
+function BtmExit() { return new Exit(scene.width / 2, scene.height - 15, Angle.rad(90), new Vector(0, -1), new Vector(scene.width / 2, 25)); }
 const rooms = [];
 function getRmExits(room, rooms) {
     const hasRoom = (x, y) => rooms.some(r => r.x == x && r.y == y);
@@ -708,7 +729,6 @@ const ssStartBtn = btn(() => {
     // // remove all enemies from first room
     // if(r) r.e = [];
     worldInit();
-    ldRm();
     hideSS();
     hideOvr();
     gmRn = true;
@@ -913,7 +933,8 @@ scene.start(() => {
         else
             console.error(e);
     }
-    if (gsi.x == hero.spr.length - 1 && gsi.y == pss[gsi.x].length - 1) {
+    if (gsi.x == hero.spr.length - 1 && gsi.y == pss[gsi.x].length - 1 && !gssQue) {
+        gssQue = true;
         setTimeout(gss, 1000);
     }
     dispStat();
