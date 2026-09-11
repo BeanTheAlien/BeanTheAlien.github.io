@@ -508,6 +508,7 @@ class MeleeBoss extends MeleeEnemy {
     kill() {
         scene.rm(this);
         gss();
+        stat.mon += 5;
     }
 }
 class BulkBoss extends MeleeBoss {
@@ -878,10 +879,6 @@ for(let i = 0; i < trees.length; i++) {
             stat.skill.push(t.nm);
             backr.color = rfc1();
         } else if(t.typ == "gm") {
-            // i need to add global events / stacks
-            // like hurt, death, kill, etc
-            // handled with dtes; need to str/revive funcs tho
-            // (also need to actually find and execute...)
             // prevent re-appensions
             if(stat.dskill.find(x => x.nm == t.nm)) return;
             stat.dskill.push({ nm: t.nm, fn: t.fx, sp: t.sp as DTreeExecutionScope });
