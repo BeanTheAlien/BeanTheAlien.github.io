@@ -136,6 +136,7 @@ const sHealthOpts = (hp: number, onDie: Function, controller: Vector, idleFrm: n
             if(!pDed) controller.x = idleFrm;
         }, 125);
         stat.hp = plr.comp("health").hp;
+        stat.dskill.filter(x => x.sp == "hurt").forEach(x => x.fn());
     } } as any;
 };
 const healthOpts = (self: Entity, hp: number, onDie: Function, c1: string, c2: string = "#8b0b0b") => {
@@ -219,6 +220,7 @@ function getSI(...names: string[]) {
 }
 plr.use("health", sHealthOpts(stat.hp, () => {
     pDed = true;
+    stat.dskill.filter(x => x.sp == "die").forEach(x => x.fn());
     const rm = fdRm();
     if(rm) {
         scene.rm(...rm.e);
@@ -426,6 +428,7 @@ class Enemy extends Entity {
             stat.xp -= nextXP();
             stat.lvl++;
         }
+        stat.dskill.filter(x => x.sp == "kill").forEach(x => x.fn());
     }
     rs() {
         scene.rm(this);
@@ -847,7 +850,8 @@ interface DTree {
     sp: DTreeExecutionScope;
 }
 const trees: Tree[] = [
-    { nm: "hi", ico: "tree", ct: 1, fx: () => {}, typ: "sk" }
+    { nm: "hi", ico: "tree", ct: 1, fx: () => {}, typ: "sk" },
+    { nm: "alt", ico: "tree", ct: 0, fx: () => {}, typ: "gm", sp: "hurt" }
 ] as const;
 const treeUIs: [SceneUI, ImgUI, ButtonUI, TextUI][] = [];
 const arwu = new ImgUI({ scene, img: new Img("icons/uparrow.png"), x: scene.width - 100, y: scene.height - 100, w: 50, h: 50 });
