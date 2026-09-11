@@ -1,15 +1,14 @@
-import { Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Cooldown, random, Img, chance, ButtonUI, SceneUI, TextUI, Local, FilePicker, ImgUI } from "../../phantom2d.js";
+import { Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Cooldown, random, Img, chance, ButtonUI, SceneUI, TextUI, Local, FilePicker, ImgUI, isCol } from "../../phantom2d.js";
 Img.config.set("root", "assets");
 window.addEventListener("error", (e) => alert(`${e.message}, ${e.lineno}`));
 // Local.del("stat");
 /**
  * TODO:
- * stat
  * shop
- * skill tree
  * objects that block vision
  * sprites
  * game init func
+ * fix cont / mm
  */
 const scene = new Scene({ canvas: "dng", w: 700, h: 700 });
 const size = 10;
@@ -202,8 +201,8 @@ const buller = (func, cnt, rot, life, spd, then) => {
             then?.();
         }
 };
-const heroGun = (shots, roff, life = 5000) => buller(bulGenr, shots, () => Angle.roff(scene.rotToMouse(plr), roff), life, stat.bspd);
-const heroMel = (swings, life = 90) => buller(melGenr, swings, () => scene.rotToMouse(plr), life, stat.bspd * 1.5);
+const heroGun = (shots, roff, life = 5000, then) => buller(bulGenr, shots, () => Angle.roff(scene.rotToMouse(plr), roff), life, stat.bspd, then);
+const heroMel = (swings, life = 90, then) => buller(melGenr, swings, () => scene.rotToMouse(plr), life, stat.bspd * 1.5, then);
 const heroGunFred = {
     nm: "Gun Fred",
     ds: "A bald man with a short temper. No one knows how he got here.",
@@ -429,6 +428,7 @@ class MeleeBoss extends MeleeEnemy {
     kill() {
         scene.rm(this);
         gss();
+        stat.mon += 5;
     }
 }
 class BulkBoss extends MeleeBoss {
@@ -439,6 +439,11 @@ class BulkBoss extends MeleeBoss {
 class SprinterBoss extends MeleeBoss {
     constructor(x, y) {
         super(x, y, 5, 5, "#920d92", 10, 1, 2.35);
+    }
+}
+class ShottyEnemy extends CoreGunEnemy {
+    constructor(x, y) {
+        super(x, y, 1, 2, "#f8a025", 3, 1, 1.25, 600, 20, () => { }, 6);
     }
 }
 class Exit extends Entity {
@@ -490,7 +495,7 @@ function getRmExits(room, rooms) {
     return exits;
 }
 function genEnemyCtors() {
-    const ec = [BasicMeleeEnemy, BasicGunEnemy, BulletSprayGunEnemy, SprintMeleeEnemy];
+    const ec = [BasicMeleeEnemy, BasicGunEnemy, BulletSprayGunEnemy, SprintMeleeEnemy, ShottyEnemy];
     const out = [];
     for (let i = 0; i < random(1, 6); i++)
         out.push(ec[random(ec.length)]);
@@ -552,7 +557,14 @@ function genRms() {
     for (let i = 0; i < cord.length; i++) {
         const c = cord[i];
         const tag = (chance(bc) && i > 2 && !bcg) || (i == cord.length - 1 && !bcg) ? "boss" : /*(chance(sc) && !scg && i > 0) ? "shop" :*/ "nm";
-        rooms.push({ at: c, e: genEnemyCtors().map(c => new c(0, 0)), exit: getRmExits(c, cord), tg: tag });
+        rooms.push({ at: c, e: genEnemyCtors().map(c => {
+                const x = new c(0, 0);
+                const rp = () => new Vector(random(0, scene.width - x.width), random(0, scene.height - x.height));
+                x.setPos(rp());
+                while (isCol(x, plr))
+                    x.setPos(rp());
+                return x;
+            }), exit: getRmExits(c, cord), tg: tag });
         // if(tag != "shop") sc++;
         // else sc = 5;
         if (tag == "boss")
@@ -757,8 +769,9 @@ for (let i = 0; i < trees.length; i++) {
     const rfc2 = () => rfc(stat.dskill, x => x.nm == t.nm);
     const y = 100 + i * 125; // Added top offset so items don't render off-screen at y=0
     const backr = new SceneUI({ scene, x: scene.width / 2 - 32.5, y: y - 7.5, w: 65, h: 65, color: rfc(stat.skill, x => x == t.nm) });
-    const imgUI = new ImgUI({ img: new Img(`perks/${t.ico}.png`), scene, x: scene.width / 2 - 25, y, w: 50, h: 50 });
-    const btnUI = new ButtonUI({ scene, x: scene.width / 2 - 35, y, w: 50, h: 50, color: invis, click: () => {
+    const ix = scene.width / 2 - 25;
+    const imgUI = new ImgUI({ img: new Img(`perks/${t.ico}.png`), scene, x: ix, y, w: 50, h: 50 });
+    const btnUI = new ButtonUI({ scene, x: ix, y, w: 50, h: 50, color: invis, click: () => {
             if (stat.ap < t.ct)
                 return;
             stat.ap -= t.ct;
@@ -771,10 +784,6 @@ for (let i = 0; i < trees.length; i++) {
                 backr.color = rfc1();
             }
             else if (t.typ == "gm") {
-                // i need to add global events / stacks
-                // like hurt, death, kill, etc
-                // handled with dtes; need to str/revive funcs tho
-                // (also need to actually find and execute...)
                 // prevent re-appensions
                 if (stat.dskill.find(x => x.nm == t.nm))
                     return;

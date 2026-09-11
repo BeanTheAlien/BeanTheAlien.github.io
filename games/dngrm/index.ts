@@ -1,4 +1,4 @@
-import { DebugRay, Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Raycast, Cooldown, random, Img, chance, ButtonUI, SceneUI, TextUI, Local, FilePicker, ImgUI } from "../../phantom2d.js";
+import { DebugRay, Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Raycast, Cooldown, random, Img, chance, ButtonUI, SceneUI, TextUI, Local, FilePicker, ImgUI, isCol } from "../../phantom2d.js";
 Img.config.set("root", "assets");
 window.addEventListener("error", (e) => alert(`${e.message}, ${e.lineno}`))
 // Local.del("stat");
@@ -521,6 +521,11 @@ class SprinterBoss extends MeleeBoss {
         super(x, y, 5, 5, "#920d92", 10, 1, 2.35);
     }
 }
+class ShottyEnemy extends CoreGunEnemy {
+    constructor(x: number, y: number) {
+        super(x, y, 1, 2, "#f8a025", 3, 1, 1.25, 600, 20, () => {}, 6);
+    }
+}
 
 class Exit extends Entity {
     constructor(x: number, y: number, rot: number, then: Vector, sp: Vector) {
@@ -573,7 +578,7 @@ function getRmExits(room: Vector, rooms: Vector[]) {
     return exits;
 }
 function genEnemyCtors() {
-    const ec = [BasicMeleeEnemy, BasicGunEnemy, BulletSprayGunEnemy, SprintMeleeEnemy] as const;
+    const ec = [BasicMeleeEnemy, BasicGunEnemy, BulletSprayGunEnemy, SprintMeleeEnemy, ShottyEnemy] as const;
     const out: (new (...arg: any[]) => Enemy)[] = [];
     for(let i = 0; i < random(1, 6); i++) out.push(ec[random(ec.length)]);
     return out;
@@ -652,7 +657,13 @@ function genRms() {
     for(let i = 0; i < cord.length; i++) {
         const c = cord[i];
         const tag: RoomTag = (chance(bc) && i > 2 && !bcg) || (i == cord.length - 1 && !bcg) ? "boss" : /*(chance(sc) && !scg && i > 0) ? "shop" :*/ "nm";
-        rooms.push({ at: c, e: genEnemyCtors().map(c => new c(0, 0)), exit: getRmExits(c, cord), tg: tag });
+        rooms.push({ at: c, e: genEnemyCtors().map(c => {
+            const x = new c(0, 0);
+            const rp = () => new Vector(random(0, scene.width - x.width), random(0, scene.height - x.height));
+            x.setPos(rp());
+            while(isCol(x, plr)) x.setPos(rp());
+            return x;
+        }), exit: getRmExits(c, cord), tg: tag });
         // if(tag != "shop") sc++;
         // else sc = 5;
         if(tag == "boss") bcg = true;
