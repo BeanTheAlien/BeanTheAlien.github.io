@@ -1,6 +1,7 @@
 import { DebugRay, Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Raycast, Cooldown, random, Img, chance, ButtonUI, SceneUI, TextUI, Local, FilePicker, ImgUI } from "../../phantom2d.js";
 Img.config.set("root", "assets");
 window.addEventListener("error", (e) => alert(`${e.message}, ${e.lineno}`))
+// Local.del("stat");
 /**
  * TODO:
  * stat
@@ -861,24 +862,31 @@ const arwd = new ImgUI({ scene, img: new Img("icons/downarrow.png"), x: scene.wi
 const arwdb = new ButtonUI({ scene, x: scene.width - 100, y: scene.height - 170, w: 50, h: 50, click: () => treeUIs.forEach(x => x.forEach(y => y.y -= shift)) });
 for(let i = 0; i < trees.length; i++) {
     const t = trees[i];
-    const rfc = () => !!stat.skill.find(s => s == t.nm) ? "#056700" : invis;
-    const y = 100 + i * 80; // Added top offset so items don't render off-screen at y=0
-    const backr = new SceneUI({ scene, x: scene.width / 2 - 32.5, y: y - 7.5, w: 65, h: 65, color: rfc() });
+    const rfc = <T extends string[] | DTree[]>(src: T, array: (x: T[number]) => boolean) => !!src.find(array) ? "#056700" : invis;
+    const rfc1 = () => rfc(stat.skill, x => x == t.nm);
+    const rfc2 = () => rfc(stat.dskill, x => x.nm == t.nm);
+    const y = 100 + i * 125; // Added top offset so items don't render off-screen at y=0
+    const backr = new SceneUI({ scene, x: scene.width / 2 - 32.5, y: y - 7.5, w: 65, h: 65, color: rfc(stat.skill, x => x == t.nm) });
     const imgUI = new ImgUI({ img: new Img(`perks/${t.ico}.png`), scene, x: scene.width / 2 - 25, y, w: 50, h: 50 });
     const btnUI = new ButtonUI({ scene, x: scene.width / 2 - 35, y, w: 50, h: 50, color: invis, click: () => {
         if(stat.ap < t.ct) return;
         stat.ap -= t.ct;
         if(t.typ == "sk") {
+            // prevent re-appensions
+            if(stat.skill.find(x => x == t.nm)) return;
             t.fx();
             stat.skill.push(t.nm);
+            backr.color = rfc1();
         } else if(t.typ == "gm") {
             // i need to add global events / stacks
             // like hurt, death, kill, etc
             // handled with dtes; need to str/revive funcs tho
             // (also need to actually find and execute...)
+            // prevent re-appensions
+            if(stat.dskill.find(x => x.nm == t.nm)) return;
             stat.dskill.push({ nm: t.nm, fn: t.fx, sp: t.sp as DTreeExecutionScope });
+            backr.color = rfc2();
         }
-        treeUIs.forEach(x => x[0].color = rfc());
     } });
     const textUI = new TextUI({ scene, x: scene.width / 2 - 5, y: y + 85, tx: t.nm });
     treeUIs.push([backr, imgUI, btnUI, textUI]);
