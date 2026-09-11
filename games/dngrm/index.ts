@@ -99,6 +99,8 @@ const lsB = document.getElementById("ls") as HTMLButtonElement;
 lsB.addEventListener("click", lclSave)
 const pcsB = document.getElementById("pcs") as HTMLButtonElement;
 pcsB.addEventListener("click", pcSave);
+const clsB = document.getElementById("cls") as HTMLButtonElement;
+clsB.addEventListener("click", () => Local.del("stat"));
 function dispStat() {
     const none = (a: any[]) => !a.length ? "none" : a;
     statDisp.textContent = `Level ${stat.lvl} (${stat.xp} / ${nextXP()} xp)\n
