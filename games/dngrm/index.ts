@@ -451,7 +451,7 @@ class Enemy extends Entity {
         return Vector.dist(this.getPos(), plr.getPos());
     }
     kill() {
-        if(getDSkillRType("kill", true).some(x => x.fn())) return;
+        if(getDSkillRType("kill", true).some(x => x.fn())) return console.log("REFUTE");
         const rm = this.rs();
         for(let i = 0; i < random(1, 5); i++) {
             new Coin(this.x, this.y);
@@ -900,8 +900,8 @@ interface NonRefutableDTree extends DTree<void> {}
 interface RefutableDTree extends DTree<boolean> {}
 const trees: Tree[] = [
     { nm: "hi", ico: "tree", ct: 1, fx: () => {}, typ: "sk" },
-    { nm: "bad", ico: "tree", ct: 0, fx: () => chance(50), typ: "gm", sp: "kill", rf: true },
-    { nm: "Phoenix's Grace", ico: "phoenix", ct: 5, fx: () => chance(5), typ: "gm", sp: "die", rf: true },
+    { nm: "bad", ico: "tree", ct: 0, fx: () => chance(100), typ: "gm", sp: "kill", rf: true },
+    { nm: "Phoenix's Grace", ico: "phoneix", ct: 5, fx: () => chance(5), typ: "gm", sp: "die", rf: true },
     { nm: "Lifestal", ico: "lifestal", ct: 10, fx: () => pHeal(1), typ: "gm", sp: "kill", rf: false }
 ] as const;
 const treeUIs: [SceneUI, ImgUI, ButtonUI, TextUI][] = [];

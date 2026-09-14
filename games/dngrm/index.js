@@ -13,11 +13,16 @@ Img.config.set("root", "assets");
 const scene = new Scene({ canvas: "dng", w: 700, h: 700 });
 const size = 10;
 const nextXP = () => Math.floor(Math.pow(stat.lvl, 1.85)) + 1;
-var stat = JSON.parse(Local.get("stat") ?? `{ "xp": 0, "lvl": 1, "dmg": 1, "spd": 3, "bspd": 4, "hp": 5, "mhp": 5, "crit": 0, "luck": 0, "armor": 0, "dodge": 0, "mon": 0, "perks": [], "skill": [], "dskill": [], "ap": 0, "sc": 1 }`, (k, v) => {
+const parseStat = () => JSON.parse(Local.get("stat") ?? `{ "xp": 0, "lvl": 1, "dmg": 1, "spd": 3, "bspd": 4, "hp": 5, "mhp": 5, "crit": 0, "luck": 0, "armor": 0, "dodge": 0, "mon": 0, "perks": [], "skill": [], "dskill": [], "ap": 0, "sc": 1 }`, (k, v) => {
     return typeof v == "string" && (v.startsWith("function") || v.includes("=>")) ? eval(v) : v;
 });
+var stat = parseStat();
 function dodged() {
     return stat.dodge && chance(stat.dodge);
+}
+function pHeal(x) {
+    plr.comp("health").heal(x);
+    stat.hp = plr.comp("health").hp;
 }
 const statDisp = document.getElementById("stat-disp");
 statDisp.style.whiteSpace = "pre-wrap";
@@ -28,7 +33,10 @@ lsB.addEventListener("click", lclSave);
 const pcsB = document.getElementById("pcs");
 pcsB.addEventListener("click", pcSave);
 const clsB = document.getElementById("cls");
-clsB.addEventListener("click", () => Local.del("stat"));
+clsB.addEventListener("click", () => {
+    Local.del("stat");
+    stat = parseStat();
+});
 function dispStat() {
     const none = (a) => !a.length ? "none" : a;
     statDisp.textContent = `Level ${stat.lvl} (${stat.xp} / ${nextXP()} xp)\n
@@ -55,9 +63,13 @@ function resetRS() {
         ms: 0
     };
 }
+const getDSkillType = (typ) => stat.dskill.filter(x => x.sp == typ);
+const getDSkillRType = (typ, r) => getDSkillType(typ).filter(x => x.rf == r);
 const sHealthOpts = (hp, onDie, controller, idleFrm, painFrm, invince) => {
     return { hp, onDie, onHurt: () => {
             if (pDed || (invince && !invince.v))
+                return;
+            if (getDSkillRType("hurt", true).some(x => x.fn()))
                 return;
             controller.x = painFrm();
             setTimeout(() => {
@@ -65,7 +77,7 @@ const sHealthOpts = (hp, onDie, controller, idleFrm, painFrm, invince) => {
                     controller.x = idleFrm;
             }, 125);
             stat.hp = plr.comp("health").hp;
-            stat.dskill.filter(x => x.sp == "hurt").forEach(x => x.fn());
+            getDSkillRType("hurt", false).forEach(x => x.fn());
         } };
 };
 const healthOpts = (self, hp, onDie, c1, c2 = "#8b0b0b") => {
@@ -167,8 +179,10 @@ function getSI(...names) {
     return hero.spr.findIndex(s => names.some(n => s.id.startsWith(n)));
 }
 plr.use("health", sHealthOpts(stat.hp, () => {
+    if (getDSkillRType("die", true).some(x => x.fn()))
+        return;
     pDed = true;
-    stat.dskill.filter(x => x.sp == "die").forEach(x => x.fn());
+    getDSkillRType("die", false).forEach(x => x.fn());
     const rm = fdRm();
     if (rm) {
         scene.rm(...rm.e);
@@ -354,6 +368,10 @@ class Enemy extends Entity {
         return Vector.dist(this.getPos(), plr.getPos());
     }
     kill() {
+        console.log(getDSkillRType("kill", true).map(x => x.fn()));
+        console.log(chance(100));
+        if (getDSkillRType("kill", true).some(x => x.fn()))
+            return console.log("REFUTE");
         const rm = this.rs();
         for (let i = 0; i < random(1, 5); i++) {
             new Coin(this.x, this.y);
@@ -365,7 +383,7 @@ class Enemy extends Entity {
             stat.xp -= nextXP();
             stat.lvl++;
         }
-        stat.dskill.filter(x => x.sp == "kill").forEach(x => x.fn());
+        getDSkillRType("kill", false).forEach(x => x.fn());
     }
     rs() {
         scene.rm(this);
@@ -774,7 +792,9 @@ function hideShop() {
 }
 const trees = [
     { nm: "hi", ico: "tree", ct: 1, fx: () => { }, typ: "sk" },
-    { nm: "alt", ico: "tree", ct: 0, fx: () => alert("AHHHHHHH"), typ: "gm", sp: "hurt" }
+    { nm: "bad", ico: "tree", ct: 0, fx: () => chance(100), typ: "gm", sp: "kill", rf: true },
+    { nm: "Phoenix's Grace", ico: "phoneix", ct: 5, fx: () => chance(5), typ: "gm", sp: "die", rf: true },
+    { nm: "Lifestal", ico: "lifestal", ct: 10, fx: () => pHeal(1), typ: "gm", sp: "kill", rf: false }
 ];
 const treeUIs = [];
 const arwu = new ImgUI({ scene, img: new Img("icons/uparrow.png"), x: scene.width - 100, y: scene.height - 100, w: 50, h: 50 });
@@ -807,7 +827,7 @@ for (let i = 0; i < trees.length; i++) {
                 // prevent re-appensions
                 if (stat.dskill.find(x => x.nm == t.nm))
                     return;
-                stat.dskill.push({ nm: t.nm, fn: t.fx, sp: t.sp });
+                stat.dskill.push({ nm: t.nm, fn: t.fx, sp: t.sp, rf: t.rf });
                 backr.color = rfc2();
             }
         } });
