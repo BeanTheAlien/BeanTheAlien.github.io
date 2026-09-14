@@ -92,6 +92,10 @@ var stat: Stat = parseStat();
 function dodged() {
     return stat.dodge && chance(stat.dodge);
 }
+function pHeal(x: number) {
+    plr.comp("health").heal(x);
+    stat.hp = plr.comp("health").hp;
+}
 const statDisp = document.getElementById("stat-disp") as HTMLDivElement;
 statDisp.style.whiteSpace = "pre-wrap";
 const lst = document.getElementById("lst") as HTMLDivElement;
@@ -134,15 +138,18 @@ function resetRS(): RunStat {
 interface BObj {
     v: boolean;
 }
+const getDSkillType = (typ: DTreeExecutionScope) => stat.dskill.filter(x => x.sp == typ);
+const getDSkillRType = <T extends boolean>(typ: DTreeExecutionScope, r: T) => getDSkillType(typ).filter(x => x.rf == r) as (T extends true ? RefutableDTree : NonRefutableDTree)[];
 const sHealthOpts = (hp: number, onDie: Function, controller: Vector, idleFrm: number, painFrm: () => number, invince?: BObj) => {
     return { hp, onDie, onHurt: () => {
         if(pDed || (invince && !invince.v)) return;
+        if(getDSkillRType("hurt", true).some(x => x.fn())) return;
         controller.x = painFrm();
         setTimeout(() => {
             if(!pDed) controller.x = idleFrm;
         }, 125);
         stat.hp = plr.comp("health").hp;
-        stat.dskill.filter(x => x.sp == "hurt").forEach(x => x.fn());
+        getDSkillRType("hurt", false).forEach(x => x.fn());
     } } as any;
 };
 const healthOpts = (self: Entity, hp: number, onDie: Function, c1: string, c2: string = "#8b0b0b") => {
@@ -244,8 +251,9 @@ function getSI(...names: string[]) {
     return hero.spr.findIndex(s => names.some(n => s.id.startsWith(n)));
 }
 plr.use("health", sHealthOpts(stat.hp, () => {
+    if(getDSkillRType("die", true).some(x => x.fn())) return;
     pDed = true;
-    stat.dskill.filter(x => x.sp == "die").forEach(x => x.fn());
+    getDSkillRType("die", false).forEach(x => x.fn());
     const rm = fdRm();
     if(rm) {
         scene.rm(...rm.e);
@@ -443,6 +451,7 @@ class Enemy extends Entity {
         return Vector.dist(this.getPos(), plr.getPos());
     }
     kill() {
+        if(getDSkillRType("kill", true).some(x => x.fn())) return;
         const rm = this.rs();
         for(let i = 0; i < random(1, 5); i++) {
             new Coin(this.x, this.y);
@@ -453,7 +462,7 @@ class Enemy extends Entity {
             stat.xp -= nextXP();
             stat.lvl++;
         }
-        stat.dskill.filter(x => x.sp == "kill").forEach(x => x.fn());
+        getDSkillRType("kill", false).forEach(x => x.fn());
     }
     rs() {
         scene.rm(this);
@@ -878,16 +887,22 @@ interface Tree {
     ct: number;
     typ: TreeSkillType;
     sp?: DTreeExecutionScope;
+    rf?: boolean;
 }
 type DTreeExecutionScope = "hurt" | "die" | "kill";
-interface DTree {
+interface DTree<T extends void | boolean = void> {
     nm: string;
-    fn: () => void;
+    fn: () => T;
     sp: DTreeExecutionScope;
+    rf: boolean;
 }
+interface NonRefutableDTree extends DTree<void> {}
+interface RefutableDTree extends DTree<boolean> {}
 const trees: Tree[] = [
     { nm: "hi", ico: "tree", ct: 1, fx: () => {}, typ: "sk" },
-    { nm: "alt", ico: "tree", ct: 0, fx: () => alert("AHHHHHHH"), typ: "gm", sp: "hurt" }
+    { nm: "bad", ico: "tree", ct: 0, fx: () => chance(50), typ: "gm", sp: "kill", rf: true },
+    { nm: "Phoenix's Grace", ico: "phoenix", ct: 5, fx: () => chance(5), typ: "gm", sp: "die", rf: true },
+    { nm: "Lifestal", ico: "lifestal", ct: 10, fx: () => pHeal(1), typ: "gm", sp: "kill", rf: false }
 ] as const;
 const treeUIs: [SceneUI, ImgUI, ButtonUI, TextUI][] = [];
 const arwu = new ImgUI({ scene, img: new Img("icons/uparrow.png"), x: scene.width - 100, y: scene.height - 100, w: 50, h: 50 });
@@ -916,7 +931,7 @@ for(let i = 0; i < trees.length; i++) {
         } else if(t.typ == "gm") {
             // prevent re-appensions
             if(stat.dskill.find(x => x.nm == t.nm)) return;
-            stat.dskill.push({ nm: t.nm, fn: t.fx, sp: t.sp as DTreeExecutionScope });
+            stat.dskill.push({ nm: t.nm, fn: t.fx, sp: t.sp as DTreeExecutionScope, rf: t.rf as boolean });
             backr.color = rfc2();
         }
     } });
