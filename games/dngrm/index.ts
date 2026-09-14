@@ -85,9 +85,10 @@ interface Stat {
     sc: number;
 }
 const nextXP = () => Math.floor(Math.pow(stat.lvl, 1.85)) + 1;
-var stat: Stat = JSON.parse(Local.get("stat") ?? `{ "xp": 0, "lvl": 1, "dmg": 1, "spd": 3, "bspd": 4, "hp": 5, "mhp": 5, "crit": 0, "luck": 0, "armor": 0, "dodge": 0, "mon": 0, "perks": [], "skill": [], "dskill": [], "ap": 0, "sc": 1 }`, (k, v) => {
+const parseStat = () => JSON.parse(Local.get("stat") ?? `{ "xp": 0, "lvl": 1, "dmg": 1, "spd": 3, "bspd": 4, "hp": 5, "mhp": 5, "crit": 0, "luck": 0, "armor": 0, "dodge": 0, "mon": 0, "perks": [], "skill": [], "dskill": [], "ap": 0, "sc": 1 }`, (k, v) => {
     return typeof v == "string" && (v.startsWith("function") || v.includes("=>")) ? eval(v) : v;
 }) as Stat;
+var stat: Stat = parseStat();
 function dodged() {
     return stat.dodge && chance(stat.dodge);
 }
@@ -100,7 +101,10 @@ lsB.addEventListener("click", lclSave)
 const pcsB = document.getElementById("pcs") as HTMLButtonElement;
 pcsB.addEventListener("click", pcSave);
 const clsB = document.getElementById("cls") as HTMLButtonElement;
-clsB.addEventListener("click", () => Local.del("stat"));
+clsB.addEventListener("click", () => {
+    Local.del("stat");
+    stat = parseStat();
+});
 function dispStat() {
     const none = (a: any[]) => !a.length ? "none" : a;
     statDisp.textContent = `Level ${stat.lvl} (${stat.xp} / ${nextXP()} xp)\n
