@@ -66,7 +66,7 @@ interface Stat {
     /**
      * Perks unlocked during battle.
      */
-    perks: string[];
+    perks: Shop[];
     /**
      * Permanent skills.
      */
@@ -118,7 +118,7 @@ Armor: ${stat.armor} (dodge: ${stat.dodge})\n
 Speed: ${stat.spd} / B-speed: ${stat.bspd}\n
 Luck: ${stat.luck}\n
 Money: ${stat.mon}\n
-Perks: ${none(stat.perks)}\n
+Perks: ${none(stat.perks.map(s => s.nm))}\n
 Skills: ${none(stat.skill)}\n
 DSkill: ${none(stat.dskill.map(x => x.nm))}\n
 Adventure Points: ${stat.ap}`;
@@ -224,6 +224,9 @@ function worldInit() {
     plrBuls.splice(0);
     coins = [];
     shop = [];
+    // cleanup shop skills
+    stat.perks.forEach(s => s.clean());
+    stat.perks = [];
     noSFU();
     fps = 5;
     sfu = setSFU();
@@ -810,21 +813,27 @@ var shop: Shop[] = [];
 type ShopDeclarerType = "st" | "dt";
 class Shop extends WorldObj {
     img: Img;
-    constructor(x: number, y: number, cost: number, spr: string, name: string, typ: "st", effect: () => void);
+    nm: string;
+    clean: () => void;
+    constructor(x: number, y: number, cost: number, spr: string, name: string, typ: "st", effect: () => void, cleanup: () => void);
     constructor(x: number, y: number, cost: number, spr: string, name: string, typ: "dt", dtree: DTree);
-    constructor(x: number, y: number, cost: number, spr: string, name: string, typ: ShopDeclarerType, fx?: (() => void) | DTree) {
-        super(x, y, 20, 20, () => { stat.mon -= cost; stat.perks.push(name); if(typ == "st") {
+    constructor(x: number, y: number, cost: number, spr: string, name: string, typ: ShopDeclarerType, fx?: (() => void) | DTree, cleanup = () => {
+        stat.dskill.splice(stat.dskill.indexOf(fx as DTree), 1);
+    }) {
+        super(x, y, 20, 20, () => { stat.mon -= cost; stat.perks.push(this); if(typ == "st") {
             (fx as (() => void))();
         } else {
             stat.dskill.push(fx as DTree);
         } }, () => this.rend(), shop, false, () => stat.mon >= cost);
         this.img = new Img(spr + ".png");
+        this.clean = cleanup;
+        this.nm = name;
     }
     rend() {
         scene.img(this.img, this.x, this.y, this.width, this.height);
     }
 }
-function ShopEx(x: number, y: number) { return new Shop(x, y, 1, "coin", "test", "st", () => alert("H{WE{IOWE[EWFPOIFEWI{EWF{OWFE[oWFEo[kfEW")); }
+function ShopEx(x: number, y: number) { return new Shop(x, y, 1, "coin", "test", "st", () => alert("H{WE{IOWE[EWFPOIFEWI{EWF{OWFE[oWFEo[kfEW"), () => {}); }
 // genRms();
 // ldRm();
 
