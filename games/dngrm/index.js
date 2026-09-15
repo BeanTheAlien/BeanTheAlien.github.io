@@ -632,6 +632,11 @@ function genRms() {
     }
     console.assert(!rooms.some(r => r.tg == "shop"), "shop:", rooms.find(r => r.tg == "shop")?.at.x, ",", rooms.find(r => r.tg == "shop")?.at.y);
 }
+function locateRoom(room) {
+    const rm = (r) => r.tg == room;
+    const r = rooms.find(rm);
+    console.assert(!rooms.some(rm), room + ":", r.at.x + ", " + r.at.y);
+}
 function genShop() {
     const ctor = [ShopEx, ShopArmor, ShopDmg];
     const obj = [];
