@@ -531,7 +531,7 @@ class BasicGunEnemy extends CoreGunEnemy {
 }
 class BulletSprayGunEnemy extends CoreGunEnemy {
     constructor(x: number, y: number) {
-        super(x, y, 1, 2, "#be2b2b", 5, 1, 3, 150, 10, () => {}, 5);
+        super(x, y, 1, 2, "#be2b2b", 5, 1, 3, 500, 10, () => {}, 5);
     }
 }
 class SprintMeleeEnemy extends MeleeEnemy {
@@ -725,7 +725,7 @@ function genRms() {
     console.assert(!rooms.some(r => r.tg == "shop"), "shop:", rooms.find(r => r.tg == "shop")?.at.x, ",", rooms.find(r => r.tg == "shop")?.at.y);
 }
 function genShop() {
-    const ctor: ((x: number, y: number) => Shop)[] = [ShopEx];
+    const ctor: ((x: number, y: number) => Shop)[] = [ShopEx, ShopArmor, ShopDmg];
     const obj: Shop[] = [];
     const ct = 3;
     const sx = scene.width / ct;
@@ -812,29 +812,45 @@ class Coin extends WorldObj {
 }
 var shop: Shop[] = [];
 type ShopDeclarerType = "st" | "dt";
+interface StatControllingShop {
+    on: VoidFunc;
+    off: VoidFunc;
+}
 class Shop extends WorldObj {
     img: Img;
     nm: string;
     clean: VoidFunc;
     constructor(x: number, y: number, cost: number, spr: string, name: string, typ: "st", effect: VoidFunc, cleanup: VoidFunc);
+    constructor(x: number, y: number, cost: number, spr: string, name: string, typ: "st", scs: StatControllingShop);
     constructor(x: number, y: number, cost: number, spr: string, name: string, typ: "dt", dtree: DTree);
-    constructor(x: number, y: number, cost: number, spr: string, name: string, typ: ShopDeclarerType, fx?: VoidFunc | DTree, cleanup = () => {
-        stat.dskill.splice(stat.dskill.indexOf(fx as DTree), 1);
-    }) {
-        super(x, y, 20, 20, () => { stat.mon -= cost; stat.perks.push(this); if(typ == "st") {
-            (fx as VoidFunc)();
-        } else {
-            stat.dskill.push(fx as DTree);
-        } }, () => this.rend(), shop, false, () => stat.mon >= cost);
+    constructor(x: number, y: number, cost: number, spr: string, name: string, typ: ShopDeclarerType, fx?: VoidFunc | DTree | StatControllingShop, cleanup?: VoidFunc) {
+        super(x, y, 20, 20, () => {
+            stat.mon -= cost;
+            stat.perks.push(this);
+            if(typ == "st") {
+                if(fx && "on" in fx) fx.on();
+                else (fx as VoidFunc)();
+            } else {
+                stat.dskill.push(fx as DTree);
+            }
+        }, () => this.rend(), shop, false, () => stat.mon >= cost);
         this.img = new Img(spr + ".png");
-        this.clean = cleanup;
+        this.clean = typ == "dt" && !!cleanup ? () => {
+            stat.dskill.splice(stat.dskill.indexOf(fx as DTree), 1);
+        } : (typ == "st" ? ((fx as StatControllingShop).off) : cleanup as VoidFunc);
         this.nm = name;
     }
     rend() {
         scene.img(this.img, this.x, this.y, this.width, this.height);
     }
 }
+type AbsoluteSCSMakerChanger = "a" | "s";
+function SCSMaker<T extends keyof Stat, K extends Stat[T]>(k: T, v: K, f: AbsoluteSCSMakerChanger = "a") {
+    return { on: () => stat[k] = ((stat[k] as number) + (f == "a" ? (v as number) : -(v as number))) as Stat[T], off: () => stat[k] = ((stat[k] as number) + (f == "a" ? -(v as number) : (v as number))) as Stat[T] };
+}
 function ShopEx(x: number, y: number) { return new Shop(x, y, 1, "coin", "test", "st", () => alert("H{WE{IOWE[EWFPOIFEWI{EWF{OWFE[oWFEo[kfEW"), () => {}); }
+function ShopArmor(x: number, y: number) { return new Shop(x, y, 3, "coin", "Shield Potion", "st", SCSMaker("armor", 3)); }
+function ShopDmg(x: number, y: number) { return new Shop(x, y, 5, "coin", "Damage Potion", "st", SCSMaker("dmg", 1)); }
 // genRms();
 // ldRm();
 

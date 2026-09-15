@@ -453,7 +453,7 @@ class BasicGunEnemy extends CoreGunEnemy {
 }
 class BulletSprayGunEnemy extends CoreGunEnemy {
     constructor(x, y) {
-        super(x, y, 1, 2, "#be2b2b", 5, 1, 3, 150, 10, () => { }, 5);
+        super(x, y, 1, 2, "#be2b2b", 5, 1, 3, 500, 10, () => { }, 5);
     }
 }
 class SprintMeleeEnemy extends MeleeEnemy {
@@ -633,7 +633,7 @@ function genRms() {
     console.assert(!rooms.some(r => r.tg == "shop"), "shop:", rooms.find(r => r.tg == "shop")?.at.x, ",", rooms.find(r => r.tg == "shop")?.at.y);
 }
 function genShop() {
-    const ctor = [ShopEx];
+    const ctor = [ShopEx, ShopArmor, ShopDmg];
     const obj = [];
     const ct = 3;
     const sx = scene.width / ct;
@@ -725,28 +725,36 @@ class Shop extends WorldObj {
     img;
     nm;
     clean;
-    constructor(x, y, cost, spr, name, typ, fx, cleanup = () => {
-        stat.dskill.splice(stat.dskill.indexOf(fx), 1);
-    }) {
+    constructor(x, y, cost, spr, name, typ, fx, cleanup) {
         super(x, y, 20, 20, () => {
             stat.mon -= cost;
             stat.perks.push(this);
             if (typ == "st") {
-                fx();
+                if (fx && "on" in fx)
+                    fx.on();
+                else
+                    fx();
             }
             else {
                 stat.dskill.push(fx);
             }
         }, () => this.rend(), shop, false, () => stat.mon >= cost);
         this.img = new Img(spr + ".png");
-        this.clean = cleanup;
+        this.clean = typ == "dt" && !!cleanup ? () => {
+            stat.dskill.splice(stat.dskill.indexOf(fx), 1);
+        } : (typ == "st" ? (fx.off) : cleanup);
         this.nm = name;
     }
     rend() {
         scene.img(this.img, this.x, this.y, this.width, this.height);
     }
 }
+function SCSMaker(k, v, f = "a") {
+    return { on: () => stat[k] = (stat[k] + (f == "a" ? v : -v)), off: () => stat[k] = (stat[k] + (f == "a" ? -v : v)) };
+}
 function ShopEx(x, y) { return new Shop(x, y, 1, "coin", "test", "st", () => alert("H{WE{IOWE[EWFPOIFEWI{EWF{OWFE[oWFEo[kfEW"), () => { }); }
+function ShopArmor(x, y) { return new Shop(x, y, 3, "coin", "Shield Potion", "st", SCSMaker("armor", 3)); }
+function ShopDmg(x, y) { return new Shop(x, y, 5, "coin", "Damage Potion", "st", SCSMaker("dmg", 1)); }
 // genRms();
 // ldRm();
 const ovr = new SceneUI({ scene, w: scene.width, h: scene.height, color: "#000c49" });
