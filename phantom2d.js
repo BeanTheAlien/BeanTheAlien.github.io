@@ -2199,6 +2199,13 @@ class Scene {
     dualRuntime;
     scaleX;
     scaleY;
+    /**
+     * Controls the global offset.
+     *
+     * Assigning an offset value would shift everything `goff.x` right
+     * and `goff.y` down.
+     */
+    goff;
     constructor(opts) {
         if (typeof opts.canvas == "string") {
             opts.canvas = document.getElementById(opts.canvas);
@@ -2240,6 +2247,7 @@ class Scene {
         this.dualRuntime = new Runtime();
         this.scaleX = 1;
         this.scaleY = 1;
+        this.goff = new Vector();
     }
     get width() {
         return this.canvas.width;
@@ -2453,8 +2461,8 @@ class Scene {
             ox = this.width / 2 - fcx;
             oy = this.height / 2 - fcy;
         }
-        const dx = ex + ox + offX;
-        const dy = ey + oy + offY;
+        const dx = ex + ox + offX + this.goff.x;
+        const dy = ey + oy + offY + this.goff.y;
         this.ctx.save();
         const w2 = w / 2;
         const h2 = h / 2;
@@ -2922,6 +2930,21 @@ class Scene {
     scale(sx, sy) {
         this.scaleX = sx;
         this.scaleY = sy;
+    }
+    oval(x, y, rx, ry, color) {
+        this.ctx.beginPath();
+        this.ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI);
+        this.color = color;
+        this.ctx.fill();
+    }
+    rgrad(x, y, r, ...stops) {
+        const g = this.ctx.createRadialGradient(x, y, r, x, y, r);
+        for (let i = 0; i < stops.length; i++)
+            if (Array.isArray(stops))
+                g.addColorStop(stops[i][0], stops[i][1]);
+            else
+                g.addColorStop(i, stops[i]);
+        return g;
     }
 }
 /**
@@ -3426,6 +3449,16 @@ class Angle {
     static roff(inRadSource, roffVal) {
         return Angle.rad(random(Angle.deg(inRadSource - roffVal), Angle.deg(inRadSource + roffVal)));
     }
+    /**
+     * Convert an angle from deg => rad or rad => deg.
+     * @param angle The angle string to convert.
+     * @returns The opposite angle value.
+     */
+    static cv(angle) {
+        if (angle.endsWith("deg"))
+            return this.rad(Number(angle.slice(0, angle.indexOf("d"))));
+        return this.deg(Number(angle.slice(0, angle.indexOf("r"))));
+    }
 }
 class Config {
     config;
@@ -3661,15 +3694,24 @@ class FilePicker extends FilePickerBase {
         const out = await Promise.all(files.map(async (o) => o.text()));
         return out;
     }
+    static async pick(opts) {
+        return await (new FilePicker()).pick(opts);
+    }
     async handle(opts) {
         const [...handles] = await window.showOpenFilePicker({ ...this.cleanOpts(opts), multiple: opts.mult });
         return handles;
+    }
+    static async handle(opts) {
+        return await (new FilePicker()).handle(opts);
     }
     async write(opts) {
         const [h] = await this.handle(opts);
         const w = await h.createWritable();
         await w.write(opts.tx);
         await w.close();
+    }
+    static async write(opts) {
+        await (new FilePicker()).write(opts);
     }
 }
 class SaveFilePicker extends FilePickerBase {
@@ -3689,13 +3731,8 @@ class SaveFilePicker extends FilePickerBase {
  */
 class DirPicker extends Picker {
     async pick(opts) {
-        try {
-            const handle = await window.showDirectoryPicker(this.cleanOpts(opts));
-            return handle;
-        }
-        catch (e) {
-            throw e;
-        }
+        const handle = await window.showDirectoryPicker(this.cleanOpts(opts));
+        return handle;
     }
     async handle(opts) {
         return this.pick(opts);
@@ -4045,9 +4082,11 @@ class TextUI extends SceneUI {
     }
     render() {
         this.scene.color = this.color;
+        const f = this.scene.font;
         if (this.font)
             this.scene.font = this.font;
         this.scene.text(this.tx, this.x, this.y, this.mw);
+        this.scene.font = f;
         super.render();
     }
 }
@@ -4117,6 +4156,8 @@ class ImgUI extends SceneUI {
     constructor(opts) {
         super(opts);
         this.img = opts.img;
+        // invis, shouldn't show a bg
+        this.color = "#0000";
     }
     render() {
         this.scene.img(this.img, this.x, this.y, this.width, this.height);
@@ -4371,6 +4412,37 @@ class AIController {
         this.tg = opts.tg;
     }
 }
+const CtorMap = {
+    entity: Entity,
+    stcobj: StaticObject,
+    physobj: PhysicsObject,
+    mvobj: MovingObject,
+    bulobj: BulletObject,
+    wallobj: WallObject,
+    floorobj: FloorObject,
+    char: Character,
+    pc: PlayableCharacter,
+    aircf: Aircraft
+};
+class Spawner {
+    ctor;
+    opt;
+    itvl;
+    constructor(ctor, opt) {
+        this.ctor = CtorMap[ctor];
+        this.opt = opt;
+        this.itvl = new Itvl();
+    }
+    new() {
+        return new (this.ctor)(this.opt);
+    }
+    start(time) {
+        this.itvl.start(this.new.bind(this), time);
+    }
+    stop() {
+        this.itvl.stop();
+    }
+}
 // type HistoryCache<T> = [keyof T, T[keyof T], T[keyof T]];
 // class History<T> {
 //     hist: HistoryCache<T>[];
@@ -4390,6 +4462,41 @@ class AIController {
 //         return this.hist[this.ptr];
 //     }
 // }
+class Perlin {
+    perm;
+    constructor() {
+        this.perm = new Uint8Array(512);
+        const p = Array.from({ length: 256 }, (_, i) => i);
+        // Shuffle the array
+        for (let i = 255; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [p[i], p[j]] = [p[j], p[i]];
+        }
+        // Duplicate the permutation array
+        for (let i = 0; i < 512; i++) {
+            this.perm[i] = p[i & 255];
+        }
+    }
+    fade(t) { return t * t * t * (t * (t * 6 - 15) + 10); }
+    grad(hash, x, y) {
+        const h = hash & 7;
+        const u = h < 4 ? x : y;
+        const v = h < 4 ? y : x;
+        return ((h & 1) ? -u : u) + ((h & 2) ? -2.0 * v : 2.0 * v);
+    }
+    noise(x, y) {
+        const X = Math.floor(x) & 255;
+        const Y = Math.floor(y) & 255;
+        x -= Math.floor(x);
+        y -= Math.floor(y);
+        const u = this.fade(x);
+        const v = this.fade(y);
+        const p = this.perm;
+        const A = p[X] + Y;
+        const B = p[X + 1] + Y;
+        return lerp(v, lerp(u, this.grad(p[A], x, y), this.grad(p[B], x - 1, y)), lerp(u, this.grad(p[A + 1], x, y - 1), this.grad(p[B + 1], x - 1, y - 1)));
+    }
+}
 /**
  * Returns whether 2 objects are in collision.
  * @param a Object 1.
@@ -4529,7 +4636,7 @@ function random(a, b) {
     return Math.floor(Math.random() * (max - min)) + min;
 }
 function chance(max, upperBound) {
-    return max <= random((upperBound ?? 100) + 1);
+    return random((upperBound ?? 100) + 1) <= max;
 }
 function objIs(obj, ctor) {
     return obj != undefined && obj instanceof ctor;
@@ -4567,4 +4674,12 @@ function easeSmoothStep(t) {
 function aspectRatio() {
     return window.innerWidth / window.innerHeight;
 }
-export { Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, FloorObject, Aircraft, Weapon, Gun, Pistol, Burst, SceneUI, ButtonUI, TextUI, MenuUI, ImgUI, ProgressUI, KeyedTextUI, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, DebugRay, Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag, External, MultiRaycast, ConeRaycast, ConeDebugRay, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, randItem, lerp, Local, LocalDeprecated, Session, Clipboard, Cookies, Params, Comp, HealthComp, InvComp, EnhancedPhysicsComp, GravityComp, Trigger, Itvl, FixedItvl, KeyInputs, LerpDevice, VectorBasedLerpDevice, VectorLerpDevice, EntityLerpDevice, SceneUILerpDevice, EntityRotationLerpDevice, AngleBasedLerpDevice, SceneUIRotationLerpDevice, ParamKey };
+function mulberry32(a) {
+    return function () {
+        let t = a += 0x6D2B79F5;
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+}
+export { Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, FloorObject, Aircraft, Weapon, Gun, Pistol, Burst, SceneUI, ButtonUI, TextUI, MenuUI, ImgUI, ProgressUI, KeyedTextUI, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, DebugRay, Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag, External, MultiRaycast, ConeRaycast, ConeDebugRay, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, randItem, lerp, mulberry32, Local, LocalDeprecated, Session, Clipboard, Cookies, Params, Comp, HealthComp, InvComp, EnhancedPhysicsComp, GravityComp, Trigger, Itvl, FixedItvl, KeyInputs, LerpDevice, VectorBasedLerpDevice, VectorLerpDevice, EntityLerpDevice, SceneUILerpDevice, EntityRotationLerpDevice, AngleBasedLerpDevice, SceneUIRotationLerpDevice, ParamKey, Spawner, Perlin };

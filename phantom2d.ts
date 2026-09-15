@@ -3100,6 +3100,13 @@ class Scene {
     dualRuntime: Runtime;
     scaleX: number;
     scaleY: number;
+    /**
+     * Controls the global offset.
+     * 
+     * Assigning an offset value would shift everything `goff.x` right
+     * and `goff.y` down.
+     */
+    goff: Vector;
     constructor(opts: SceneOptions) {
         if(typeof opts.canvas == "string") {
             opts.canvas = document.getElementById(opts.canvas);
@@ -3134,6 +3141,7 @@ class Scene {
         this.dualRuntime = new Runtime();
         this.scaleX = 1;
         this.scaleY = 1;
+        this.goff = new Vector();
     }
     get width(): number {
         return this.canvas.width;
@@ -3343,8 +3351,8 @@ class Scene {
             ox = this.width / 2 - fcx;
             oy = this.height / 2 - fcy;
         }
-        const dx = ex + ox + offX;
-        const dy = ey + oy + offY;
+        const dx = ex + ox + offX + this.goff.x;
+        const dy = ey + oy + offY + this.goff.y;
         this.ctx.save();
         const w2 = w / 2;
         const h2 = h / 2;
@@ -3821,6 +3829,17 @@ class Scene {
     scale(sx: number, sy: number) {
         this.scaleX = sx;
         this.scaleY = sy;
+    }
+    oval(x: number, y: number, rx: number, ry: number, color: string) {
+        this.ctx.beginPath();
+        this.ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI);
+        this.color = color;
+        this.ctx.fill();
+    }
+    rgrad(x: number, y: number, r: number, ...stops: (string | [number, string])[]) {
+        const g = this.ctx.createRadialGradient(x, y, r, x, y, r);
+        for(let i = 0; i < stops.length; i++) if(Array.isArray(stops)) g.addColorStop(stops[i][0] as number, stops[i][1]); else g.addColorStop(i, stops[i]);
+        return g;
     }
 }
 /**
@@ -4329,6 +4348,7 @@ class Cooldown {
         this.ready = true;
     }
 }
+type AngleString = `${number}deg` | `${number}rad` | `${number}d` | `${number}r`;
 class Angle {
     static deg(rad: number): number {
         return rad * 180 / Math.PI;
@@ -4347,6 +4367,15 @@ class Angle {
      */
     static roff(inRadSource: number, roffVal: number) {
         return Angle.rad(random(Angle.deg(inRadSource - roffVal), Angle.deg(inRadSource + roffVal)));
+    }
+    /**
+     * Convert an angle from deg => rad or rad => deg.
+     * @param angle The angle string to convert.
+     * @returns The opposite angle value.
+     */
+    static cv(angle: AngleString) {
+        if(angle.endsWith("deg")) return this.rad(Number(angle.slice(0, angle.indexOf("d"))));
+        return this.deg(Number(angle.slice(0, angle.indexOf("r"))));
     }
 }
 type ConfigOnValueSetHandler<T> = (k: keyof T, v: T[keyof T]) => void;
@@ -4649,6 +4678,7 @@ type FilePickerHandleType = FileSystemFileHandle[];
 class FilePicker extends FilePickerBase<FilePickerPickType, FilePickerHandleType, FilePickerOptions, FilePickerFinalOptions> {
     pick(opts: { mult: false } & FilePickerBaseOptions): Promise<string>;
     pick(opts: { mult: true } & FilePickerBaseOptions): Promise<string[]>;
+    pick(opts: FilePickerOptions): Promise<string | string[]>;
     async pick(opts: FilePickerOptions): Promise<FilePickerPickType> {
         const [...handles]: FilePickerHandleType = await this.handle(opts);
         if(handles.length == 1) {
@@ -4662,15 +4692,27 @@ class FilePicker extends FilePickerBase<FilePickerPickType, FilePickerHandleType
         const out = await Promise.all(files.map(async o => o.text()));
         return out;
     }
+    static pick(opts: { mult: false } & FilePickerBaseOptions): Promise<string>;
+    static pick(opts: { mult: true } & FilePickerBaseOptions): Promise<string[]>;
+    static pick(opts: FilePickerOptions): Promise<string | string[]>;
+    static async pick(opts: FilePickerOptions): Promise<FilePickerPickType> {
+        return await (new FilePicker()).pick(opts);
+    }
     async handle(opts: FilePickerOptions): Promise<FilePickerHandleType> {
         const [...handles]: FilePickerHandleType = await (window as any).showOpenFilePicker({ ...this.cleanOpts(opts), multiple: opts.mult });
         return handles;
+    }
+    static async handle(opts: FilePickerOptions): Promise<FilePickerHandleType> {
+        return await (new FilePicker()).handle(opts);
     }
     async write(opts: FilePickerWritingOptions) {
         const [h] = await this.handle(opts);
         const w = await h.createWritable();
         await w.write(opts.tx);
         await w.close();
+    }
+    static async write(opts: FilePickerWritingOptions) {
+        await (new FilePicker()).write(opts);
     }
 }
 class SaveFilePicker extends FilePickerBase<FileSystemHandle, FileSystemHandle, FilePickerSaveOptions, FilePickerSaveFinalOptions> {
@@ -4690,12 +4732,8 @@ class SaveFilePicker extends FilePickerBase<FileSystemHandle, FileSystemHandle, 
  */
 class DirPicker extends Picker<FileSystemDirectoryHandle, FileSystemDirectoryHandle> {
     async pick(opts: DirPickerOptions): Promise<FileSystemDirectoryHandle> {
-        try {
-            const handle: FileSystemDirectoryHandle = await (window as any).showDirectoryPicker(this.cleanOpts(opts));
-            return handle;
-        } catch(e) {
-            throw e;
-        }
+        const handle: FileSystemDirectoryHandle = await (window as any).showDirectoryPicker(this.cleanOpts(opts));
+        return handle;
     }
     async handle(opts: DirPickerOptions): Promise<FileSystemDirectoryHandle> {
         return this.pick(opts);
@@ -5097,8 +5135,10 @@ class TextUI extends SceneUI {
     }
     render() {
         this.scene.color = this.color;
+        const f = this.scene.font;
         if(this.font) this.scene.font = this.font;
         this.scene.text(this.tx, this.x, this.y, this.mw);
+        this.scene.font = f;
         super.render();
     }
 }
@@ -5178,6 +5218,8 @@ class ImgUI extends SceneUI {
     constructor(opts: ImgUIOptions) {
         super(opts);
         this.img = opts.img;
+        // invis, shouldn't show a bg
+        this.color = "#0000";
     }
     render() {
         this.scene.img(this.img, this.x, this.y, this.width, this.height);
@@ -5467,6 +5509,61 @@ class AIController {
         this.tg = opts.tg;
     }
 }
+interface SpawnerOptionsMap {
+    entity: EntityOptions;
+    stcobj: StaticObjectOptions;
+    physobj: PhysicsObjectOptions;
+    mvobj: MovingObjectOptions;
+    bulobj: BulletObjectOptions;
+    wallobj: WallObjectOptions;
+    floorobj: WallObjectOptions;
+    char: CharacterOptions;
+    pc: PlayableCharacterOptions;
+    aircf: AircraftOptions;
+}
+interface SpawnerCtorMap {
+    entity: Constructor<Entity>;
+    stcobj: Constructor<StaticObject>;
+    physobj: Constructor<PhysicsObject>;
+    mvobj: Constructor<MovingObject>;
+    bulobj: Constructor<BulletObject>;
+    wallobj: Constructor<WallObject>;
+    floorobj: Constructor<FloorObject>;
+    char: Constructor<Character>;
+    pc: Constructor<PlayableCharacter>;
+    aircf: Constructor<Aircraft>;
+}
+const CtorMap: SpawnerCtorMap = {
+    entity: Entity,
+    stcobj: StaticObject,
+    physobj: PhysicsObject,
+    mvobj: MovingObject,
+    bulobj: BulletObject,
+    wallobj: WallObject,
+    floorobj: FloorObject,
+    char: Character,
+    pc: PlayableCharacter,
+    aircf: Aircraft
+} as const;
+class Spawner<T extends keyof SpawnerOptionsMap, C extends SpawnerCtorMap[T], K extends () => SpawnerOptionsMap[T]> {
+    ctor: C;
+    opt: K;
+    itvl: Itvl;
+    constructor(ctor: T, opt: K) {
+        this.ctor = CtorMap[ctor] as C;
+        this.opt = opt;
+        this.itvl = new Itvl();
+    }
+    new() {
+        return new (this.ctor)(this.opt);
+    }
+    start(time: number) {
+        this.itvl.start(this.new.bind(this), time);
+    }
+    stop() {
+        this.itvl.stop();
+    }
+}
 // type HistoryCache<T> = [keyof T, T[keyof T], T[keyof T]];
 // class History<T> {
 //     hist: HistoryCache<T>[];
@@ -5486,6 +5583,48 @@ class AIController {
 //         return this.hist[this.ptr];
 //     }
 // }
+class Perlin {
+    perm: Uint8Array;
+    constructor() {
+        this.perm = new Uint8Array(512);
+        const p = Array.from({ length: 256 }, (_, i) => i);
+        // Shuffle the array
+        for(let i = 255; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [p[i], p[j]] = [p[j], p[i]];
+        }
+        // Duplicate the permutation array
+        for(let i = 0; i < 512; i++) {
+            this.perm[i] = p[i & 255];
+        }
+    }
+    fade(t: number) { return t * t * t * (t * (t * 6 - 15) + 10); }
+    grad(hash: number, x: number, y: number) {
+        const h = hash & 7;
+        const u = h < 4 ? x : y;
+        const v = h < 4 ? y : x;
+        return ((h & 1) ? -u : u) + ((h & 2) ? -2.0 * v : 2.0 * v);
+    }
+    noise(x: number, y: number) {
+        const X = Math.floor(x) & 255;
+        const Y = Math.floor(y) & 255;
+
+        x -= Math.floor(x);
+        y -= Math.floor(y);
+
+        const u = this.fade(x);
+        const v = this.fade(y);
+
+        const p = this.perm;
+        const A = p[X] + Y;
+        const B = p[X + 1] + Y;
+
+        return lerp(v, 
+            lerp(u, this.grad(p[A], x, y), this.grad(p[B], x - 1, y)),
+            lerp(u, this.grad(p[A + 1], x, y - 1), this.grad(p[B + 1], x - 1, y - 1))
+        );
+    }
+}
 
 /**
  * Returns whether 2 objects are in collision.
@@ -5666,7 +5805,7 @@ function chance(max: number): boolean;
  */
 function chance(max: number, upperBound: number): boolean;
 function chance(max: number, upperBound?: number): boolean {
-    return max <= random((upperBound ?? 100) + 1);
+    return random((upperBound ?? 100) + 1) <= max;
 }
 function objIs<T>(obj: any, ctor: Constructor<T>): obj is T {
     return obj != undefined && obj instanceof ctor;
@@ -5704,6 +5843,14 @@ function easeSmoothStep(t: number) {
 function aspectRatio() {
     return window.innerWidth / window.innerHeight;
 }
+function mulberry32(a: number) {
+    return function() {
+      let t = a += 0x6D2B79F5;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    }
+}
 
 export {
     Entity, StaticObject, PhysicsObject, MovingObject, BulletObject,
@@ -5721,7 +5868,7 @@ export {
     Config, SceneConfig, ImgConfig,
 
     isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, randItem,
-    lerp,
+    lerp, mulberry32,
 
     Local, LocalDeprecated, Session, Clipboard, Cookies, Params,
 
@@ -5736,6 +5883,8 @@ export {
     LerpDevice, VectorBasedLerpDevice, VectorLerpDevice, EntityLerpDevice, SceneUILerpDevice,
     EntityRotationLerpDevice, AngleBasedLerpDevice, SceneUIRotationLerpDevice,
 
-    ParamKey
+    ParamKey,
+
+    Spawner, Perlin
 };
 export type { Renderable, Constructor, AbstractConstructor, KeyCode };

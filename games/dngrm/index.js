@@ -368,10 +368,8 @@ class Enemy extends Entity {
         return Vector.dist(this.getPos(), plr.getPos());
     }
     kill() {
-        console.log(getDSkillRType("kill", true).map(x => x.fn()));
-        console.log(chance(100));
         if (getDSkillRType("kill", true).some(x => x.fn()))
-            return console.log("REFUTE");
+            return;
         const rm = this.rs();
         for (let i = 0; i < random(1, 5); i++) {
             new Coin(this.x, this.y);
@@ -792,7 +790,7 @@ function hideShop() {
 }
 const trees = [
     { nm: "hi", ico: "tree", ct: 1, fx: () => { }, typ: "sk" },
-    { nm: "bad", ico: "tree", ct: 0, fx: () => chance(100), typ: "gm", sp: "kill", rf: true },
+    { nm: "bad", ico: "tree", ct: 0, fx: () => chance(10), typ: "gm", sp: "kill", rf: true },
     { nm: "Phoenix's Grace", ico: "phoneix", ct: 5, fx: () => chance(5), typ: "gm", sp: "die", rf: true },
     { nm: "Lifestal", ico: "lifestal", ct: 10, fx: () => pHeal(1), typ: "gm", sp: "kill", rf: false }
 ];
