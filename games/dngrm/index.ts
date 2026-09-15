@@ -66,7 +66,7 @@ interface Stat {
     /**
      * Perks unlocked during battle.
      */
-    perks: Shop[];
+    perks: string[];
     /**
      * Permanent skills.
      */
@@ -582,10 +582,10 @@ class Exit extends Entity {
         } });
     }
 }
-function LeftExit() { return new Exit(0, scene.height / 2, 0, new Vector(-1, 0), new Vector(scene.width - 25, scene.height / 2)); }
-function RightExit() { return new Exit(scene.width - 5, scene.height / 2, 0, new Vector(1, 0), new Vector(25, scene.height / 2)); }
-function TopExit() { return new Exit(scene.width / 2, -20, Angle.rad(90), new Vector(0, 1), new Vector(scene.width / 2, scene.height - 25)); }
-function BtmExit() { return new Exit(scene.width / 2, scene.height - 15, Angle.rad(90), new Vector(0, -1), new Vector(scene.width / 2, 25)); }
+function LeftExit() { return new Exit(0, scene.height / 2, 0, new Vector(-1, 0), new Vector(scene.width - 50, scene.height / 2)); }
+function RightExit() { return new Exit(scene.width - 5, scene.height / 2, 0, new Vector(1, 0), new Vector(50, scene.height / 2)); }
+function TopExit() { return new Exit(scene.width / 2, 0, Angle.rad(90), new Vector(0, 1), new Vector(scene.width / 2, scene.height - 50)); }
+function BtmExit() { return new Exit(scene.width / 2, scene.height - 15, Angle.rad(90), new Vector(0, -1), new Vector(scene.width / 2, 50)); }
 
 const rooms: Room[] = [];
 function getRmExits(room: Vector, rooms: Vector[]) {
@@ -690,7 +690,7 @@ function genRms() {
     // todo: fix chances
     for(let i = 0; i < cord.length; i++) {
         const c = cord[i];
-        const tag: RoomTag = (chance(bc) && i > 2 && !bcg) || (i == cord.length - 1 && !bcg) ? "boss" : /*(chance(sc) && !scg && i > 0) ? "shop" :*/ "nm";
+        const tag: RoomTag = (chance(bc) && i > 2 && !bcg) || (i == cord.length - 1 && !bcg) ? "boss" : (chance(sc) && !scg && i > 0) ? "shop" : "nm";
         rooms.push({ at: c, e: genEnemyCtors().map(c => {
             const x = new c(0, 0);
             const rp = () => new Vector(random(0, scene.width - x.width), random(0, scene.height - x.height));
@@ -701,7 +701,7 @@ function genRms() {
         // if(tag != "shop") sc++;
         // else sc = 5;
         if(tag == "boss") bcg = true;
-        //else if(tag == "shop") scg = true;
+        else if(tag == "shop") scg = true;
     }
     // now clean rooms with shop / boss tag
     // boss logic not impl yet
@@ -718,6 +718,7 @@ function genRms() {
         r.tg = "nm";
         r.welt = [];
     }
+    console.assert(!rooms.some(r => r.tg == "shop"), "shop:", rooms.find(r => r.tg == "shop")?.at.x, ",", rooms.find(r => r.tg == "shop")?.at.y);
 }
 function genShop() {
     const ctor: ((x: number, y: number) => Shop)[] = [ShopEx];
@@ -806,17 +807,24 @@ class Coin extends WorldObj {
     }
 }
 var shop: Shop[] = [];
+type ShopDeclarerType = "st" | "dt";
 class Shop extends WorldObj {
     img: Img;
-    constructor(x: number, y: number, cost: number, spr: string) {
-        super(x, y, 20, 20, () => { stat.mon -= cost; stat.perks.push(this); }, () => this.rend(), shop, false, () => stat.mon >= cost);
-        this.img = new Img(spr);
+    constructor(x: number, y: number, cost: number, spr: string, name: string, typ: "st", effect: () => void);
+    constructor(x: number, y: number, cost: number, spr: string, name: string, typ: "dt", dtree: DTree);
+    constructor(x: number, y: number, cost: number, spr: string, name: string, typ: ShopDeclarerType, fx?: (() => void) | DTree) {
+        super(x, y, 20, 20, () => { stat.mon -= cost; stat.perks.push(name); if(typ == "st") {
+            (fx as (() => void))();
+        } else {
+            stat.dskill.push(fx as DTree);
+        } }, () => this.rend(), shop, false, () => stat.mon >= cost);
+        this.img = new Img(spr + ".png");
     }
     rend() {
         scene.img(this.img, this.x, this.y, this.width, this.height);
     }
 }
-function ShopEx(x: number, y: number) { return new Shop(x, y, 1, "coin.png"); }
+function ShopEx(x: number, y: number) { return new Shop(x, y, 1, "coin", "test", "st", () => alert("H{WE{IOWE[EWFPOIFEWI{EWF{OWFE[oWFEo[kfEW")); }
 // genRms();
 // ldRm();
 
