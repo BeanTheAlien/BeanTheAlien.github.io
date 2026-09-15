@@ -1,4 +1,4 @@
-import { Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Cooldown, random, Img, chance, ButtonUI, SceneUI, TextUI, Local, FilePicker, ImgUI, isCol } from "../../phantom2d.js";
+import { Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Cooldown, random, Img, chance, ButtonUI, SceneUI, TextUI, Local, FilePicker, ImgUI, isCol, randItem } from "../../phantom2d.js";
 Img.config.set("root", "assets");
 //window.addEventListener("error", (e) => alert(`${e.message}, ${e.lineno}`))
 // Local.del("stat");
@@ -812,13 +812,55 @@ for (let i = 0; i < heroSet.length; i++) {
             } })
     ]);
 }
+const pchs = [
+    { nm: "Test", path: "perks", ico: "tree", ct: 0, fx: () => alert("HI") }
+];
+const pchsUI = [];
+const shopRFB = btn(() => {
+    if (stat.mon >= 5) {
+        stat.mon -= 5;
+        pchsUI.splice(0);
+        newPchUIs();
+    }
+}, 300, "Refresh", -50);
+function newPchUIs() {
+    const pchsOut = [];
+    for (let i = 0; i < 5; i++)
+        pchsOut.push(randItem(pchs));
+    for (let i = 0; i < pchsOut.length; i++) {
+        const p = pchsOut[i];
+        const col = i % 5;
+        const w = size * 5;
+        const x = col * (w + 100);
+        const y = scene.height / 2 - w;
+        const ix = x + 27;
+        const iy = y + 20;
+        const uis = [
+            new ImgUI({ img: new Img(p.path + "/" + p.ico + ".png"), scene, x: ix, y: iy, w, h: w, color: invis }),
+            new TextUI({ scene, x: x + w / 2, y: y + w + 50, tx: p.nm }),
+            new ButtonUI({ scene, x: ix, y: iy, w, h: w, color: invis, click: () => {
+                    if (stat.mon >= p.ct) {
+                        stat.mon -= p.ct;
+                        p.fx();
+                        scene.rmUI(...uis);
+                    }
+                } })
+        ];
+        pchsUI.push(uis);
+    }
+}
 function showShop() {
     hideSS();
     showOvr();
     scene.addUI(shopBk);
+    newPchUIs();
+    pchsUI.forEach(x => scene.addUI(...x));
+    scene.addUI(shopRFB);
 }
 function hideShop() {
-    scene.rmUI(shopBk);
+    scene.rmUI(shopBk, shopRFB);
+    pchsUI.forEach(x => scene.rmUI(...x));
+    hideOvr();
     showSS();
 }
 const trees = [
