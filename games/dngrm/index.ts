@@ -84,6 +84,7 @@ interface Stat {
      */
     sc: number;
 }
+type VoidFunc = () => void;
 const nextXP = () => Math.floor(Math.pow(stat.lvl, 1.85)) + 1;
 const parseStat = () => JSON.parse(Local.get("stat") ?? `{ "xp": 0, "lvl": 1, "dmg": 1, "spd": 3, "bspd": 4, "hp": 5, "mhp": 5, "crit": 0, "luck": 0, "armor": 0, "dodge": 0, "mon": 0, "perks": [], "skill": [], "dskill": [], "ap": 0, "sc": 1 }`, (k, v) => {
     return typeof v == "string" && (v.startsWith("function") || v.includes("=>")) ? eval(v) : v;
@@ -814,14 +815,14 @@ type ShopDeclarerType = "st" | "dt";
 class Shop extends WorldObj {
     img: Img;
     nm: string;
-    clean: () => void;
-    constructor(x: number, y: number, cost: number, spr: string, name: string, typ: "st", effect: () => void, cleanup: () => void);
+    clean: VoidFunc;
+    constructor(x: number, y: number, cost: number, spr: string, name: string, typ: "st", effect: VoidFunc, cleanup: VoidFunc);
     constructor(x: number, y: number, cost: number, spr: string, name: string, typ: "dt", dtree: DTree);
-    constructor(x: number, y: number, cost: number, spr: string, name: string, typ: ShopDeclarerType, fx?: (() => void) | DTree, cleanup = () => {
+    constructor(x: number, y: number, cost: number, spr: string, name: string, typ: ShopDeclarerType, fx?: VoidFunc | DTree, cleanup = () => {
         stat.dskill.splice(stat.dskill.indexOf(fx as DTree), 1);
     }) {
         super(x, y, 20, 20, () => { stat.mon -= cost; stat.perks.push(this); if(typ == "st") {
-            (fx as (() => void))();
+            (fx as VoidFunc)();
         } else {
             stat.dskill.push(fx as DTree);
         } }, () => this.rend(), shop, false, () => stat.mon >= cost);
@@ -900,7 +901,7 @@ type TreeSkillType = "sk" | "gm";
 interface Tree {
     nm: string;
     ico: string;
-    fx: () => void;
+    fx: VoidFunc;
     ct: number;
     typ: TreeSkillType;
     sp?: DTreeExecutionScope;

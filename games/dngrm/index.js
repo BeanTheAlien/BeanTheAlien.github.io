@@ -46,7 +46,7 @@ Armor: ${stat.armor} (dodge: ${stat.dodge})\n
 Speed: ${stat.spd} / B-speed: ${stat.bspd}\n
 Luck: ${stat.luck}\n
 Money: ${stat.mon}\n
-Perks: ${none(stat.perks)}\n
+Perks: ${none(stat.perks.map(s => s.nm))}\n
 Skills: ${none(stat.skill)}\n
 DSkill: ${none(stat.dskill.map(x => x.nm))}\n
 Adventure Points: ${stat.ap}`;
@@ -152,6 +152,9 @@ function worldInit() {
     plrBuls.splice(0);
     coins = [];
     shop = [];
+    // cleanup shop skills
+    stat.perks.forEach(s => s.clean());
+    stat.perks = [];
     noSFU();
     fps = 5;
     sfu = setSFU();
@@ -720,10 +723,14 @@ class Coin extends WorldObj {
 var shop = [];
 class Shop extends WorldObj {
     img;
-    constructor(x, y, cost, spr, name, typ, fx) {
+    nm;
+    clean;
+    constructor(x, y, cost, spr, name, typ, fx, cleanup = () => {
+        stat.dskill.splice(stat.dskill.indexOf(fx), 1);
+    }) {
         super(x, y, 20, 20, () => {
             stat.mon -= cost;
-            stat.perks.push(name);
+            stat.perks.push(this);
             if (typ == "st") {
                 fx();
             }
@@ -732,12 +739,14 @@ class Shop extends WorldObj {
             }
         }, () => this.rend(), shop, false, () => stat.mon >= cost);
         this.img = new Img(spr + ".png");
+        this.clean = cleanup;
+        this.nm = name;
     }
     rend() {
         scene.img(this.img, this.x, this.y, this.width, this.height);
     }
 }
-function ShopEx(x, y) { return new Shop(x, y, 1, "coin", "test", "st", () => alert("H{WE{IOWE[EWFPOIFEWI{EWF{OWFE[oWFEo[kfEW")); }
+function ShopEx(x, y) { return new Shop(x, y, 1, "coin", "test", "st", () => alert("H{WE{IOWE[EWFPOIFEWI{EWF{OWFE[oWFEo[kfEW"), () => { }); }
 // genRms();
 // ldRm();
 const ovr = new SceneUI({ scene, w: scene.width, h: scene.height, color: "#000c49" });
