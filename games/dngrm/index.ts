@@ -909,10 +909,34 @@ for(let i = 0; i < heroSet.length; i++) {
             } })
     ]);
 }
+interface Purchase {
+    nm: string;
+    path: string;
+    ico: string;
+    ct: number;
+    fx: VoidFunc;
+}
+const pchs: Purchase[] = [] as const;
+const pchsUI: SceneUI[] = [];
 function showShop() {
     hideSS();
     showOvr();
     scene.addUI(shopBk);
+    for(let i = 0; i < pchs.length; i++) {
+        const p = pchs[i];
+        const col = i % columns;
+        const w = size * 5;
+        const x = col * (w + spacingX);
+        const y = scene.height / 2 - w;
+        const ix = x + 27;
+        const iy = y + 20;
+        pchsUI.push(
+            new ImgUI({ img: new Img(p.path + "/" + p.ico + ".png"), scene, x: ix, y: iy, w, h: w, color: invis }),
+            new TextUI({ scene, x: x + w / 2, y: y + w + 50, tx: p.nm }),
+            //new TextUI({ scene, x: x + w / 2, y: y + w + 100, tx: h.ds }),
+            new ButtonUI({ scene, x: ix, y: iy, w, h: w, color: invis, click: p.fx })
+        );
+    }
 }
 function hideShop() {
     scene.rmUI(shopBk);
