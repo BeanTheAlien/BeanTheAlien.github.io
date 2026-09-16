@@ -87,10 +87,14 @@ interface Stat {
      * Purchased and unlocked weapons.
      */
     armory: Weapon[];
+    /**
+     * Bullet count. How many bullets to fire per shot.
+     */
+    bc: number;
 }
 type VoidFunc = () => void;
 const nextXP = () => Math.floor(Math.pow(stat.lvl, 1.85)) + 1;
-const parseStat = () => JSON.parse(Local.get("stat") ?? `{ "xp": 0, "lvl": 1, "dmg": 1, "spd": 3, "bspd": 4, "hp": 5, "mhp": 5, "crit": 0, "luck": 0, "armor": 0, "dodge": 0, "mon": 0, "perks": [], "skill": [], "dskill": [], "ap": 0, "sc": 1, "armory": [] }`, (k, v) => {
+const parseStat = () => JSON.parse(Local.get("stat") ?? `{ "xp": 0, "lvl": 1, "dmg": 1, "spd": 3, "bspd": 4, "hp": 5, "mhp": 5, "crit": 0, "luck": 0, "armor": 0, "dodge": 0, "mon": 0, "perks": [], "skill": [], "dskill": [], "ap": 0, "sc": 1, "armory": [], "bc": 0 }`, (k, v) => {
     return typeof v == "string" && (v.startsWith("function") || v.includes("=>")) ? eval(v) : v;
 }) as Stat;
 var stat: Stat = parseStat();
@@ -127,6 +131,7 @@ Perks: ${none(stat.perks.map(s => s.nm))}\n
 Skills: ${none(stat.skill)}\n
 DSkill: ${none(stat.dskill.map(x => x.nm))}\n
 Armory: ${none(stat.armory.map(x => x.nm))}\n
+Bullet Count: ${stat.bc}\n
 Adventure Points: ${stat.ap}`;
 }
 dispStat();
@@ -307,8 +312,9 @@ interface Hero {
     ico: string;
     atk: Function;
 }
+type WeaponCategory = "ps" | "st" | "rf" | "sp";
 interface Weapon {
-    typ: "ps" | "st" | "rf" | "sp";
+    typ: WeaponCategory;
     ch: (typeof heroSet)[number]["nm"];
     dmg: number;
     bul: number;
@@ -316,12 +322,13 @@ interface Weapon {
     wg: number;
     ico: string;
     nm: string;
+    cn: string;
 }
 interface Pistol extends Weapon {
     typ: "ps";
 }
-const buller = (func: (...args: any[]) => BulletObject, cnt: number, rot: () => number, life: number, spd: number, then?: Function) => {
-    for(let j = 0; j < stat.sc; j++) for(let i = 0; i < cnt; i++) {
+const buller = (func: (...args: any[]) => BulletObject, cnt: number, rot: () => number, life: number, spd: number, includeBC: boolean, then?: Function) => {
+    for(let j = 0; j < stat.sc; j++) for(let i = 0; i < cnt + (includeBC ? stat.bc : 0); i++) {
         const o = func(plr.x, plr.y, rot(), (e: Entity) => { if(objIs(e, Enemy)) { e.comp("health").hurt(stat.crit && chance(stat.crit) ? stat.dmg * 2 : stat.dmg); scene.rm(o); } }, spd);
         scene.add(o);
         plrBuls.push(o);
@@ -329,8 +336,8 @@ const buller = (func: (...args: any[]) => BulletObject, cnt: number, rot: () => 
         then?.();
     }
 }
-const heroGun = (shots: number, roff: number, life = 5000, then?: Function) => buller(bulGenr, shots, () => Angle.roff(scene.rotToMouse(plr), roff), life, stat.bspd, then);
-const heroMel = (swings: number, life = 90, then?: Function) => buller(melGenr, swings, () => scene.rotToMouse(plr), life, stat.bspd * 1.5, then);
+const heroGun = (shots: number, roff: number, life = 5000, then?: Function) => buller(bulGenr, shots, () => Angle.roff(scene.rotToMouse(plr), roff), life, stat.bspd, true, then);
+const heroMel = (swings: number, life = 90, then?: Function) => buller(melGenr, swings, () => scene.rotToMouse(plr), life, stat.bspd * 1.5, false, then);
 const heroGunFred: Hero = {
     nm: "Gun Fred",
     ds: "A bald man with a short temper. No one knows how he got here.",
@@ -370,7 +377,7 @@ const heroSet = [
     heroGunFred,
     heroGeorge
 ] as const;
-const wepPistolGeneric: Pistol = { nm: "Generic Pistol", typ: "ps", ch: "gunfred", dmg: 0, wg: 0, bspd: 0, bul: 0, ico: "perks/tree.png" };
+const wepPistolGeneric: Pistol = { nm: "Generic Pistol", cn: "generic", typ: "ps", ch: "gunfred", dmg: 0, wg: 0, bspd: 0, bul: 0, ico: "pistol" };
 const wepSet = [
     wepPistolGeneric
 ] as const;
@@ -954,10 +961,10 @@ interface Purchase {
     fx: VoidFunc;
     rr: number;
 }
-const pchsWep = (inWeaponName: string) => stat.armory.push(wepSet.find(w => w.nm == inWeaponName) as Weapon);
+const pchsWep = (cat: WeaponCategory, inWeaponName: string) => stat.armory.push(wepSet.filter(w => w.typ == cat).find(w => w.cn == inWeaponName) as Weapon);
 const pchs: Purchase[] = [
     { nm: "Test", path: "perks", ico: "tree", ct: 0, fx: () => alert("HI"), rr: 75 },
-    { nm: "Test2", path: "icons", ico: "downarrow", ct: 0, fx: () => pchsWep("Generic Pistol"), rr: 30 }
+    { nm: "Test2", path: "icons", ico: "downarrow", ct: 0, fx: () => pchsWep("ps", "generic"), rr: 30 }
 ] as const;
 const pchsUI: SceneUI[][] = [];
 const shopRFB = btn(() => {
@@ -1031,7 +1038,7 @@ function showArmory() {
         const ix = x + 27;
         const iy = y + 20;
         armoryUI.push([
-            new ImgUI({ img: new Img(/*"weapon/" + */ h.ico + ".png"), scene, x: ix, y: iy, w, h: w, color: invis }),
+            new ImgUI({ img: new Img("weapons/" + h.ico + ".png"), scene, x: ix, y: iy, w, h: w, color: invis }),
             new TextUI({ scene, x: x + w / 2, y: y + w + 50, tx: h.nm }),
             //new TextUI({ scene, x: x + w / 2, y: y + w + 100, tx: h.ds }),
             new ButtonUI({ scene, x: ix, y: iy, w, h: w, color: invis, click: () => equip(h) })

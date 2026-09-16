@@ -13,7 +13,7 @@ Img.config.set("root", "assets");
 const scene = new Scene({ canvas: "dng", w: 700, h: 700 });
 const size = 10;
 const nextXP = () => Math.floor(Math.pow(stat.lvl, 1.85)) + 1;
-const parseStat = () => JSON.parse(Local.get("stat") ?? `{ "xp": 0, "lvl": 1, "dmg": 1, "spd": 3, "bspd": 4, "hp": 5, "mhp": 5, "crit": 0, "luck": 0, "armor": 0, "dodge": 0, "mon": 0, "perks": [], "skill": [], "dskill": [], "ap": 0, "sc": 1, "armory": [] }`, (k, v) => {
+const parseStat = () => JSON.parse(Local.get("stat") ?? `{ "xp": 0, "lvl": 1, "dmg": 1, "spd": 3, "bspd": 4, "hp": 5, "mhp": 5, "crit": 0, "luck": 0, "armor": 0, "dodge": 0, "mon": 0, "perks": [], "skill": [], "dskill": [], "ap": 0, "sc": 1, "armory": [], "bc": 0 }`, (k, v) => {
     return typeof v == "string" && (v.startsWith("function") || v.includes("=>")) ? eval(v) : v;
 });
 var stat = parseStat();
@@ -50,6 +50,7 @@ Perks: ${none(stat.perks.map(s => s.nm))}\n
 Skills: ${none(stat.skill)}\n
 DSkill: ${none(stat.dskill.map(x => x.nm))}\n
 Armory: ${none(stat.armory.map(x => x.nm))}\n
+Bullet Count: ${stat.bc}\n
 Adventure Points: ${stat.ap}`;
 }
 dispStat();
@@ -227,9 +228,9 @@ plr.binds(["w", () => {
         gsi.x = getSI("right");
         gsi.y = 0;
     }]);
-const buller = (func, cnt, rot, life, spd, then) => {
+const buller = (func, cnt, rot, life, spd, includeBC, then) => {
     for (let j = 0; j < stat.sc; j++)
-        for (let i = 0; i < cnt; i++) {
+        for (let i = 0; i < cnt + (includeBC ? stat.bc : 0); i++) {
             const o = func(plr.x, plr.y, rot(), (e) => { if (objIs(e, Enemy)) {
                 e.comp("health").hurt(stat.crit && chance(stat.crit) ? stat.dmg * 2 : stat.dmg);
                 scene.rm(o);
@@ -240,8 +241,8 @@ const buller = (func, cnt, rot, life, spd, then) => {
             then?.();
         }
 };
-const heroGun = (shots, roff, life = 5000, then) => buller(bulGenr, shots, () => Angle.roff(scene.rotToMouse(plr), roff), life, stat.bspd, then);
-const heroMel = (swings, life = 90, then) => buller(melGenr, swings, () => scene.rotToMouse(plr), life, stat.bspd * 1.5, then);
+const heroGun = (shots, roff, life = 5000, then) => buller(bulGenr, shots, () => Angle.roff(scene.rotToMouse(plr), roff), life, stat.bspd, true, then);
+const heroMel = (swings, life = 90, then) => buller(melGenr, swings, () => scene.rotToMouse(plr), life, stat.bspd * 1.5, false, then);
 const heroGunFred = {
     nm: "Gun Fred",
     ds: "A bald man with a short temper. No one knows how he got here.",
@@ -281,7 +282,7 @@ const heroSet = [
     heroGunFred,
     heroGeorge
 ];
-const wepPistolGeneric = { nm: "Generic Pistol", typ: "ps", ch: "gunfred", dmg: 0, wg: 0, bspd: 0, bul: 0, ico: "perks/tree.png" };
+const wepPistolGeneric = { nm: "Generic Pistol", cn: "generic", typ: "ps", ch: "gunfred", dmg: 0, wg: 0, bspd: 0, bul: 0, ico: "pistol" };
 const wepSet = [
     wepPistolGeneric
 ];
@@ -832,10 +833,10 @@ for (let i = 0; i < heroSet.length; i++) {
             } })
     ]);
 }
-const pchsWep = (inWeaponName) => stat.armory.push(wepSet.find(w => w.nm == inWeaponName));
+const pchsWep = (cat, inWeaponName) => stat.armory.push(wepSet.filter(w => w.typ == cat).find(w => w.cn == inWeaponName));
 const pchs = [
     { nm: "Test", path: "perks", ico: "tree", ct: 0, fx: () => alert("HI"), rr: 75 },
-    { nm: "Test2", path: "icons", ico: "downarrow", ct: 0, fx: () => pchsWep("Generic Pistol"), rr: 30 }
+    { nm: "Test2", path: "icons", ico: "downarrow", ct: 0, fx: () => pchsWep("ps", "generic"), rr: 30 }
 ];
 const pchsUI = [];
 const shopRFB = btn(() => {
@@ -910,7 +911,7 @@ function showArmory() {
         const ix = x + 27;
         const iy = y + 20;
         armoryUI.push([
-            new ImgUI({ img: new Img(/*"weapon/" + */ h.ico + ".png"), scene, x: ix, y: iy, w, h: w, color: invis }),
+            new ImgUI({ img: new Img("weapons/" + h.ico + ".png"), scene, x: ix, y: iy, w, h: w, color: invis }),
             new TextUI({ scene, x: x + w / 2, y: y + w + 50, tx: h.nm }),
             //new TextUI({ scene, x: x + w / 2, y: y + w + 100, tx: h.ds }),
             new ButtonUI({ scene, x: ix, y: iy, w, h: w, color: invis, click: () => equip(h) })
