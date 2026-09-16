@@ -117,6 +117,8 @@ const clsB = document.getElementById("cls") as HTMLButtonElement;
 clsB.addEventListener("click", () => {
     Local.del("stat");
     stat = parseStat();
+    // force a clean load
+    window.location.reload();
 });
 function dispStat() {
     const none = (a: any[]) => !a.length ? "none" : a;
@@ -1203,6 +1205,10 @@ function lclSave() {
     Local.set("stat", statString());
     nextSave();
 }
+// start local autosave
+setInterval(lclSave, 60000);
+// save properly before closing
+window.addEventListener("close", lclSave);
 function pcSave() {
     (new FilePicker()).handle({ accept: [{ accept: { "text/json": [".json"] } }], all: false, mult: false })
         .then(h => h[0])
