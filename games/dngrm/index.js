@@ -873,6 +873,7 @@ function newPchUIs() {
                         stat.mon -= p.ct;
                         p.fx();
                         scene.rmUI(...uis);
+                        pchsUI.splice(pchsUI.indexOf(uis));
                     }
                 } })
         ];
