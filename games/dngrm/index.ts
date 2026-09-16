@@ -126,6 +126,7 @@ Money: ${stat.mon}\n
 Perks: ${none(stat.perks.map(s => s.nm))}\n
 Skills: ${none(stat.skill)}\n
 DSkill: ${none(stat.dskill.map(x => x.nm))}\n
+Armory: ${none(stat.armory.map(x => x.nm))}\n
 Adventure Points: ${stat.ap}`;
 }
 dispStat();
@@ -950,11 +951,12 @@ interface Purchase {
     ico: string;
     ct: number;
     fx: VoidFunc;
+    rr: number;
 }
 const pchsWep = (inWeaponName: string) => stat.armory.push(wepSet.find(w => w.nm == inWeaponName) as Weapon);
 const pchs: Purchase[] = [
-    { nm: "Test", path: "perks", ico: "tree", ct: 0, fx: () => alert("HI") },
-    { nm: "Test2", path: "icons", ico: "downarrow", ct: 0, fx: () => pchsWep("Generic Pistol") }
+    { nm: "Test", path: "perks", ico: "tree", ct: 0, fx: () => alert("HI"), rr: 75 },
+    { nm: "Test2", path: "icons", ico: "downarrow", ct: 0, fx: () => pchsWep("Generic Pistol"), rr: 30 }
 ] as const;
 const pchsUI: SceneUI[][] = [];
 const shopRFB = btn(() => {
@@ -965,8 +967,16 @@ const shopRFB = btn(() => {
     }
 }, 300, "Refresh", -50);
 function newPchUIs() {
+    if(pchsUI.length) return;
     const pchsOut: Purchase[] = [];
-    for(let i = 0; i < 5; i++) pchsOut.push(randItem(pchs));
+    const pass = () => pchs.find(p => chance(p.rr));
+    for(let i = 0; i < 5; i++) {
+        var out;
+        do {
+            out = pass();
+        } while(!out);
+        pchsOut.push(out);
+    }
     for(let i = 0; i < pchsOut.length; i++) {
         const p = pchsOut[i];
         const col = i % 5;

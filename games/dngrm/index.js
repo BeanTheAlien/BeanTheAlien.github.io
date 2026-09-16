@@ -1,4 +1,4 @@
-import { Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Cooldown, random, Img, chance, ButtonUI, SceneUI, TextUI, Local, FilePicker, ImgUI, isCol, randItem } from "../../phantom2d.js";
+import { Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Cooldown, random, Img, chance, ButtonUI, SceneUI, TextUI, Local, FilePicker, ImgUI, isCol } from "../../phantom2d.js";
 Img.config.set("root", "assets");
 //window.addEventListener("error", (e) => alert(`${e.message}, ${e.lineno}`))
 // Local.del("stat");
@@ -13,7 +13,7 @@ Img.config.set("root", "assets");
 const scene = new Scene({ canvas: "dng", w: 700, h: 700 });
 const size = 10;
 const nextXP = () => Math.floor(Math.pow(stat.lvl, 1.85)) + 1;
-const parseStat = () => JSON.parse(Local.get("stat") ?? `{ "xp": 0, "lvl": 1, "dmg": 1, "spd": 3, "bspd": 4, "hp": 5, "mhp": 5, "crit": 0, "luck": 0, "armor": 0, "dodge": 0, "mon": 0, "perks": [], "skill": [], "dskill": [], "ap": 0, "sc": 1 }`, (k, v) => {
+const parseStat = () => JSON.parse(Local.get("stat") ?? `{ "xp": 0, "lvl": 1, "dmg": 1, "spd": 3, "bspd": 4, "hp": 5, "mhp": 5, "crit": 0, "luck": 0, "armor": 0, "dodge": 0, "mon": 0, "perks": [], "skill": [], "dskill": [], "ap": 0, "sc": 1, "armory": [] }`, (k, v) => {
     return typeof v == "string" && (v.startsWith("function") || v.includes("=>")) ? eval(v) : v;
 });
 var stat = parseStat();
@@ -49,6 +49,7 @@ Money: ${stat.mon}\n
 Perks: ${none(stat.perks.map(s => s.nm))}\n
 Skills: ${none(stat.skill)}\n
 DSkill: ${none(stat.dskill.map(x => x.nm))}\n
+Armory: ${none(stat.armory.map(x => x.nm))}\n
 Adventure Points: ${stat.ap}`;
 }
 dispStat();
@@ -280,6 +281,22 @@ const heroSet = [
     heroGunFred,
     heroGeorge
 ];
+const wepPistolGeneric = { nm: "Generic Pistol", typ: "ps", ch: "gunfred", dmg: 0, wg: 0, bspd: 0, bul: 0, ico: "perks/tree.png" };
+const wepSet = [
+    wepPistolGeneric
+];
+var eqWep = wepSet[0];
+const equip = (wep) => {
+    stat.dmg -= eqWep.dmg;
+    stat.bspd -= eqWep.bspd;
+    stat.sc -= eqWep.bul;
+    stat.spd += eqWep.wg;
+    eqWep = wep;
+    stat.dmg += eqWep.dmg;
+    stat.bspd += eqWep.bspd;
+    stat.sc += eqWep.bul;
+    stat.spd -= eqWep.wg;
+};
 const cycle = () => {
     const i = heroSet.indexOf(hero) + 1;
     if (i >= heroSet.length)
@@ -786,6 +803,8 @@ const shopBtn = btn(showShop, 100, "Shop", 0, -50);
 const treeBtn = btn(showTree, 200, "Tree", 0, -50);
 const shopBk = btn(hideShop, 300, "Back", 230);
 const treeBk = btn(hideTree, 300, "Back", 230);
+const armBtn = btn(showArmory, 300, "Armory", 0, -50);
+const armBk = btn(hideArmory, 300, "Back", 230);
 const heroUIImg = new ImgUI({ img: pss[0][0], scene, x: scene.width - 100, y: 100, w: size * 5, h: size * 5, color: invis });
 const heroUIImgBtn = new ButtonUI({ scene, color: invis, x: heroUIImg.x, y: heroUIImg.y, w: heroUIImg.width, h: heroUIImg.height, click: showHero });
 const heroBk = btn(hideHero, 200, "Back", 50);
@@ -812,8 +831,10 @@ for (let i = 0; i < heroSet.length; i++) {
             } })
     ]);
 }
+const pchsWep = (inWeaponName) => stat.armory.push(wepSet.find(w => w.nm == inWeaponName));
 const pchs = [
-    { nm: "Test", path: "perks", ico: "tree", ct: 0, fx: () => alert("HI") }
+    { nm: "Test", path: "perks", ico: "tree", ct: 0, fx: () => alert("HI"), rr: 75 },
+    { nm: "Test2", path: "icons", ico: "downarrow", ct: 0, fx: () => pchsWep("Generic Pistol"), rr: 30 }
 ];
 const pchsUI = [];
 const shopRFB = btn(() => {
@@ -824,9 +845,17 @@ const shopRFB = btn(() => {
     }
 }, 300, "Refresh", -50);
 function newPchUIs() {
+    if (pchsUI.length)
+        return;
     const pchsOut = [];
-    for (let i = 0; i < 5; i++)
-        pchsOut.push(randItem(pchs));
+    const pass = () => pchs.find(p => chance(p.rr));
+    for (let i = 0; i < 5; i++) {
+        var out;
+        do {
+            out = pass();
+        } while (!out);
+        pchsOut.push(out);
+    }
     for (let i = 0; i < pchsOut.length; i++) {
         const p = pchsOut[i];
         const col = i % 5;
@@ -860,6 +889,36 @@ function showShop() {
 function hideShop() {
     scene.rmUI(shopBk, shopRFB);
     pchsUI.forEach(x => scene.rmUI(...x));
+    hideOvr();
+    showSS();
+}
+const armoryUI = [];
+function showArmory() {
+    hideSS();
+    showOvr();
+    scene.addUI(armBk);
+    const ws = stat.armory.filter(w => w.ch == hero.nm);
+    for (let i = 0; i < ws.length; i++) {
+        const h = ws[i];
+        const col = i % columns;
+        const row = Math.floor(i / columns);
+        const w = size * 5;
+        const x = col * (w + spacingX);
+        const y = row * (w + spacingY + 100);
+        const ix = x + 27;
+        const iy = y + 20;
+        armoryUI.push([
+            new ImgUI({ img: new Img(/*"weapon/" + */ h.ico + ".png"), scene, x: ix, y: iy, w, h: w, color: invis }),
+            new TextUI({ scene, x: x + w / 2, y: y + w + 50, tx: h.nm }),
+            //new TextUI({ scene, x: x + w / 2, y: y + w + 100, tx: h.ds }),
+            new ButtonUI({ scene, x: ix, y: iy, w, h: w, color: invis, click: () => equip(h) })
+        ]);
+    }
+    armoryUI.forEach(a => scene.addUI(...a));
+}
+function hideArmory() {
+    scene.rmUI(armBk);
+    armoryUI.forEach(a => scene.rmUI(...a));
     hideOvr();
     showSS();
 }
