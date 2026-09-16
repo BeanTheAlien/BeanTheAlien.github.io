@@ -83,10 +83,14 @@ interface Stat {
      * Shot count. How many times to repeat attack.
      */
     sc: number;
+    /**
+     * Purchased and unlocked weapons.
+     */
+    armory: Weapon[];
 }
 type VoidFunc = () => void;
 const nextXP = () => Math.floor(Math.pow(stat.lvl, 1.85)) + 1;
-const parseStat = () => JSON.parse(Local.get("stat") ?? `{ "xp": 0, "lvl": 1, "dmg": 1, "spd": 3, "bspd": 4, "hp": 5, "mhp": 5, "crit": 0, "luck": 0, "armor": 0, "dodge": 0, "mon": 0, "perks": [], "skill": [], "dskill": [], "ap": 0, "sc": 1 }`, (k, v) => {
+const parseStat = () => JSON.parse(Local.get("stat") ?? `{ "xp": 0, "lvl": 1, "dmg": 1, "spd": 3, "bspd": 4, "hp": 5, "mhp": 5, "crit": 0, "luck": 0, "armor": 0, "dodge": 0, "mon": 0, "perks": [], "skill": [], "dskill": [], "ap": 0, "sc": 1, "armory": [] }`, (k, v) => {
     return typeof v == "string" && (v.startsWith("function") || v.includes("=>")) ? eval(v) : v;
 }) as Stat;
 var stat: Stat = parseStat();
@@ -302,6 +306,19 @@ interface Hero {
     ico: string;
     atk: Function;
 }
+interface Weapon {
+    typ: "ps" | "st" | "rf" | "sp";
+    ch: (typeof heroSet)[number]["nm"];
+    dmg: number;
+    bul: number;
+    bspd: number;
+    wg: number;
+    ico: string;
+    nm: string;
+}
+interface Pistol extends Weapon {
+    typ: "ps";
+}
 const buller = (func: (...args: any[]) => BulletObject, cnt: number, rot: () => number, life: number, spd: number, then?: Function) => {
     for(let j = 0; j < stat.sc; j++) for(let i = 0; i < cnt; i++) {
         const o = func(plr.x, plr.y, rot(), (e: Entity) => { if(objIs(e, Enemy)) { e.comp("health").hurt(stat.crit && chance(stat.crit) ? stat.dmg * 2 : stat.dmg); scene.rm(o); } }, spd);
@@ -352,6 +369,22 @@ const heroSet = [
     heroGunFred,
     heroGeorge
 ] as const;
+const wepPistolGeneric: Pistol = { nm: "Generic Pistol", typ: "ps", ch: "gunfred", dmg: 0, wg: 0, bspd: 0, bul: 0, ico: "perks/tree.png" };
+const wepSet = [
+    wepPistolGeneric
+] as const;
+var eqWep: Weapon = wepSet[0];
+const equip = (wep: Weapon) => {
+    stat.dmg -= eqWep.dmg;
+    stat.bspd -= eqWep.bspd;
+    stat.sc -= eqWep.bul;
+    stat.spd += eqWep.wg;
+    eqWep = wep;
+    stat.dmg += eqWep.dmg;
+    stat.bspd += eqWep.bspd;
+    stat.sc += eqWep.bul;
+    stat.spd -= eqWep.wg;
+}
 const cycle = () => {
     const i = heroSet.indexOf(hero) + 1;
     if(i >= heroSet.length) hero = heroSet[0];
@@ -883,6 +916,8 @@ const shopBtn = btn(showShop, 100, "Shop", 0, -50);
 const treeBtn = btn(showTree, 200, "Tree", 0, -50);
 const shopBk = btn(hideShop, 300, "Back", 230);
 const treeBk = btn(hideTree, 300, "Back", 230);
+const armBtn = btn(showArmory, 300, "Armory", 0, -50);
+const armBk = btn(hideArmory, 300, "Back", 230);
 const heroUIImg = new ImgUI({ img: pss[0][0], scene, x: scene.width - 100, y: 100, w: size * 5, h: size * 5, color: invis });
 const heroUIImgBtn = new ButtonUI({ scene, color: invis, x: heroUIImg.x, y: heroUIImg.y, w: heroUIImg.width, h: heroUIImg.height, click: showHero });
 const heroBk = btn(hideHero, 200, "Back", 50);
@@ -916,8 +951,10 @@ interface Purchase {
     ct: number;
     fx: VoidFunc;
 }
+const pchsWep = (inWeaponName: string) => stat.armory.push(wepSet.find(w => w.nm == inWeaponName) as Weapon);
 const pchs: Purchase[] = [
-    { nm: "Test", path: "perks", ico: "tree", ct: 0, fx: () => alert("HI") }
+    { nm: "Test", path: "perks", ico: "tree", ct: 0, fx: () => alert("HI") },
+    { nm: "Test2", path: "icons", ico: "downarrow", ct: 0, fx: () => pchsWep("Generic Pistol") }
 ] as const;
 const pchsUI: SceneUI[][] = [];
 const shopRFB = btn(() => {
@@ -963,6 +1000,36 @@ function showShop() {
 function hideShop() {
     scene.rmUI(shopBk, shopRFB);
     pchsUI.forEach(x => scene.rmUI(...x));
+    hideOvr();
+    showSS();
+}
+const armoryUI: SceneUI[][] = [];
+function showArmory() {
+    hideSS();
+    showOvr();
+    scene.addUI(armBk);
+    const ws = stat.armory.filter(w => w.ch == hero.nm);
+    for(let i = 0; i < ws.length; i++) {
+        const h = ws[i];
+        const col = i % columns;
+        const row = Math.floor(i / columns);
+        const w = size * 5;
+        const x = col * (w + spacingX);
+        const y = row * (w + spacingY + 100);
+        const ix = x + 27;
+        const iy = y + 20;
+        armoryUI.push([
+            new ImgUI({ img: new Img(/*"weapon/" + */ h.ico + ".png"), scene, x: ix, y: iy, w, h: w, color: invis }),
+            new TextUI({ scene, x: x + w / 2, y: y + w + 50, tx: h.nm }),
+            //new TextUI({ scene, x: x + w / 2, y: y + w + 100, tx: h.ds }),
+            new ButtonUI({ scene, x: ix, y: iy, w, h: w, color: invis, click: () => equip(h) })
+        ]);
+    }
+    armoryUI.forEach(a => scene.addUI(...a));
+}
+function hideArmory() {
+    scene.rmUI(armBk);
+    armoryUI.forEach(a => scene.rmUI(...a));
     hideOvr();
     showSS();
 }
