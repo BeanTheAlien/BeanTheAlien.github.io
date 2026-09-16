@@ -164,7 +164,7 @@ function worldInit() {
     pDed = false;
     gssQue = false;
     pCanHurt.v = true;
-    plr.comp("health").heal(stat.mhp);
+    plr.comp("health").hp = stat.mhp;
     stat.hp = stat.mhp;
     gsi = new Vector();
     plr.setMoveMode("move");
