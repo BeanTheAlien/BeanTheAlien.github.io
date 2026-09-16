@@ -499,6 +499,7 @@ class Enemy extends Entity {
         if(stat.xp >= nextXP()) {
             stat.xp -= nextXP();
             stat.lvl++;
+            stat.ap++;
         }
         getDSkillRType("kill", false).forEach(x => x.fn());
     }
