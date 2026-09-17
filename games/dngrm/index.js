@@ -9,6 +9,7 @@ Img.config.set("root", "assets");
  * sprites
  * game init func
  * fix cont / mm
+ * mulberry random
  */
 const scene = new Scene({ canvas: "dng", w: 700, h: 700 });
 const size = 10;
@@ -728,7 +729,7 @@ function bulGenr(x, y, rot, collide, spd) {
     return __stdBG(x, y, rot, collide, spd, 18, 6, "#e2e603");
 }
 function melGenr(x, y, rot, collide, spd) {
-    return __stdBG(x, y, rot, collide, spd, 25, 4, "#a7a7a7");
+    return __stdBG(x, y, rot, collide, spd, 4, 25, "#a7a7a7");
 }
 class WorldObj extends Entity {
     a;

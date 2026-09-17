@@ -1,4 +1,4 @@
-import { DebugRay, Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Raycast, Cooldown, random, Img, chance, ButtonUI, SceneUI, TextUI, Local, FilePicker, ImgUI, isCol, randItem } from "../../phantom2d.js";
+import { DebugRay, Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Raycast, Cooldown, random, Img, chance, ButtonUI, SceneUI, TextUI, Local, FilePicker, ImgUI, isCol, randItem, mulberry32 } from "../../phantom2d.js";
 Img.config.set("root", "assets");
 //window.addEventListener("error", (e) => alert(`${e.message}, ${e.lineno}`))
 // Local.del("stat");
@@ -9,6 +9,7 @@ Img.config.set("root", "assets");
  * sprites
  * game init func
  * fix cont / mm
+ * mulberry random
  */
 const scene = new Scene({ canvas: "dng", w: 700, h: 700 });
 const size = 10;
