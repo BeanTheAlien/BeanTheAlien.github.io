@@ -328,6 +328,7 @@ interface Hero {
     ico: string;
     atk: Function;
     ao?: Function;
+    dw: Weapon;
 }
 type WeaponCategory = "ps" | "st" | "rf" | "sp" | "sw";
 interface Weapon {
@@ -386,7 +387,8 @@ const heroGunFred: Hero = {
     ],
     path: "gunfred",
     ico: "fireright0",
-    atk: () => heroGun(1, 0)
+    atk: () => heroGun(1, 0),
+    dw: wepPistol("Generic Pistol", "generic", "gunfred", 0, 0, 0, 0, "pistol")
 } as const;
 const heroGeorge: Hero = {
     nm: "George",
@@ -402,7 +404,8 @@ const heroGeorge: Hero = {
     ],
     path: "george",
     ico: "idle0",
-    atk: () => heroMel(1)
+    atk: () => heroMel(1),
+    dw: wepSword("Generic Sword", "generic", "george", 0, 0, 0, 0, "pistol")
 } as const;
 const heroSet = [
     heroGunFred,
@@ -412,10 +415,14 @@ type ActualCharName = "gunfred" | "george";
 function wepPistol(nm: string, cn: string, ch: ActualCharName, dmg: number, wg: number, bspd: number, bul: number, ico:  string): Pistol {
     return { nm, cn, ch, dmg, wg, bspd, bul, ico, typ: "ps" };
 }
+function wepSword(nm: string, cn: string, ch: ActualCharName, dmg: number, wg: number, bspd: number, bul: number, ico:  string): Sword {
+    return { nm, cn, ch, dmg, wg, bspd, bul, ico, typ: "sw" };
+}
 const wepSet = [
     wepPistol("Generic Pistol", "generic", "gunfred", 0, 0, 0, 0, "pistol"),
     wepPistol("SIG Sauer P250", "p250", "gunfred", 1, 0, -0.05, 0, "p250"),
-    wepPistol("Desert Eagle", "deagle", "gunfred", 3, 0.5, 0, 0, "deagle")
+    wepPistol("Desert Eagle", "deagle", "gunfred", 3, 0.5, 0, 0, "deagle"),
+    wepSword("Generic Sword", "generic", "george", 0, 0, 0, 0, "pistol")
 ] as const;
 var eqWep: Weapon = wepSet[0];
 const equip = (wep: Weapon) => {
@@ -1073,7 +1080,7 @@ function showArmory() {
     hideSS();
     showOvr();
     scene.addUI(armBk);
-    const ws = stat.armory.filter(w => w.ch == hero.nm);
+    const ws = [hero.dw, ...stat.armory.filter(w => w.ch == hero.nm)];
     for(let i = 0; i < ws.length; i++) {
         const h = ws[i];
         const col = i % columns;
