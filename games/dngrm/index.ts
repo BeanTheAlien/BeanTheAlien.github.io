@@ -121,6 +121,17 @@ clsB.addEventListener("click", () => {
     window.location.reload();
 });
 const sdv = document.getElementById("seed-view") as HTMLDivElement;
+const ldB = document.getElementById("ld") as HTMLButtonElement;
+ldB.addEventListener("click", () => {
+    // force in-dungeon
+    if(!gmRn) return;
+    gss();
+    // ran for cleanup
+    // (theoretically, player could "leave" in room with enemies)
+    // (process would still be running, and player could die)
+    // (would dupe call gss)
+    rooms.splice(0);
+});
 function dispStat() {
     const none = (a: any[]) => !a.length ? "none" : a;
     statDisp.textContent = `Level ${stat.lvl} (${stat.xp} / ${nextXP()} xp)\n
