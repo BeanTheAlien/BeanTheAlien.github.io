@@ -327,6 +327,7 @@ interface Hero {
     path: string;
     ico: string;
     atk: Function;
+    ao?: Function;
 }
 type WeaponCategory = "ps" | "st" | "rf" | "sp" | "sw";
 interface Weapon {
@@ -351,6 +352,7 @@ interface Rifle extends Weapon {
 }
 interface Special extends Weapon {
     typ: "sp";
+    atk: Function;
 }
 interface Sword extends Weapon {
     typ: "sw";
@@ -420,11 +422,15 @@ const equip = (wep: Weapon) => {
     stat.bspd -= eqWep.bspd;
     stat.sc -= eqWep.bul;
     stat.spd += eqWep.wg;
+    hero.ao = undefined;
     eqWep = wep;
     stat.dmg += eqWep.dmg;
     stat.bspd += eqWep.bspd;
     stat.sc += eqWep.bul;
     stat.spd -= eqWep.wg;
+    if(wep.typ == "sp") {
+        hero.ao = (wep as Special).atk;
+    }
 }
 const cycle = () => {
     const i = heroSet.indexOf(hero) + 1;
@@ -1263,7 +1269,8 @@ const plrBuls: BulletObject[] = [];
 scene.add(plr);
 scene.on("click", () => {
     if(!gmRn) return;
-    hero.atk();
+    if(hero.ao) hero.ao();
+    else hero.atk();
 });
 scene.start(() => {
     scene.bg("#003764");
