@@ -1088,7 +1088,7 @@ function showArmory() {
     hideSS();
     showOvr();
     scene.addUI(armBk);
-    const ws = [hero.dw, ...stat.armory.filter(w => w.ch == hero.nm)];
+    const ws = [hero.dw, ...stat.armory.filter(w => w.ch == hero.path)];
     for(let i = 0; i < ws.length; i++) {
         const h = ws[i];
         const col = i % columns;
