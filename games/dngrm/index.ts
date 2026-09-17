@@ -839,7 +839,7 @@ function __stdBG(x: number, y: number, rot: number, collide: (e: Entity) => void
     return new BulletObject({ x, y, rot, width: w, height: h, scene, color, collide, extLeft: 0, extRight: scene.width, extTop: 0, extBtm: scene.height, spd });
 }
 function bulGenr(x: number, y: number, rot: number, collide: (e: Entity) => void, spd: number) {
-    return __stdBG(x, y, rot, collide, spd, 6, 18, "#e2e603");
+    return __stdBG(x, y, rot, collide, spd, 18, 6, "#e2e603");
 }
 function melGenr(x: number, y: number, rot: number, collide: (e: Entity) => void, spd: number) {
     return __stdBG(x, y, rot, collide, spd, 25, 4, "#a7a7a7");

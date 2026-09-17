@@ -39,6 +39,7 @@ clsB.addEventListener("click", () => {
     // force a clean load
     window.location.reload();
 });
+const sdv = document.getElementById("seed-view");
 function dispStat() {
     const none = (a) => !a.length ? "none" : a;
     statDisp.textContent = `Level ${stat.lvl} (${stat.xp} / ${nextXP()} xp)\n
@@ -172,6 +173,7 @@ function worldInit() {
     gsi = new Vector();
     plr.setMoveMode("move");
     gmRn = true;
+    sdv.textContent = `Seed: ${genDungSeed()}`;
     genRms();
     ldRm();
 }
@@ -284,9 +286,13 @@ const heroSet = [
     heroGunFred,
     heroGeorge
 ];
-const wepPistolGeneric = { nm: "Generic Pistol", cn: "generic", typ: "ps", ch: "gunfred", dmg: 0, wg: 0, bspd: 0, bul: 0, ico: "pistol" };
+function wepPistol(nm, cn, ch, dmg, wg, bspd, bul, ico) {
+    return { nm, cn, ch, dmg, wg, bspd, bul, ico, typ: "ps" };
+}
 const wepSet = [
-    wepPistolGeneric
+    wepPistol("Generic Pistol", "generic", "gunfred", 0, 0, 0, 0, "pistol"),
+    wepPistol("SIG Sauer P250", "p250", "gunfred", 1, 0, -0.05, 0, "p250"),
+    wepPistol("Desert Eagle", "deagle", "gunfred", 3, 0.5, 0, 0, "deagle")
 ];
 var eqWep = wepSet[0];
 const equip = (wep) => {
@@ -703,11 +709,14 @@ function ldExs() {
         rooms[fdRmIdx()].e = [];
     }
 }
+function __stdBG(x, y, rot, collide, spd, w, h, color) {
+    return new BulletObject({ x, y, rot, width: w, height: h, scene, color, collide, extLeft: 0, extRight: scene.width, extTop: 0, extBtm: scene.height, spd });
+}
 function bulGenr(x, y, rot, collide, spd) {
-    return new BulletObject({ x, y, rot, height: 6, width: 18, scene, color: "#e2e603", collide, extLeft: 0, extRight: scene.width, extTop: 0, extBtm: scene.height, spd });
+    return __stdBG(x, y, rot, collide, spd, 18, 6, "#e2e603");
 }
 function melGenr(x, y, rot, collide, spd) {
-    return new BulletObject({ x, y, rot, height: 25, width: 4, scene, color: "#a7a7a7", collide, extLeft: 0, extRight: scene.width, extTop: 0, extBtm: scene.height, spd });
+    return __stdBG(x, y, rot, collide, spd, 25, 4, "#a7a7a7");
 }
 class WorldObj extends Entity {
     a;
@@ -1039,6 +1048,7 @@ function genStatText(s) {
         const k = ka;
         out.push(new TextUI({ scene, tx: `${k == "kill" ? "Kills" : k == "hpl" ? "Health Lost" : k == "hpg" ? "Health Gained" : k == "dmg" ? "Damage" : k == "me" ? "Money Earned" : k == "ms" ? "Money Spent" : "unknown"}: ${v}`, x: 100, y: 50 + i * 50 }));
     }
+    sdv.textContent = "";
     return out;
 }
 var gmRn = false;
