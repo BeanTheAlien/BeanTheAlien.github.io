@@ -358,6 +358,14 @@ interface Special extends Weapon {
 interface Sword extends Weapon {
     typ: "sw";
 }
+const createWepFunc = <T extends WeaponCategory, K extends (T extends "ps" ? Pistol : T extends "st" ? Shotgun : T extends "rf" ? Rifle : T extends "sp" ? Special : T extends "sw" ? Sword : never)>(typ: T) => {
+    return (nm: string, cn: string, ch: ActualCharName, dmg: number, wg: number, bspd: number, bul: number, ico: string) => {
+        return { nm, cn, ch, dmg, wg, bspd, bul, ico, typ } as K;
+    }
+}
+const wepPistol = createWepFunc("ps");
+const wepSword = createWepFunc("sw");
+const wepSpecial = createWepFunc("sp");
 const buller = (func: (...args: any[]) => BulletObject, cnt: number, rot: () => number, life: number, spd: number, includeBC: boolean, then?: Function) => {
     for(let j = 0; j < stat.sc; j++) for(let i = 0; i < cnt + (includeBC ? stat.bc : 0); i++) {
         const o = func(plr.x, plr.y, rot(), (e: Entity) => { if(objIs(e, Enemy)) { e.comp("health").hurt(stat.crit && chance(stat.crit) ? stat.dmg * 2 : stat.dmg); scene.rm(o); } }, spd);
@@ -412,12 +420,6 @@ const heroSet = [
     heroGeorge
 ] as const;
 type ActualCharName = "gunfred" | "george";
-function wepPistol(nm: string, cn: string, ch: ActualCharName, dmg: number, wg: number, bspd: number, bul: number, ico:  string): Pistol {
-    return { nm, cn, ch, dmg, wg, bspd, bul, ico, typ: "ps" };
-}
-function wepSword(nm: string, cn: string, ch: ActualCharName, dmg: number, wg: number, bspd: number, bul: number, ico:  string): Sword {
-    return { nm, cn, ch, dmg, wg, bspd, bul, ico, typ: "sw" };
-}
 const wepSet = [
     wepPistol("Generic Pistol", "generic", "gunfred", 0, 0, 0, 0, "pistol"),
     wepPistol("SIG Sauer P250", "p250", "gunfred", 1, 0, -0.05, 0, "p250"),

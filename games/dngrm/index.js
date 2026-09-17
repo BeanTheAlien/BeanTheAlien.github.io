@@ -245,6 +245,14 @@ plr.binds(["w", () => {
         gsi.x = getSI("right");
         gsi.y = 0;
     }]);
+const createWepFunc = (typ) => {
+    return (nm, cn, ch, dmg, wg, bspd, bul, ico) => {
+        return { nm, cn, ch, dmg, wg, bspd, bul, ico, typ };
+    };
+};
+const wepPistol = createWepFunc("ps");
+const wepSword = createWepFunc("sw");
+const wepSpecial = createWepFunc("sp");
 const buller = (func, cnt, rot, life, spd, includeBC, then) => {
     for (let j = 0; j < stat.sc; j++)
         for (let i = 0; i < cnt + (includeBC ? stat.bc : 0); i++) {
@@ -278,7 +286,8 @@ const heroGunFred = {
     ],
     path: "gunfred",
     ico: "fireright0",
-    atk: () => heroGun(1, 0)
+    atk: () => heroGun(1, 0),
+    dw: wepPistol("Generic Pistol", "generic", "gunfred", 0, 0, 0, 0, "pistol")
 };
 const heroGeorge = {
     nm: "George",
@@ -294,19 +303,18 @@ const heroGeorge = {
     ],
     path: "george",
     ico: "idle0",
-    atk: () => heroMel(1)
+    atk: () => heroMel(1),
+    dw: wepSword("Generic Sword", "generic", "george", 0, 0, 0, 0, "pistol")
 };
 const heroSet = [
     heroGunFred,
     heroGeorge
 ];
-function wepPistol(nm, cn, ch, dmg, wg, bspd, bul, ico) {
-    return { nm, cn, ch, dmg, wg, bspd, bul, ico, typ: "ps" };
-}
 const wepSet = [
     wepPistol("Generic Pistol", "generic", "gunfred", 0, 0, 0, 0, "pistol"),
     wepPistol("SIG Sauer P250", "p250", "gunfred", 1, 0, -0.05, 0, "p250"),
-    wepPistol("Desert Eagle", "deagle", "gunfred", 3, 0.5, 0, 0, "deagle")
+    wepPistol("Desert Eagle", "deagle", "gunfred", 3, 0.5, 0, 0, "deagle"),
+    wepSword("Generic Sword", "generic", "george", 0, 0, 0, 0, "pistol")
 ];
 var eqWep = wepSet[0];
 const equip = (wep) => {
@@ -932,7 +940,7 @@ function showArmory() {
     hideSS();
     showOvr();
     scene.addUI(armBk);
-    const ws = stat.armory.filter(w => w.ch == hero.nm);
+    const ws = [hero.dw, ...stat.armory.filter(w => w.ch == hero.nm)];
     for (let i = 0; i < ws.length; i++) {
         const h = ws[i];
         const col = i % columns;
