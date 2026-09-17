@@ -368,6 +368,7 @@ const buller = (func: (...args: any[]) => BulletObject, cnt: number, rot: () => 
 }
 const heroGun = (shots: number, roff: number, life = 5000, then?: Function) => buller(bulGenr, shots, () => Angle.roff(scene.rotToMouse(plr), roff), life, stat.bspd, true, then);
 const heroMel = (swings: number, life = 90, then?: Function) => buller(melGenr, swings, () => scene.rotToMouse(plr), life, stat.bspd * 1.5, false, then);
+const heroRayGun = (roff: number, then?: Function) => buller(rayGenr, 10, () => Angle.roff(scene.rotToMouse(plr), roff), 300, stat.bspd * 5, false, then);
 const heroGunFred: Hero = {
     nm: "Gun Fred",
     ds: "A bald man with a short temper. No one knows how he got here.",
@@ -861,6 +862,9 @@ function bulGenr(x: number, y: number, rot: number, collide: (e: Entity) => void
 }
 function melGenr(x: number, y: number, rot: number, collide: (e: Entity) => void, spd: number) {
     return __stdBG(x, y, rot, collide, spd, 4, 25, "#a7a7a7");
+}
+function rayGenr(x: number, y: number, rot: number, collide: (e: Entity) => void, spd: number) {
+    return __stdBG(x, y, rot, collide, spd, 20, 10, "#9400c1");
 }
 
 abstract class WorldObj extends Entity {
