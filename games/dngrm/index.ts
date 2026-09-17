@@ -1203,7 +1203,7 @@ function showOvr() {
 function hideOvr() {
     scene.rmUI(ovr);
 }
-const ssBtns = [ssStartBtn, shopBtn, treeBtn, heroUIImg, heroUIImgBtn];
+const ssBtns = [ssStartBtn, shopBtn, treeBtn, heroUIImg, heroUIImgBtn, armBtn];
 function hideSS() {
     hideOvr();
     scene.rmUI(...ssBtns);
