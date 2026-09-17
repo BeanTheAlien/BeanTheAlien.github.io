@@ -246,8 +246,11 @@ plr.binds(["w", () => {
         gsi.y = 0;
     }]);
 const createWepFunc = (typ) => {
-    return (nm, cn, ch, dmg, wg, bspd, bul, ico) => {
-        return { nm, cn, ch, dmg, wg, bspd, bul, ico, typ };
+    return (nm, cn, ch, dmg, wg, bspd, bul, ico, ovr = undefined) => {
+        const __core = { nm, cn, ch, dmg, wg, bspd, bul, ico, typ };
+        if (typ != "sp")
+            return __core;
+        return { ...__core, atk: ovr };
     };
 };
 const wepPistol = createWepFunc("ps");
@@ -314,7 +317,10 @@ const wepSet = [
     wepPistol("Generic Pistol", "generic", "gunfred", 0, 0, 0, 0, "pistol"),
     wepPistol("SIG Sauer P250", "p250", "gunfred", 1, 0, -0.05, 0, "p250"),
     wepPistol("Desert Eagle", "deagle", "gunfred", 3, 0.5, 0, 0, "deagle"),
-    wepSword("Generic Sword", "generic", "george", 0, 0, 0, 0, "pistol")
+    wepSword("Generic Sword", "generic", "george", 0, 0, 0, 0, "pistol"),
+    wepSpecial("Raygun", "ray", "gunfred", 0, 0, 0, 0, "pistol", () => {
+        heroRayGun(5);
+    })
 ];
 var eqWep = wepSet[0];
 const equip = (wep) => {
@@ -876,7 +882,8 @@ for (let i = 0; i < heroSet.length; i++) {
 const pchsWep = (cat, inWeaponName) => stat.armory.push(wepSet.filter(w => w.typ == cat).find(w => w.cn == inWeaponName));
 const pchs = [
     { nm: "Test", path: "perks", ico: "tree", ct: 0, fx: () => alert("HI"), rr: 75 },
-    { nm: "Test2", path: "icons", ico: "downarrow", ct: 0, fx: () => pchsWep("ps", "generic"), rr: 30 }
+    { nm: "Test2", path: "icons", ico: "downarrow", ct: 0, fx: () => pchsWep("ps", "generic"), rr: 30 },
+    { nm: "Test3", path: "icons", ico: "uparrow", ct: 0, fx: () => pchsWep("sp", "ray"), rr: 85 }
 ];
 const pchsUI = [];
 const shopRFB = btn(() => {

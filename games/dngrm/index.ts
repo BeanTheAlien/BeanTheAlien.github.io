@@ -358,9 +358,11 @@ interface Special extends Weapon {
 interface Sword extends Weapon {
     typ: "sw";
 }
-const createWepFunc = <T extends WeaponCategory, K extends (T extends "ps" ? Pistol : T extends "st" ? Shotgun : T extends "rf" ? Rifle : T extends "sp" ? Special : T extends "sw" ? Sword : never)>(typ: T) => {
-    return (nm: string, cn: string, ch: ActualCharName, dmg: number, wg: number, bspd: number, bul: number, ico: string) => {
-        return { nm, cn, ch, dmg, wg, bspd, bul, ico, typ } as K;
+const createWepFunc = <T extends WeaponCategory, K extends (T extends "ps" ? Pistol : T extends "st" ? Shotgun : T extends "rf" ? Rifle : T extends "sp" ? Special : T extends "sw" ? Sword : never), O extends (K extends Special ? Function : undefined)>(typ: T) => {
+    return (nm: string, cn: string, ch: ActualCharName, dmg: number, wg: number, bspd: number, bul: number, ico: string, ovr = undefined as O) => {
+        const __core = { nm, cn, ch, dmg, wg, bspd, bul, ico, typ } as K;
+        if(typ != "sp") return __core;
+        return { ...__core, atk: ovr } as K;
     }
 }
 const wepPistol = createWepFunc("ps");
@@ -424,7 +426,10 @@ const wepSet = [
     wepPistol("Generic Pistol", "generic", "gunfred", 0, 0, 0, 0, "pistol"),
     wepPistol("SIG Sauer P250", "p250", "gunfred", 1, 0, -0.05, 0, "p250"),
     wepPistol("Desert Eagle", "deagle", "gunfred", 3, 0.5, 0, 0, "deagle"),
-    wepSword("Generic Sword", "generic", "george", 0, 0, 0, 0, "pistol")
+    wepSword("Generic Sword", "generic", "george", 0, 0, 0, 0, "pistol"),
+    wepSpecial("Raygun", "ray", "gunfred", 0, 0, 0, 0, "pistol", () => {
+        heroRayGun(5);
+    })
 ] as const;
 var eqWep: Weapon = wepSet[0];
 const equip = (wep: Weapon) => {
@@ -1019,7 +1024,8 @@ interface Purchase {
 const pchsWep = (cat: WeaponCategory, inWeaponName: string) => stat.armory.push(wepSet.filter(w => w.typ == cat).find(w => w.cn == inWeaponName) as Weapon);
 const pchs: Purchase[] = [
     { nm: "Test", path: "perks", ico: "tree", ct: 0, fx: () => alert("HI"), rr: 75 },
-    { nm: "Test2", path: "icons", ico: "downarrow", ct: 0, fx: () => pchsWep("ps", "generic"), rr: 30 }
+    { nm: "Test2", path: "icons", ico: "downarrow", ct: 0, fx: () => pchsWep("ps", "generic"), rr: 30 },
+    { nm: "Test3", path: "icons", ico: "uparrow", ct: 0, fx: () => pchsWep("sp", "ray"), rr: 85 }
 ] as const;
 const pchsUI: SceneUI[][] = [];
 const shopRFB = btn(() => {
