@@ -295,7 +295,8 @@ class PhantomRemovedEvent extends PhantomEvent {
  * @since v0.0.0
  */
 class PhantomHealthCompHurtEvent extends PhantomEvent {
-    constructor() { super("hurt"); }
+    dmg;
+    constructor(dmg) { super("hurt"); this.dmg = dmg; }
 }
 /**
  * Fired when this ent dies.
@@ -309,7 +310,8 @@ class PhantomHealthCompDieEvent extends PhantomEvent {
  * @since v0.0.0
  */
 class PhantomHealthCompHealEvent extends PhantomEvent {
-    constructor() { super("heal"); }
+    hp;
+    constructor(hp) { super("heal"); this.hp = hp; }
 }
 class PhantomDestroyedEvent extends PhantomEvent {
     constructor() { super("destroyed"); }
@@ -365,7 +367,7 @@ class HealthComp extends Comp {
      */
     hurt(dmg) {
         this.hp -= dmg;
-        this.#consume(this.onHurt, "hurt", new PhantomHealthCompHurtEvent());
+        this.#consume(this.onHurt, "hurt", new PhantomHealthCompHurtEvent(dmg));
         if (this.hp <= 0)
             this.die();
     }
@@ -385,7 +387,7 @@ class HealthComp extends Comp {
         this.hp += hp;
         if (this.mhp)
             this.hp = Math.min(this.hp, this.mhp);
-        this.#consume(this.onHeal, "heal", new PhantomHealthCompHealEvent());
+        this.#consume(this.onHeal, "heal", new PhantomHealthCompHealEvent(hp));
     }
     /**
      * If the handle exists, use the handle.
@@ -1489,6 +1491,7 @@ class WallObject extends Entity {
                     }
                 }
             }
+            opts?.collide?.(e);
         };
     }
     static from(opts) {
@@ -4635,6 +4638,50 @@ function random(a, b) {
     }
     return Math.floor(Math.random() * (max - min)) + min;
 }
+/**
+ * Generates a random 32-bit integer seed.
+ * @returns A 32-bit integer.
+ */
+function mulberrySeed() {
+    return Math.floor(Math.random() * 0x100000000) >>> 0;
+}
+/**
+ * Returns a random number from [`min`, `max`)
+ * while using the random algorithm provided.
+ *
+ * **Does NOT perform the same `[min, max] <=> [max, min]` swap
+ * if `max` > `min`!**
+ *
+ * @example Usage with `mulberry32` algorithm.
+ * ```
+ * // example seed, use mulberrySeed() for a random seed
+ * const seed = 123;
+ * // seed the mulberry32 func
+ * const mulberry = mulberry32(seed);
+ * // now, generate a random number
+ * const output = randomx(mulberry, 0, 101);
+ * console.log(output); // any number between 0 - 101
+ * ```
+ * @example Usage with `mulberry32` algorithm (random seed).
+ * ```
+ * // generate a seed
+ * const seed = mulberrySeed();
+ * // seed the mulberry32 func
+ * const mulberry = mulberry32(seed);
+ * // now, generate a random number
+ * const output = randomx(mulberry, 0, 101);
+ * console.log(output); // any number between 0 - 101
+ * ```
+ * @param randomFunction The random number function. MUST return a value between 0 and 1 to work.
+ * @param min The minimum value.
+ * @param max The maximum value.
+ * @returns A random number, using the random algorithm.
+ */
+function randomx(randomFunction, min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(randomFunction() * (max - min)) + min;
+}
 function chance(max, upperBound) {
     return random((upperBound ?? 100) + 1) <= max;
 }
@@ -4682,4 +4729,4 @@ function mulberry32(a) {
         return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
     };
 }
-export { Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, FloorObject, Aircraft, Weapon, Gun, Pistol, Burst, SceneUI, ButtonUI, TextUI, MenuUI, ImgUI, ProgressUI, KeyedTextUI, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, DebugRay, Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag, External, MultiRaycast, ConeRaycast, ConeDebugRay, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, randItem, lerp, mulberry32, Local, LocalDeprecated, Session, Clipboard, Cookies, Params, Comp, HealthComp, InvComp, EnhancedPhysicsComp, GravityComp, Trigger, Itvl, FixedItvl, KeyInputs, LerpDevice, VectorBasedLerpDevice, VectorLerpDevice, EntityLerpDevice, SceneUILerpDevice, EntityRotationLerpDevice, AngleBasedLerpDevice, SceneUIRotationLerpDevice, ParamKey, Spawner, Perlin };
+export { Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, FloorObject, Aircraft, Weapon, Gun, Pistol, Burst, SceneUI, ButtonUI, TextUI, MenuUI, ImgUI, ProgressUI, KeyedTextUI, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, DebugRay, Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag, External, MultiRaycast, ConeRaycast, ConeDebugRay, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, randItem, lerp, mulberry32, Local, LocalDeprecated, Session, Clipboard, Cookies, Params, Comp, HealthComp, InvComp, EnhancedPhysicsComp, GravityComp, Trigger, Itvl, FixedItvl, KeyInputs, LerpDevice, VectorBasedLerpDevice, VectorLerpDevice, EntityLerpDevice, SceneUILerpDevice, EntityRotationLerpDevice, AngleBasedLerpDevice, SceneUIRotationLerpDevice, ParamKey, Spawner, Perlin, randomx, mulberrySeed };

@@ -260,6 +260,7 @@ const buller = (func, cnt, rot, life, spd, includeBC, then) => {
 };
 const heroGun = (shots, roff, life = 5000, then) => buller(bulGenr, shots, () => Angle.roff(scene.rotToMouse(plr), roff), life, stat.bspd, true, then);
 const heroMel = (swings, life = 90, then) => buller(melGenr, swings, () => scene.rotToMouse(plr), life, stat.bspd * 1.5, false, then);
+const heroRayGun = (roff, then) => buller(rayGenr, 10, () => Angle.roff(scene.rotToMouse(plr), roff), 300, stat.bspd * 5, false, then);
 const heroGunFred = {
     nm: "Gun Fred",
     ds: "A bald man with a short temper. No one knows how he got here.",
@@ -313,11 +314,15 @@ const equip = (wep) => {
     stat.bspd -= eqWep.bspd;
     stat.sc -= eqWep.bul;
     stat.spd += eqWep.wg;
+    hero.ao = undefined;
     eqWep = wep;
     stat.dmg += eqWep.dmg;
     stat.bspd += eqWep.bspd;
     stat.sc += eqWep.bul;
     stat.spd -= eqWep.wg;
+    if (wep.typ == "sp") {
+        hero.ao = wep.atk;
+    }
 };
 const cycle = () => {
     const i = heroSet.indexOf(hero) + 1;
@@ -731,6 +736,9 @@ function bulGenr(x, y, rot, collide, spd) {
 function melGenr(x, y, rot, collide, spd) {
     return __stdBG(x, y, rot, collide, spd, 4, 25, "#a7a7a7");
 }
+function rayGenr(x, y, rot, collide, spd) {
+    return __stdBG(x, y, rot, collide, spd, 20, 10, "#9400c1");
+}
 class WorldObj extends Entity {
     a;
     constructor(x, y, width, height, col, render, a, auto = true, verif) {
@@ -1098,7 +1106,10 @@ scene.add(plr);
 scene.on("click", () => {
     if (!gmRn)
         return;
-    hero.atk();
+    if (hero.ao)
+        hero.ao();
+    else
+        hero.atk();
 });
 scene.start(() => {
     scene.bg("#003764");

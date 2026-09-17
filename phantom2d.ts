@@ -998,7 +998,7 @@ class PhantomRemovedEvent extends PhantomEvent { constructor() { super("removed"
  * Fired when this ent takes damage.
  * @since v0.0.0
  */
-class PhantomHealthCompHurtEvent extends PhantomEvent { constructor() { super("hurt"); } }
+class PhantomHealthCompHurtEvent extends PhantomEvent { dmg: number; constructor(dmg: number) { super("hurt"); this.dmg = dmg; } }
 /**
  * Fired when this ent dies.
  * @since v0.0.0
@@ -1008,7 +1008,7 @@ class PhantomHealthCompDieEvent extends PhantomEvent { constructor() { super("di
  * Fired when this ent heals.
  * @since v0.0.0
  */
-class PhantomHealthCompHealEvent extends PhantomEvent { constructor() { super("heal"); } }
+class PhantomHealthCompHealEvent extends PhantomEvent { hp: number; constructor(hp: number) { super("heal"); this.hp = hp; } }
 class PhantomDestroyedEvent extends PhantomEvent { constructor() { super("destroyed"); } }
 /**
  * The component class.
@@ -1042,9 +1042,9 @@ class Comp {
  */
 class HealthComp extends Comp {
     hp: number; mhp?: number;
-    onHurt?: PhantomEventHandle;
-    onDie?: PhantomEventHandle;
-    onHeal?: PhantomEventHandle;
+    onHurt?: PhantomEventHandle<PhantomHealthCompHurtEvent>;
+    onDie?: PhantomEventHandle<PhantomHealthCompDieEvent>;
+    onHeal?: PhantomEventHandle<PhantomHealthCompHealEvent>;
     constructor(ent: Entity, opts: HealthCompOptions) {
         super(ent);
         this.hp = opts.hp ?? 0;
@@ -1060,7 +1060,7 @@ class HealthComp extends Comp {
      */
     hurt(dmg: number) {
         this.hp -= dmg;
-        this.#consume(this.onHurt, "hurt", new PhantomHealthCompHurtEvent());
+        this.#consume(this.onHurt as any, "hurt", new PhantomHealthCompHurtEvent(dmg));
         if(this.hp <= 0) this.die();
     }
     /**
@@ -1078,7 +1078,7 @@ class HealthComp extends Comp {
     heal(hp: number) {
         this.hp += hp;
         if(this.mhp) this.hp = Math.min(this.hp, this.mhp);
-        this.#consume(this.onHeal, "heal", new PhantomHealthCompHealEvent());
+        this.#consume(this.onHeal as any, "heal", new PhantomHealthCompHealEvent(hp));
     }
     /**
      * If the handle exists, use the handle.
@@ -2257,6 +2257,7 @@ class WallObject extends Entity {
                     }
                 }
             }
+            opts?.collide?.(e);
         }
     }
     /**
@@ -5786,6 +5787,50 @@ function random(a?: number, b?: number): number {
     return Math.floor(Math.random() * (max - min)) + min;
 }
 /**
+ * Generates a random 32-bit integer seed.
+ * @returns A 32-bit integer.
+ */
+function mulberrySeed() {
+    return Math.floor(Math.random() * 0x100000000) >>> 0;
+}
+/**
+ * Returns a random number from [`min`, `max`)
+ * while using the random algorithm provided.
+ * 
+ * **Does NOT perform the same `[min, max] <=> [max, min]` swap
+ * if `max` > `min`!**
+ * 
+ * @example Usage with `mulberry32` algorithm.
+ * ```
+ * // example seed, use mulberrySeed() for a random seed
+ * const seed = 123;
+ * // seed the mulberry32 func
+ * const mulberry = mulberry32(seed);
+ * // now, generate a random number
+ * const output = randomx(mulberry, 0, 101);
+ * console.log(output); // any number between 0 - 101
+ * ```
+ * @example Usage with `mulberry32` algorithm (random seed).
+ * ```
+ * // generate a seed
+ * const seed = mulberrySeed();
+ * // seed the mulberry32 func
+ * const mulberry = mulberry32(seed);
+ * // now, generate a random number
+ * const output = randomx(mulberry, 0, 101);
+ * console.log(output); // any number between 0 - 101
+ * ```
+ * @param randomFunction The random number function. MUST return a value between 0 and 1 to work.
+ * @param min The minimum value.
+ * @param max The maximum value.
+ * @returns A random number, using the random algorithm.
+ */
+function randomx(randomFunction: () => number, min: number, max: number) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(randomFunction() * (max - min)) + min;
+}
+/**
  * Returns a `boolean` of whether a randomly-generated number is less-equal `max`.
  * 
  * Uses random(101).
@@ -5885,6 +5930,8 @@ export {
 
     ParamKey,
 
-    Spawner, Perlin
+    Spawner, Perlin,
+
+    randomx, mulberrySeed
 };
 export type { Renderable, Constructor, AbstractConstructor, KeyCode };
