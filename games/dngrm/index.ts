@@ -120,6 +120,7 @@ clsB.addEventListener("click", () => {
     // force a clean load
     window.location.reload();
 });
+const sdv = document.getElementById("seed-view") as HTMLDivElement;
 function dispStat() {
     const none = (a: any[]) => !a.length ? "none" : a;
     statDisp.textContent = `Level ${stat.lvl} (${stat.xp} / ${nextXP()} xp)\n
@@ -253,6 +254,7 @@ function worldInit() {
     gsi = new Vector();
     plr.setMoveMode("move");
     gmRn = true;
+    sdv.textContent = `Seed: ${genDungSeed()}`;
     genRms();
     ldRm();
 }
@@ -314,7 +316,7 @@ interface Hero {
     ico: string;
     atk: Function;
 }
-type WeaponCategory = "ps" | "st" | "rf" | "sp";
+type WeaponCategory = "ps" | "st" | "rf" | "sp" | "sw";
 interface Weapon {
     typ: WeaponCategory;
     ch: (typeof heroSet)[number]["nm"];
@@ -328,6 +330,18 @@ interface Weapon {
 }
 interface Pistol extends Weapon {
     typ: "ps";
+}
+interface Shotgun extends Weapon {
+    typ: "st";
+}
+interface Rifle extends Weapon {
+    typ: "rf";
+}
+interface Special extends Weapon {
+    typ: "sp";
+}
+interface Sword extends Weapon {
+    typ: "sw";
 }
 const buller = (func: (...args: any[]) => BulletObject, cnt: number, rot: () => number, life: number, spd: number, includeBC: boolean, then?: Function) => {
     for(let j = 0; j < stat.sc; j++) for(let i = 0; i < cnt + (includeBC ? stat.bc : 0); i++) {
@@ -379,9 +393,14 @@ const heroSet = [
     heroGunFred,
     heroGeorge
 ] as const;
-const wepPistolGeneric: Pistol = { nm: "Generic Pistol", cn: "generic", typ: "ps", ch: "gunfred", dmg: 0, wg: 0, bspd: 0, bul: 0, ico: "pistol" };
+type ActualCharName = "gunfred" | "george";
+function wepPistol(nm: string, cn: string, ch: ActualCharName, dmg: number, wg: number, bspd: number, bul: number, ico:  string): Pistol {
+    return { nm, cn, ch, dmg, wg, bspd, bul, ico, typ: "ps" };
+}
 const wepSet = [
-    wepPistolGeneric
+    wepPistol("Generic Pistol", "generic", "gunfred", 0, 0, 0, 0, "pistol"),
+    wepPistol("SIG Sauer P250", "p250", "gunfred", 1, 0, -0.05, 0, "p250"),
+    wepPistol("Desert Eagle", "deagle", "gunfred", 3, 0.5, 0, 0, "deagle")
 ] as const;
 var eqWep: Weapon = wepSet[0];
 const equip = (wep: Weapon) => {
@@ -816,11 +835,14 @@ function ldExs() {
         rooms[fdRmIdx()].e = [];
     }
 }
+function __stdBG(x: number, y: number, rot: number, collide: (e: Entity) => void, spd: number, w: number, h: number, color: string) {
+    return new BulletObject({ x, y, rot, width: w, height: h, scene, color, collide, extLeft: 0, extRight: scene.width, extTop: 0, extBtm: scene.height, spd });
+}
 function bulGenr(x: number, y: number, rot: number, collide: (e: Entity) => void, spd: number) {
-    return new BulletObject({ x, y, rot, height: 6, width: 18, scene, color: "#e2e603", collide, extLeft: 0, extRight: scene.width, extTop: 0, extBtm: scene.height, spd });
+    return __stdBG(x, y, rot, collide, spd, 6, 18, "#e2e603");
 }
 function melGenr(x: number, y: number, rot: number, collide: (e: Entity) => void, spd: number) {
-    return new BulletObject({ x, y, rot, height: 25, width: 4, scene, color: "#a7a7a7", collide, extLeft: 0, extRight: scene.width, extTop: 0, extBtm: scene.height, spd });
+    return __stdBG(x, y, rot, collide, spd, 25, 4, "#a7a7a7");
 }
 
 abstract class WorldObj extends Entity {
@@ -1189,6 +1211,7 @@ function genStatText(s: RunStat) {
         const k = ka as keyof RunStat;
         out.push(new TextUI({ scene, tx: `${k == "kill" ? "Kills" : k == "hpl" ? "Health Lost" : k == "hpg" ? "Health Gained" : k == "dmg" ? "Damage" : k == "me" ? "Money Earned" : k == "ms" ? "Money Spent" : "unknown"}: ${v}`, x: 100, y: 50 + i * 50 }));
     }
+    sdv.textContent = "";
     return out;
 }
 
