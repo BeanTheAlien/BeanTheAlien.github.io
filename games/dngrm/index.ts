@@ -853,7 +853,7 @@ function bulGenr(x: number, y: number, rot: number, collide: (e: Entity) => void
     return __stdBG(x, y, rot, collide, spd, 18, 6, "#e2e603");
 }
 function melGenr(x: number, y: number, rot: number, collide: (e: Entity) => void, spd: number) {
-    return __stdBG(x, y, rot, collide, spd, 25, 4, "#a7a7a7");
+    return __stdBG(x, y, rot, collide, spd, 4, 25, "#a7a7a7");
 }
 
 abstract class WorldObj extends Entity {
