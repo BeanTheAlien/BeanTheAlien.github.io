@@ -1,4 +1,4 @@
-import { Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Cooldown, random, Img, chance, ButtonUI, SceneUI, TextUI, Local, FilePicker, ImgUI, isCol } from "../../phantom2d.js";
+import { Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Cooldown, random, Img, chance, ButtonUI, SceneUI, TextUI, Local, FilePicker, ImgUI, isCol, mulberry32, mulberrySeed, randomx } from "../../phantom2d.js";
 Img.config.set("root", "assets");
 //window.addEventListener("error", (e) => alert(`${e.message}, ${e.lineno}`))
 // Local.del("stat");
@@ -159,6 +159,8 @@ const plr = new PlayableCharacter({ strength: 0, width: size * 3, height: size *
     }, x: 50, y: 50 });
 var pDed = false;
 var gssQue = false;
+var worldSeed = null;
+var worldMul = null;
 function worldInit() {
     scene.unfollow();
     rooms.forEach(rm => {
@@ -186,7 +188,9 @@ function worldInit() {
     gsi = new Vector();
     plr.setMoveMode("move");
     gmRn = true;
-    sdv.textContent = `Seed: ${genDungSeed()}`;
+    worldSeed = mulberrySeed();
+    worldMul = mulberry32(worldSeed);
+    sdv.textContent = `Seed: ${worldSeed}`;
     genRms();
     ldRm();
 }
@@ -597,12 +601,12 @@ function genEnemyCtors() {
     const ec = [BasicMeleeEnemy, BasicGunEnemy, BulletSprayGunEnemy, SprintMeleeEnemy, ShottyEnemy];
     const out = [];
     for (let i = 0; i < random(1, 6); i++)
-        out.push(ec[random(ec.length)]);
+        out.push(ec[randomx(worldMul, 0, ec.length)]);
     return out;
 }
 function getBossCtor() {
     const bc = [BulkBoss, SprinterBoss];
-    return bc[random(bc.length)];
+    return bc[randomx(worldMul, 0, bc.length)];
 }
 function genRmCoords() {
     const max = 20;
@@ -630,7 +634,7 @@ function genRmCoords() {
             stack.pop();
             continue;
         }
-        const dir = available[random(available.length)];
+        const dir = available[randomx(worldMul, 0, available.length)];
         const next = new Vector(current.x + dir.x, current.y + dir.y);
         cord.push(next);
         stack.push(next);

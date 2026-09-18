@@ -1,4 +1,4 @@
-import { DebugRay, Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Raycast, Cooldown, random, Img, chance, ButtonUI, SceneUI, TextUI, Local, FilePicker, ImgUI, isCol, randItem, mulberry32 } from "../../phantom2d.js";
+import { DebugRay, Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Raycast, Cooldown, random, Img, chance, ButtonUI, SceneUI, TextUI, Local, FilePicker, ImgUI, isCol, randItem, mulberry32, mulberrySeed, randomx } from "../../phantom2d.js";
 Img.config.set("root", "assets");
 //window.addEventListener("error", (e) => alert(`${e.message}, ${e.lineno}`))
 // Local.del("stat");
@@ -239,6 +239,8 @@ const plr = new PlayableCharacter({ strength: 0, width: size * 3, height: size *
 }, x: 50, y: 50 });
 var pDed = false;
 var gssQue = false;
+var worldSeed: number | null = null;
+var worldMul: (() => number) | null = null;
 function worldInit() {
     scene.unfollow();
     rooms.forEach(rm => {
@@ -266,7 +268,9 @@ function worldInit() {
     gsi = new Vector();
     plr.setMoveMode("move");
     gmRn = true;
-    sdv.textContent = `Seed: ${genDungSeed()}`;
+    worldSeed = mulberrySeed();
+    worldMul = mulberry32(worldSeed);
+    sdv.textContent = `Seed: ${worldSeed}`;
     genRms();
     ldRm();
 }
@@ -714,12 +718,12 @@ function getRmExits(room: Vector, rooms: Vector[]) {
 function genEnemyCtors() {
     const ec = [BasicMeleeEnemy, BasicGunEnemy, BulletSprayGunEnemy, SprintMeleeEnemy, ShottyEnemy] as const;
     const out: (new (...arg: any[]) => Enemy)[] = [];
-    for(let i = 0; i < random(1, 6); i++) out.push(ec[random(ec.length)]);
+    for(let i = 0; i < random(1, 6); i++) out.push(ec[randomx(worldMul as (() => number), 0, ec.length)]);
     return out;
 }
 function getBossCtor() {
     const bc = [BulkBoss, SprinterBoss] as const;
-    return bc[random(bc.length)];
+    return bc[randomx(worldMul as (() => number), 0, bc.length)];
 }
 function genRmCoords() {
     const max = 20;
@@ -760,7 +764,7 @@ function genRmCoords() {
             continue;
         }
 
-        const dir = available[random(available.length)];
+        const dir = available[randomx(worldMul as (() => number), 0, available.length)];
 
         const next = new Vector(
             current.x + dir.x,
