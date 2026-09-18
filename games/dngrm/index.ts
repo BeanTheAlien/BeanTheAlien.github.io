@@ -379,7 +379,7 @@ const buller = (func: (...args: any[]) => BulletObject, cnt: number, rot: () => 
 }
 const heroGun = (shots: number, roff: number, life = 5000, then?: Function) => buller(bulGenr, shots, () => Angle.roff(scene.rotToMouse(plr), roff), life, stat.bspd, true, then);
 const heroMel = (swings: number, life = 90, then?: Function) => buller(melGenr, swings, () => scene.rotToMouse(plr), life, stat.bspd * 1.5, false, then);
-const heroRayGun = (roff: number, then?: Function) => buller(rayGenr, 10, () => Angle.roff(scene.rotToMouse(plr), roff), 300, stat.bspd * 5, false, then);
+const heroRayGun = (roff: number, then?: Function) => buller(rayGenr, 30, () => Angle.roff(scene.rotToMouse(plr), roff), 500, stat.bspd * 5, false, then);
 const heroGunFred: Hero = {
     nm: "Gun Fred",
     ds: "A bald man with a short temper. No one knows how he got here.",
