@@ -374,7 +374,7 @@ const wepSword = createWepFunc("sw");
 const wepSpecial = createWepFunc("sp");
 const buller = (func: (...args: any[]) => BulletObject, cnt: number, rot: () => number, life: number, spd: number, includeBC: boolean, then?: Function) => {
     for(let j = 0; j < stat.sc; j++) for(let i = 0; i < cnt + (includeBC ? stat.bc : 0); i++) {
-        const o = func(plr.x, plr.y,rot(), (e: Entity) => { if(objIs(e, Enemy)) { e.comp("health").hurt(stat.crit && chance(stat.crit) ? stat.dmg * 2 : stat.dmg); scene.rm(o); } }, spd);
+        const o = func(plr.x, plr.y, rot(), (e: Entity) => { if(objIs(e, Enemy)) { e.comp("health").hurt(stat.crit && chance(stat.crit) ? stat.dmg * 2 : stat.dmg); scene.rm(o); } }, spd);
         scene.add(o);
         plrBuls.push(o);
         o.expire(life, scene);
@@ -384,6 +384,7 @@ const buller = (func: (...args: any[]) => BulletObject, cnt: number, rot: () => 
 const heroGun = (shots: number, roff: number, life = 5000, then?: Function) => buller(bulGenr, shots, () => Angle.roff(scene.rotToMouse(plr), roff), life, stat.bspd, true, then);
 const heroMel = (swings: number, life = 90, then?: Function) => buller(melGenr, swings, () => scene.rotToMouse(plr), life, stat.bspd * 1.5, false, then);
 const heroRayGun = (roff: number, then?: Function) => buller(rayGenr, 30, () => Angle.roff(scene.rotToMouse(plr), roff), 500, stat.bspd * 5, false, then);
+const heroFlamer = (then?: Function) => buller(fireGenr, 50, () => Angle.roff(scene.rotToMouse(plr), 30), 200, stat.bspd * 5, false, then);
 const heroGunFred: Hero = {
     nm: "Gun Fred",
     ds: "A bald man with a short temper. No one knows how he got here.",
@@ -431,9 +432,8 @@ const wepSet = [
     wepPistol("SIG Sauer P250", "p250", "gunfred", 1, 0, -0.05, 0, "p250"),
     wepPistol("Desert Eagle", "deagle", "gunfred", 3, 0.5, 0, 0, "deagle"),
     wepSword("Generic Sword", "generic", "george", 0, 0, 0, 0, "pistol"),
-    wepSpecial("Raygun", "ray", "gunfred", 0, 0, 0, 0, "pistol", () => {
-        heroRayGun(5);
-    })
+    wepSpecial("Raygun", "ray", "gunfred", 0, 0, 0, 0, "pistol", () => heroRayGun(5)),
+    wepSpecial("Flamethrower", "flame", "gunfred", 0, 0, 0, 0, "pistol", () => heroFlamer())
 ] as const;
 var eqWep: Weapon = wepSet[0];
 const equip = (wep: Weapon) => {
@@ -878,6 +878,7 @@ const __stdBG = (width: number, height: number, color: string) => {
 const bulGenr = __stdBG(18, 6, "#e2e603");
 const melGenr = __stdBG(4, 25, "#a7a7a7");
 const rayGenr = __stdBG(20, 10, "#9400c1");
+const fireGenr = __stdBG(10, 10, "#d40e0e");
 
 abstract class WorldObj extends Entity {
     a: WorldObj[];
