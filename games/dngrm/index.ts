@@ -868,18 +868,12 @@ function ldExs() {
         rooms[fdRmIdx()].e = [];
     }
 }
-function __stdBG(x: number, y: number, rot: number, collide: (e: Entity) => void, spd: number, w: number, h: number, color: string) {
-    return new BulletObject({ x, y, rot, width: w, height: h, scene, color, collide, extLeft: 0, extRight: scene.width, extTop: 0, extBtm: scene.height, spd });
+const __stdBG = (width: number, height: number, color: string) => {
+    return (x: number, y: number, rot: number, collide: (e: Entity) => void, spd: number) => new BulletObject({ x, y, rot, width, height, scene, color, collide, extLeft: 0, extRight: scene.width, extTop: 0, extBtm: scene.height, spd });
 }
-function bulGenr(x: number, y: number, rot: number, collide: (e: Entity) => void, spd: number) {
-    return __stdBG(x, y, rot, collide, spd, 18, 6, "#e2e603");
-}
-function melGenr(x: number, y: number, rot: number, collide: (e: Entity) => void, spd: number) {
-    return __stdBG(x, y, rot, collide, spd, 4, 25, "#a7a7a7");
-}
-function rayGenr(x: number, y: number, rot: number, collide: (e: Entity) => void, spd: number) {
-    return __stdBG(x, y, rot, collide, spd, 20, 10, "#9400c1");
-}
+const bulGenr = __stdBG(18, 6, "#e2e603");
+const melGenr = __stdBG(4, 25, "#a7a7a7");
+const rayGenr = __stdBG(20, 10, "#9400c1");
 
 abstract class WorldObj extends Entity {
     a: WorldObj[];
