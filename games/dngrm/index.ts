@@ -370,7 +370,7 @@ const wepSword = createWepFunc("sw");
 const wepSpecial = createWepFunc("sp");
 const buller = (func: (...args: any[]) => BulletObject, cnt: number, rot: () => number, life: number, spd: number, includeBC: boolean, then?: Function) => {
     for(let j = 0; j < stat.sc; j++) for(let i = 0; i < cnt + (includeBC ? stat.bc : 0); i++) {
-        const o = func(plr.x, plr.y, rot(), (e: Entity) => { if(objIs(e, Enemy)) { e.comp("health").hurt(stat.crit && chance(stat.crit) ? stat.dmg * 2 : stat.dmg); scene.rm(o); } }, spd);
+        const o = func(plr.x, plr.y,rot(), (e: Entity) => { if(objIs(e, Enemy)) { e.comp("health").hurt(stat.crit && chance(stat.crit) ? stat.dmg * 2 : stat.dmg); scene.rm(o); } }, spd);
         scene.add(o);
         plrBuls.push(o);
         o.expire(life, scene);

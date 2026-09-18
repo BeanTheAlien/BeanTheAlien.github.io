@@ -4367,7 +4367,7 @@ class Angle {
      * @returns An angle +-`roffVal` from `inRadSource` (in radians).
      */
     static roff(inRadSource: number, roffVal: number) {
-        return Angle.rad(random(Angle.deg(inRadSource - roffVal), Angle.deg(inRadSource + roffVal)));
+        return Angle.rad(random(Angle.deg(inRadSource) - roffVal, Angle.deg(inRadSource) + roffVal));
     }
     /**
      * Convert an angle from deg => rad or rad => deg.

@@ -741,18 +741,12 @@ function ldExs() {
         rooms[fdRmIdx()].e = [];
     }
 }
-function __stdBG(x, y, rot, collide, spd, w, h, color) {
-    return new BulletObject({ x, y, rot, width: w, height: h, scene, color, collide, extLeft: 0, extRight: scene.width, extTop: 0, extBtm: scene.height, spd });
-}
-function bulGenr(x, y, rot, collide, spd) {
-    return __stdBG(x, y, rot, collide, spd, 18, 6, "#e2e603");
-}
-function melGenr(x, y, rot, collide, spd) {
-    return __stdBG(x, y, rot, collide, spd, 4, 25, "#a7a7a7");
-}
-function rayGenr(x, y, rot, collide, spd) {
-    return __stdBG(x, y, rot, collide, spd, 20, 10, "#9400c1");
-}
+const __stdBG = (width, height, color) => {
+    return (x, y, rot, collide, spd) => new BulletObject({ x, y, rot, width, height, scene, color, collide, extLeft: 0, extRight: scene.width, extTop: 0, extBtm: scene.height, spd });
+};
+const bulGenr = __stdBG(18, 6, "#e2e603");
+const melGenr = __stdBG(4, 25, "#a7a7a7");
+const rayGenr = __stdBG(20, 10, "#9400c1");
 class WorldObj extends Entity {
     a;
     constructor(x, y, width, height, col, render, a, auto = true, verif) {
