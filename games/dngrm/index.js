@@ -882,7 +882,8 @@ const pchsWep = (cat, inWeaponName) => stat.armory.push(wepSet.filter(w => w.typ
 const pchs = [
     { nm: "Test", path: "perks", ico: "tree", ct: 0, fx: () => alert("HI"), rr: 75 },
     { nm: "Test2", path: "icons", ico: "downarrow", ct: 0, fx: () => pchsWep("ps", "generic"), rr: 30 },
-    { nm: "Test3", path: "icons", ico: "uparrow", ct: 0, fx: () => pchsWep("sp", "ray"), rr: 85 }
+    { nm: "Test3", path: "icons", ico: "uparrow", ct: 0, fx: () => pchsWep("sp", "ray"), rr: 85 },
+    { nm: "Test4", path: "icons", ico: "downarrow", ct: 0, fx: () => pchsWep("sp", "flame"), rr: 95 }
 ];
 const pchsUI = [];
 const shopRFB = btn(() => {
