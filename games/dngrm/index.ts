@@ -850,6 +850,10 @@ function fdRmIdx(where?: Vector) {
     return rooms.findIndex(r => rmCb(r, where));
 }
 function ldRm() {
+    const pr = fdRm();
+    if(pr) {
+        pr.e.filter(e => objIs(e, GunEnemy)).forEach(e => scene.rm(...e.bls));
+    }
     const rm = fdRm();
     coins = [];
     scene.rm(...plrBuls);
