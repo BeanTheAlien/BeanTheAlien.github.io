@@ -432,8 +432,8 @@ const wepSet = [
     wepPistol("SIG Sauer P250", "p250", "gunfred", 1, 0, -0.05, 0, "p250"),
     wepPistol("Desert Eagle", "deagle", "gunfred", 3, 0.5, 0, 0, "deagle"),
     wepSword("Generic Sword", "generic", "george", 0, 0, 0, 0, "pistol"),
-    wepSpecial("Raygun", "ray", "gunfred", 0, 0, 0, 0, "pistol", () => heroRayGun(5)),
-    wepSpecial("Flamethrower", "flame", "gunfred", 0, 0, 0, 0, "pistol", () => heroFlamer())
+    wepSpecial("Raygun", "ray", "gunfred", 0, 0, 0, 0, "raygun", () => heroRayGun(5)),
+    wepSpecial("Flamethrower", "flame", "gunfred", 0, 0, 0, 0, "flamethrower", () => heroFlamer())
 ] as const;
 var eqWep: Weapon = wepSet[0];
 const equip = (wep: Weapon) => {
