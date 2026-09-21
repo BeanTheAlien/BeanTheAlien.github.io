@@ -1290,11 +1290,14 @@ function pcSave() {
 const plrBuls: BulletObject[] = [];
 
 scene.add(plr);
-scene.on("click", () => {
+var sceneClickFunc = () => {
     if(!gmRn) return;
     if(hero.ao) hero.ao();
     else hero.atk();
-});
+}
+var sceneMDI = -1;
+scene.on("mousedown", () => sceneMDI = setInterval(sceneClickFunc, 200));
+scene.on("mouseup", () => clearInterval(sceneMDI));
 scene.start(() => {
     scene.bg("#003764");
     coins.forEach(c => c.render());
