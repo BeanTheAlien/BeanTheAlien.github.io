@@ -250,8 +250,8 @@ plr.binds(["w", () => {
         gsi.y = 0;
     }]);
 const createWepFunc = (typ) => {
-    return (nm, cn, ch, dmg, wg, bspd, bul, ico, ovr = undefined) => {
-        const __core = { nm, cn, ch, dmg, wg, bspd, bul, ico, typ };
+    return (nm, cn, ch, dmg, wg, bspd, bul, fs, ico, ovr = undefined) => {
+        const __core = { nm, cn, ch, dmg, wg, bspd, fs, bul, ico, typ };
         if (typ != "sp")
             return __core;
         return { ...__core, atk: ovr };
@@ -276,7 +276,7 @@ const buller = (func, cnt, rot, life, spd, includeBC, then) => {
 const heroGun = (shots, roff, life = 5000, then) => buller(bulGenr, shots, () => Angle.roff(scene.rotToMouse(plr), roff), life, stat.bspd, true, then);
 const heroMel = (swings, life = 90, then) => buller(melGenr, swings, () => scene.rotToMouse(plr), life, stat.bspd * 1.5, false, then);
 const heroRayGun = (roff, then) => buller(rayGenr, 30, () => Angle.roff(scene.rotToMouse(plr), roff), 500, stat.bspd * 5, false, then);
-const heroFlamer = (then) => buller(fireGenr, 50, () => Angle.roff(scene.rotToMouse(plr), 30), 200, stat.bspd * 5, false, then);
+const heroFlamer = (then) => buller(fireGenr, 50, () => Angle.roff(scene.rotToMouse(plr), 30), 50, stat.bspd * 5, false, then);
 const heroGunFred = {
     nm: "Gun Fred",
     ds: "A bald man with a short temper. No one knows how he got here.",
@@ -295,7 +295,7 @@ const heroGunFred = {
     path: "gunfred",
     ico: "fireright0",
     atk: () => heroGun(1, 0),
-    dw: wepPistol("Generic Pistol", "generic", "gunfred", 0, 0, 0, 0, "pistol")
+    dw: wepPistol("Generic Pistol", "generic", "gunfred", 0, 0, 0, 0, 200, "pistol")
 };
 const heroGeorge = {
     nm: "George",
@@ -312,19 +312,19 @@ const heroGeorge = {
     path: "george",
     ico: "idle0",
     atk: () => heroMel(1),
-    dw: wepSword("Generic Sword", "generic", "george", 0, 0, 0, 0, "pistol")
+    dw: wepSword("Generic Sword", "generic", "george", 0, 0, 0, 0, 200, "pistol")
 };
 const heroSet = [
     heroGunFred,
     heroGeorge
 ];
 const wepSet = [
-    wepPistol("Generic Pistol", "generic", "gunfred", 0, 0, 0, 0, "pistol"),
-    wepPistol("SIG Sauer P250", "p250", "gunfred", 1, 0, -0.05, 0, "p250"),
-    wepPistol("Desert Eagle", "deagle", "gunfred", 3, 0.5, 0, 0, "deagle"),
-    wepSword("Generic Sword", "generic", "george", 0, 0, 0, 0, "pistol"),
-    wepSpecial("Raygun", "ray", "gunfred", 0, 0, 0, 0, "raygun", () => heroRayGun(5)),
-    wepSpecial("Flamethrower", "flame", "gunfred", 0, 0, 0, 0, "flamethrower", () => heroFlamer())
+    wepPistol("Generic Pistol", "generic", "gunfred", 0, 0, 0, 0, 200, "pistol"),
+    wepPistol("SIG Sauer P250", "p250", "gunfred", 1, 0, -0.05, 0, 200, "p250"),
+    wepPistol("Desert Eagle", "deagle", "gunfred", 3, 0.5, 0, 0, 200, "deagle"),
+    wepSword("Generic Sword", "generic", "george", 0, 0, 0, 0, 200, "pistol"),
+    wepSpecial("Raygun", "ray", "gunfred", 0, 0, 0, 0, 30, "raygun", () => heroRayGun(5)),
+    wepSpecial("Flamethrower", "flame", "gunfred", 0, 0, 0, 0, 1, "flamethrower", () => heroFlamer())
 ];
 var eqWep = wepSet[0];
 const equip = (wep) => {
@@ -884,7 +884,7 @@ for (let i = 0; i < heroSet.length; i++) {
 }
 const pchsWep = (cat, inWeaponName) => stat.armory.push(wepSet.filter(w => w.typ == cat).find(w => w.cn == inWeaponName));
 const pchs = [
-    { nm: "Test", path: "perks", ico: "tree", ct: 0, fx: () => alert("HI"), rr: 75 },
+    { nm: "Test", path: "perks", ico: "tree", ct: 0, fx: () => alert("HI"), rr: 0 },
     { nm: "Test2", path: "icons", ico: "downarrow", ct: 0, fx: () => pchsWep("ps", "generic"), rr: 30 },
     { nm: "Test3", path: "icons", ico: "uparrow", ct: 0, fx: () => pchsWep("sp", "ray"), rr: 85 },
     { nm: "Test4", path: "icons", ico: "downarrow", ct: 0, fx: () => pchsWep("sp", "flame"), rr: 95 }
@@ -1131,7 +1131,8 @@ var sceneClickFunc = () => {
         hero.atk();
 };
 var sceneMDI = -1;
-scene.on("mousedown", () => sceneMDI = setInterval(sceneClickFunc, 200));
+scene.on("click", sceneClickFunc);
+scene.on("mousedown", () => sceneMDI = setInterval(sceneClickFunc, eqWep.fs));
 scene.on("mouseup", () => clearInterval(sceneMDI));
 scene.start(() => {
     scene.bg("#003764");

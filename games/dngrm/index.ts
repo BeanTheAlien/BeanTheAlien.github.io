@@ -345,6 +345,7 @@ interface Weapon {
     ico: string;
     nm: string;
     cn: string;
+    fs: number;
 }
 interface Pistol extends Weapon {
     typ: "ps";
@@ -363,8 +364,8 @@ interface Sword extends Weapon {
     typ: "sw";
 }
 const createWepFunc = <T extends WeaponCategory, K extends (T extends "ps" ? Pistol : T extends "st" ? Shotgun : T extends "rf" ? Rifle : T extends "sp" ? Special : T extends "sw" ? Sword : never), O extends (K extends Special ? Function : undefined)>(typ: T) => {
-    return (nm: string, cn: string, ch: ActualCharName, dmg: number, wg: number, bspd: number, bul: number, ico: string, ovr = undefined as O) => {
-        const __core = { nm, cn, ch, dmg, wg, bspd, bul, ico, typ } as K;
+    return (nm: string, cn: string, ch: ActualCharName, dmg: number, wg: number, bspd: number, bul: number, fs: number, ico: string, ovr = undefined as O) => {
+        const __core = { nm, cn, ch, dmg, wg, bspd, fs, bul, ico, typ } as K;
         if(typ != "sp") return __core;
         return { ...__core, atk: ovr } as K;
     }
@@ -384,7 +385,7 @@ const buller = (func: (...args: any[]) => BulletObject, cnt: number, rot: () => 
 const heroGun = (shots: number, roff: number, life = 5000, then?: Function) => buller(bulGenr, shots, () => Angle.roff(scene.rotToMouse(plr), roff), life, stat.bspd, true, then);
 const heroMel = (swings: number, life = 90, then?: Function) => buller(melGenr, swings, () => scene.rotToMouse(plr), life, stat.bspd * 1.5, false, then);
 const heroRayGun = (roff: number, then?: Function) => buller(rayGenr, 30, () => Angle.roff(scene.rotToMouse(plr), roff), 500, stat.bspd * 5, false, then);
-const heroFlamer = (then?: Function) => buller(fireGenr, 50, () => Angle.roff(scene.rotToMouse(plr), 30), 200, stat.bspd * 5, false, then);
+const heroFlamer = (then?: Function) => buller(fireGenr, 50, () => Angle.roff(scene.rotToMouse(plr), 30), 50, stat.bspd * 5, false, then);
 const heroGunFred: Hero = {
     nm: "Gun Fred",
     ds: "A bald man with a short temper. No one knows how he got here.",
@@ -403,7 +404,7 @@ const heroGunFred: Hero = {
     path: "gunfred",
     ico: "fireright0",
     atk: () => heroGun(1, 0),
-    dw: wepPistol("Generic Pistol", "generic", "gunfred", 0, 0, 0, 0, "pistol")
+    dw: wepPistol("Generic Pistol", "generic", "gunfred", 0, 0, 0, 0, 200, "pistol")
 } as const;
 const heroGeorge: Hero = {
     nm: "George",
@@ -420,7 +421,7 @@ const heroGeorge: Hero = {
     path: "george",
     ico: "idle0",
     atk: () => heroMel(1),
-    dw: wepSword("Generic Sword", "generic", "george", 0, 0, 0, 0, "pistol")
+    dw: wepSword("Generic Sword", "generic", "george", 0, 0, 0, 0, 200, "pistol")
 } as const;
 const heroSet = [
     heroGunFred,
@@ -428,12 +429,12 @@ const heroSet = [
 ] as const;
 type ActualCharName = "gunfred" | "george";
 const wepSet = [
-    wepPistol("Generic Pistol", "generic", "gunfred", 0, 0, 0, 0, "pistol"),
-    wepPistol("SIG Sauer P250", "p250", "gunfred", 1, 0, -0.05, 0, "p250"),
-    wepPistol("Desert Eagle", "deagle", "gunfred", 3, 0.5, 0, 0, "deagle"),
-    wepSword("Generic Sword", "generic", "george", 0, 0, 0, 0, "pistol"),
-    wepSpecial("Raygun", "ray", "gunfred", 0, 0, 0, 0, "raygun", () => heroRayGun(5)),
-    wepSpecial("Flamethrower", "flame", "gunfred", 0, 0, 0, 0, "flamethrower", () => heroFlamer())
+    wepPistol("Generic Pistol", "generic", "gunfred", 0, 0, 0, 0, 200, "pistol"),
+    wepPistol("SIG Sauer P250", "p250", "gunfred", 1, 0, -0.05, 0, 200, "p250"),
+    wepPistol("Desert Eagle", "deagle", "gunfred", 3, 0.5, 0, 0, 200, "deagle"),
+    wepSword("Generic Sword", "generic", "george", 0, 0, 0, 0, 200, "pistol"),
+    wepSpecial("Raygun", "ray", "gunfred", 0, 0, 0, 0, 30, "raygun", () => heroRayGun(5)),
+    wepSpecial("Flamethrower", "flame", "gunfred", 0, 0, 0, 0, 1, "flamethrower", () => heroFlamer())
 ] as const;
 var eqWep: Weapon = wepSet[0];
 const equip = (wep: Weapon) => {
@@ -1026,7 +1027,7 @@ interface Purchase {
 }
 const pchsWep = (cat: WeaponCategory, inWeaponName: string) => stat.armory.push(wepSet.filter(w => w.typ == cat).find(w => w.cn == inWeaponName) as Weapon);
 const pchs: Purchase[] = [
-    { nm: "Test", path: "perks", ico: "tree", ct: 0, fx: () => alert("HI"), rr: 75 },
+    { nm: "Test", path: "perks", ico: "tree", ct: 0, fx: () => alert("HI"), rr: 0 },
     { nm: "Test2", path: "icons", ico: "downarrow", ct: 0, fx: () => pchsWep("ps", "generic"), rr: 30 },
     { nm: "Test3", path: "icons", ico: "uparrow", ct: 0, fx: () => pchsWep("sp", "ray"), rr: 85 },
     { nm: "Test4", path: "icons", ico: "downarrow", ct: 0, fx: () => pchsWep("sp", "flame"), rr: 95 }
@@ -1297,10 +1298,7 @@ var sceneClickFunc = () => {
 }
 var sceneMDI = -1;
 scene.on("click", sceneClickFunc);
-scene.on("mousedown", () => {
-    sceneClickFunc();
-    sceneMDI = setInterval(sceneClickFunc, 200);
-});
+scene.on("mousedown", () => sceneMDI = setInterval(sceneClickFunc, eqWep.fs));
 scene.on("mouseup", () => clearInterval(sceneMDI));
 scene.start(() => {
     scene.bg("#003764");
