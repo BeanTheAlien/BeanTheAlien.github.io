@@ -1296,7 +1296,11 @@ var sceneClickFunc = () => {
     else hero.atk();
 }
 var sceneMDI = -1;
-scene.on("mousedown", () => sceneMDI = setInterval(sceneClickFunc, 200));
+scene.on("click", sceneClickFunc);
+scene.on("mousedown", () => {
+    sceneClickFunc();
+    sceneMDI = setInterval(sceneClickFunc, 200);
+});
 scene.on("mouseup", () => clearInterval(sceneMDI));
 scene.start(() => {
     scene.bg("#003764");
