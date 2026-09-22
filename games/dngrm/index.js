@@ -884,10 +884,11 @@ for (let i = 0; i < heroSet.length; i++) {
 }
 const pchsWep = (cat, inWeaponName) => stat.armory.push(wepSet.filter(w => w.typ == cat).find(w => w.cn == inWeaponName));
 const pchs = [
-    { nm: "Test", path: "perks", ico: "tree", ct: 0, fx: () => alert("HI"), rr: 0 },
-    { nm: "Test2", path: "icons", ico: "downarrow", ct: 0, fx: () => pchsWep("ps", "generic"), rr: 30 },
-    { nm: "Test3", path: "icons", ico: "uparrow", ct: 0, fx: () => pchsWep("sp", "ray"), rr: 85 },
-    { nm: "Test4", path: "icons", ico: "downarrow", ct: 0, fx: () => pchsWep("sp", "flame"), rr: 95 }
+    { nm: "Generic Pistol", path: "weapons", ico: "pistol", ct: 10, fx: () => pchsWep("ps", "generic"), rr: 40 },
+    { nm: "Raygun", path: "wepaons", ico: "raygun", ct: 50, fx: () => pchsWep("sp", "ray"), rr: 5 },
+    { nm: "Flamethrower", path: "weapons", ico: "flamethrower", ct: 100, fx: () => pchsWep("sp", "flame"), rr: 5 },
+    { nm: "SIG Sauer P250", path: "weapons", ico: "p250", ct: 20, fx: () => pchsWep("ps", "p250"), rr: 30 },
+    { nm: "Desert Eagle", path: "weapons", ico: "deagle", ct: 40, fx: () => pchsWep("ps", "deagle"), rr: 10 }
 ];
 const pchsUI = [];
 const shopRFB = btn(() => {
@@ -977,8 +978,6 @@ function hideArmory() {
     showSS();
 }
 const trees = [
-    { nm: "hi", ico: "tree", ct: 1, fx: () => { }, typ: "sk" },
-    { nm: "bad", ico: "tree", ct: 0, fx: () => chance(10), typ: "gm", sp: "kill", rf: true },
     { nm: "Phoenix's Grace", ico: "phoneix", ct: 5, fx: () => chance(5), typ: "gm", sp: "die", rf: true },
     { nm: "Lifestal", ico: "lifestal", ct: 10, fx: () => pHeal(1), typ: "gm", sp: "kill", rf: false }
 ];
