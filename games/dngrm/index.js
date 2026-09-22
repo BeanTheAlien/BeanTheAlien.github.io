@@ -726,6 +726,7 @@ function ldRm() {
         pr.e.filter(e => objIs(e, GunEnemy)).forEach(e => scene.rm(...e.bls));
     }
     const rm = fdRm();
+    scene.rm(...coins);
     coins = [];
     scene.rm(...plrBuls);
     plrBuls.splice(0);
@@ -738,7 +739,6 @@ function ldRm() {
             rm.welt.filter(r => objIs(r, Shop)).forEach(r => r.add());
             rm.welt.filter(r => !objIs(r, Shop)).forEach(r => scene.add(r));
         }
-        coins = [];
     }
 }
 function ldExs() {
@@ -921,6 +921,7 @@ function newPchUIs() {
         const uis = [
             new ImgUI({ img: new Img(p.path + "/" + p.ico + ".png"), scene, x: ix, y: iy, w, h: w, color: invis }),
             new TextUI({ scene, x: x + w / 2, y: y + w + 50, tx: p.nm }),
+            new TextUI({ scene, x: x + w / 2, y: y + w + 75, tx: String(p.ct) }),
             new ButtonUI({ scene, x: ix, y: iy, w, h: w, color: invis, click: () => {
                     if (stat.mon >= p.ct) {
                         stat.mon -= p.ct;
