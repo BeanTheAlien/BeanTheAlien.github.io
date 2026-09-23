@@ -237,6 +237,17 @@ const plr = new PlayableCharacter({ strength: 0, width: size * 3, height: size *
     plr.x = bound(plr.x, 0, scene.width - plr.width);
     plr.y = bound(plr.y, 0, scene.height - plr.height);
 }, x: 50, y: 50 });
+plr.bind("fslash", () => {
+    const cheat = (prompt("Enter a cheat:", "") as string).split(" ").map(x => x.trim());
+    const cheats = [
+        "earn"
+    ] as const;
+    if(!(cheat[0] in cheats)) return;
+    const [ch, ...arg] = [cheat[0] as (typeof cheats)[number], ...cheat.slice(1)];
+    if(ch == "earn") {
+        stat.mon += Number(arg[0]);
+    }
+});
 var pDed = false;
 var gssQue = false;
 var worldSeed: number | null = null;
@@ -429,6 +440,7 @@ const heroSet = [
 ] as const;
 type ActualCharName = "gunfred" | "george";
 const wepSet = [
+    wepPistol("KelTec P32", "keltec", "gunfred", 0, -1.25, 0, 0, 200, "p250"),
     wepPistol("Generic Pistol", "generic", "gunfred", 0, 0, 0, 0, 200, "pistol"),
     wepPistol("SIG Sauer P250", "p250", "gunfred", 1, 0, -0.05, 0, 200, "p250"),
     wepPistol("Desert Eagle", "deagle", "gunfred", 3, 0.5, 0, 0, 200, "deagle"),
@@ -1031,7 +1043,8 @@ const pchs: Purchase[] = [
     { nm: "Raygun", path: "wepaons", ico: "raygun", ct: 50, fx: () => pchsWep("sp", "ray"), rr: 5 },
     { nm: "Flamethrower", path: "weapons", ico: "flamethrower", ct: 100, fx: () => pchsWep("sp", "flame"), rr: 5 },
     { nm: "SIG Sauer P250", path: "weapons", ico: "p250", ct: 20, fx: () => pchsWep("ps", "p250"), rr: 30 },
-    { nm: "Desert Eagle", path: "weapons", ico: "deagle", ct: 40, fx: () => pchsWep("ps", "deagle"), rr: 10 }
+    { nm: "Desert Eagle", path: "weapons", ico: "deagle", ct: 40, fx: () => pchsWep("ps", "deagle"), rr: 10 },
+    { nm: "KelTec P32", path: "weapons", ico: "p250", ct: 15, fx: () => pchsWep("ps", "keltec"), rr: 35 }
 ] as const;
 const pchsUI: SceneUI[][] = [];
 const shopRFB = btn(() => {
