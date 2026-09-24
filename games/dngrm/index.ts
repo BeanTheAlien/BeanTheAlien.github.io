@@ -237,15 +237,16 @@ const plr = new PlayableCharacter({ strength: 0, width: size * 3, height: size *
     plr.x = bound(plr.x, 0, scene.width - plr.width);
     plr.y = bound(plr.y, 0, scene.height - plr.height);
 }, x: 50, y: 50 });
-plr.bind("fslash", () => {
-    const cheat = (prompt("Enter a cheat:", "") as string).split(" ").map(x => x.trim());
-    const cheats = [
-        "earn"
-    ] as const;
-    if(!(cheat[0] in cheats)) return;
-    const [ch, ...arg] = [cheat[0] as (typeof cheats)[number], ...cheat.slice(1)];
-    if(ch == "earn") {
-        stat.mon += Number(arg[0]);
+window.addEventListener("keypress", (e) => {
+    if(e.code == "Slash") {
+        const cheat = (prompt("Enter a cheat:") ?? "").split(" ").map(x => x.trim());
+        const cheats = [
+            "earn"
+        ] as const;
+        const [ch, ...arg] = [cheat[0] as (typeof cheats)[number], ...cheat.slice(1)];
+        if(ch == "earn") {
+            stat.mon += Number(arg[0]);
+        }
     }
 });
 var pDed = false;
@@ -397,7 +398,7 @@ const heroGun = (shots: number, roff: number, life = 5000, then?: Function) => b
 const heroMel = (swings: number, life = 90, then?: Function) => buller(melGenr, swings, () => scene.rotToMouse(plr), life, stat.bspd * 1.5, false, then);
 const heroRayGun = (roff: number, then?: Function) => buller(rayGenr, 30, () => Angle.roff(scene.rotToMouse(plr), roff), 500, stat.bspd * 5, false, then);
 const heroFlamer = (then?: Function) => buller(fireGenr, 50, () => Angle.roff(scene.rotToMouse(plr), 30), 50, stat.bspd * 5, false, then);
-const heroBeam = (then?: Function) => buller(beamGenr, 5, () => Angle.rad(random(0, 361)), 200, stat.bspd, true, then);
+const heroBeam = (then?: Function) => buller(beamGenr, 5, () => Angle.rad(random(0, 361)), 500, stat.bspd * 3.5, true, then);
 const heroGunFred: Hero = {
     nm: "Gun Fred",
     ds: "A bald man with a short temper. No one knows how he got here.",
@@ -451,7 +452,7 @@ const wepSet = [
         v.scale(1.65);
         plr.setPos(v);
     })),
-    wepSpecial("Annihilator", "anh", "gunfred", 0, 2, 0, 0, 300, "anher", () => heroBeam())
+    wepSpecial("Annihilator", "anh", "gunfred", 0, 0.5, 0, 0, 300, "anher", () => heroBeam())
 ] as const;
 var eqWep: Weapon = wepSet[0];
 const equip = (wep: Weapon) => {
@@ -1065,6 +1066,7 @@ const pchsUI: SceneUI[][] = [];
 const shopRFB = btn(() => {
     if(stat.mon >= 5) {
         stat.mon -= 5;
+        pchsUI.forEach(p => scene.rmUI(...p));
         pchsUI.splice(0);
         newPchUIs();
     }
@@ -1103,6 +1105,7 @@ function newPchUIs() {
         ];
         pchsUI.push(uis);
     }
+    pchsUI.forEach(x => scene.addUI(...x));
 }
 function showShop() {
     hideSS();

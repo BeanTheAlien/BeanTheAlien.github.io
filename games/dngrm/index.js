@@ -157,6 +157,18 @@ const plr = new PlayableCharacter({ strength: 0, width: size * 3, height: size *
         plr.x = bound(plr.x, 0, scene.width - plr.width);
         plr.y = bound(plr.y, 0, scene.height - plr.height);
     }, x: 50, y: 50 });
+window.addEventListener("keypress", (e) => {
+    if (e.code == "Slash") {
+        const cheat = (prompt("Enter a cheat:") ?? "").split(" ").map(x => x.trim());
+        const cheats = [
+            "earn"
+        ];
+        const [ch, ...arg] = [cheat[0], ...cheat.slice(1)];
+        if (ch == "earn") {
+            stat.mon += Number(arg[0]);
+        }
+    }
+});
 var pDed = false;
 var gssQue = false;
 var worldSeed = null;
@@ -277,6 +289,7 @@ const heroGun = (shots, roff, life = 5000, then) => buller(bulGenr, shots, () =>
 const heroMel = (swings, life = 90, then) => buller(melGenr, swings, () => scene.rotToMouse(plr), life, stat.bspd * 1.5, false, then);
 const heroRayGun = (roff, then) => buller(rayGenr, 30, () => Angle.roff(scene.rotToMouse(plr), roff), 500, stat.bspd * 5, false, then);
 const heroFlamer = (then) => buller(fireGenr, 50, () => Angle.roff(scene.rotToMouse(plr), 30), 50, stat.bspd * 5, false, then);
+const heroBeam = (then) => buller(beamGenr, 5, () => Angle.rad(random(0, 361)), 500, stat.bspd * 3.5, true, then);
 const heroGunFred = {
     nm: "Gun Fred",
     ds: "A bald man with a short temper. No one knows how he got here.",
@@ -319,12 +332,17 @@ const heroSet = [
     heroGeorge
 ];
 const wepSet = [
-    wepPistol("Generic Pistol", "generic", "gunfred", 0, 0, 0, 0, 200, "pistol"),
+    wepPistol("KelTec P32", "keltec", "gunfred", 0, -1.25, 0, 0, 200, "p250"),
     wepPistol("SIG Sauer P250", "p250", "gunfred", 1, 0, -0.05, 0, 200, "p250"),
     wepPistol("Desert Eagle", "deagle", "gunfred", 3, 0.5, 0, 0, 200, "deagle"),
-    wepSword("Generic Sword", "generic", "george", 0, 0, 0, 0, 200, "pistol"),
     wepSpecial("Raygun", "ray", "gunfred", 0, 0, 0, 0, 30, "raygun", () => heroRayGun(5)),
-    wepSpecial("Flamethrower", "flame", "gunfred", 0, 0, 0, 0, 1, "flamethrower", () => heroFlamer())
+    wepSpecial("Flamethrower", "flame", "gunfred", 0, 0, 0, 0, 10, "flamethrower", () => heroFlamer()),
+    wepSpecial("Wrath Sword", "wrathsword", "george", 3, 0, 0, 3, 180, "wrathsword", () => heroMel(3, undefined, () => {
+        const v = Angle.toVector(scene.rotToMouse(plr));
+        v.scale(1.65);
+        plr.setPos(v);
+    })),
+    wepSpecial("Annihilator", "anh", "gunfred", 0, 0.5, 0, 0, 300, "anher", () => heroBeam())
 ];
 var eqWep = wepSet[0];
 const equip = (wep) => {
@@ -756,6 +774,7 @@ const bulGenr = __stdBG(18, 6, "#e2e603");
 const melGenr = __stdBG(4, 25, "#a7a7a7");
 const rayGenr = __stdBG(20, 10, "#9400c1");
 const fireGenr = __stdBG(10, 10, "#d40e0e");
+const beamGenr = __stdBG(5, 5, "#27bcc2");
 class WorldObj extends Entity {
     a;
     constructor(x, y, width, height, col, render, a, auto = true, verif) {
@@ -883,17 +902,28 @@ for (let i = 0; i < heroSet.length; i++) {
     ]);
 }
 const pchsWep = (cat, inWeaponName) => stat.armory.push(wepSet.filter(w => w.typ == cat).find(w => w.cn == inWeaponName));
+const gradedWepFn = (rr) => (nm, ico, desc, cn, ct, _rr = rr) => {
+    return { nm, path: "weapons", ico, ct, fx: () => pchsWep(desc, cn), rr: _rr };
+};
+const comWep = gradedWepFn(50);
+const ucomWep = gradedWepFn(40);
+const rareWep = gradedWepFn(20);
+const epicWep = gradedWepFn(10);
+const supWep = gradedWepFn(5);
 const pchs = [
-    { nm: "Generic Pistol", path: "weapons", ico: "pistol", ct: 10, fx: () => pchsWep("ps", "generic"), rr: 40 },
-    { nm: "Raygun", path: "wepaons", ico: "raygun", ct: 50, fx: () => pchsWep("sp", "ray"), rr: 5 },
-    { nm: "Flamethrower", path: "weapons", ico: "flamethrower", ct: 100, fx: () => pchsWep("sp", "flame"), rr: 5 },
-    { nm: "SIG Sauer P250", path: "weapons", ico: "p250", ct: 20, fx: () => pchsWep("ps", "p250"), rr: 30 },
-    { nm: "Desert Eagle", path: "weapons", ico: "deagle", ct: 40, fx: () => pchsWep("ps", "deagle"), rr: 10 }
+    supWep("Raygun", "raygun", "sp", "ray", 50),
+    supWep("Flamethrower", "flamethrower", "sp", "flame", 100),
+    ucomWep("SIG Sauer P250", "p250", "ps", "p250", 20),
+    epicWep("Desert Eagle", "deagle", "ps", "deagle", 20),
+    rareWep("KelTec P32", "p250", "ps", "keltec", 15),
+    supWep("Wrath Sword", "wrathsword", "sp", "wrathsword", 50),
+    supWep("Anhiliator", "anher", "sp", "anh", 50)
 ];
 const pchsUI = [];
 const shopRFB = btn(() => {
     if (stat.mon >= 5) {
         stat.mon -= 5;
+        pchsUI.forEach(p => scene.rmUI(...p));
         pchsUI.splice(0);
         newPchUIs();
     }
@@ -933,6 +963,7 @@ function newPchUIs() {
         ];
         pchsUI.push(uis);
     }
+    pchsUI.forEach(x => scene.addUI(...x));
 }
 function showShop() {
     hideSS();
