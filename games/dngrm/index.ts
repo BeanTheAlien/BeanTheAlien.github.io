@@ -397,6 +397,7 @@ const heroGun = (shots: number, roff: number, life = 5000, then?: Function) => b
 const heroMel = (swings: number, life = 90, then?: Function) => buller(melGenr, swings, () => scene.rotToMouse(plr), life, stat.bspd * 1.5, false, then);
 const heroRayGun = (roff: number, then?: Function) => buller(rayGenr, 30, () => Angle.roff(scene.rotToMouse(plr), roff), 500, stat.bspd * 5, false, then);
 const heroFlamer = (then?: Function) => buller(fireGenr, 50, () => Angle.roff(scene.rotToMouse(plr), 30), 50, stat.bspd * 5, false, then);
+const heroBeam = (then?: Function) => buller(beamGenr, 5, () => Angle.rad(random(0, 361)), 200, stat.bspd, true, then);
 const heroGunFred: Hero = {
     nm: "Gun Fred",
     ds: "A bald man with a short temper. No one knows how he got here.",
@@ -441,12 +442,16 @@ const heroSet = [
 type ActualCharName = "gunfred" | "george";
 const wepSet = [
     wepPistol("KelTec P32", "keltec", "gunfred", 0, -1.25, 0, 0, 200, "p250"),
-    wepPistol("Generic Pistol", "generic", "gunfred", 0, 0, 0, 0, 200, "pistol"),
     wepPistol("SIG Sauer P250", "p250", "gunfred", 1, 0, -0.05, 0, 200, "p250"),
     wepPistol("Desert Eagle", "deagle", "gunfred", 3, 0.5, 0, 0, 200, "deagle"),
-    wepSword("Generic Sword", "generic", "george", 0, 0, 0, 0, 200, "pistol"),
     wepSpecial("Raygun", "ray", "gunfred", 0, 0, 0, 0, 30, "raygun", () => heroRayGun(5)),
-    wepSpecial("Flamethrower", "flame", "gunfred", 0, 0, 0, 0, 1, "flamethrower", () => heroFlamer())
+    wepSpecial("Flamethrower", "flame", "gunfred", 0, 0, 0, 0, 10, "flamethrower", () => heroFlamer()),
+    wepSpecial("Wrath Sword", "wrathsword", "george", 3, 0, 0, 3, 180, "wrathsword", () => heroMel(3, undefined, () => {
+        const v = Angle.toVector(scene.rotToMouse(plr));
+        v.scale(1.65);
+        plr.setPos(v);
+    })),
+    wepSpecial("Annihilator", "anh", "gunfred", 0, 2, 0, 0, 300, "anher", () => heroBeam())
 ] as const;
 var eqWep: Weapon = wepSet[0];
 const equip = (wep: Weapon) => {
@@ -896,6 +901,7 @@ const bulGenr = __stdBG(18, 6, "#e2e603");
 const melGenr = __stdBG(4, 25, "#a7a7a7");
 const rayGenr = __stdBG(20, 10, "#9400c1");
 const fireGenr = __stdBG(10, 10, "#d40e0e");
+const beamGenr = __stdBG(5, 5, "#27bcc2");
 
 abstract class WorldObj extends Entity {
     a: WorldObj[];
@@ -1038,13 +1044,22 @@ interface Purchase {
     rr: number;
 }
 const pchsWep = (cat: WeaponCategory, inWeaponName: string) => stat.armory.push(wepSet.filter(w => w.typ == cat).find(w => w.cn == inWeaponName) as Weapon);
+const gradedWepFn = (rr: number) => (nm: string, ico: string, desc: WeaponCategory, cn: string, ct: number, _rr = rr) => {
+    return { nm, path: "weapons", ico, ct, fx: () => pchsWep(desc, cn), rr: _rr };
+}
+const comWep = gradedWepFn(50);
+const ucomWep = gradedWepFn(40);
+const rareWep = gradedWepFn(20);
+const epicWep = gradedWepFn(10);
+const supWep = gradedWepFn(5);
 const pchs: Purchase[] = [
-    { nm: "Generic Pistol", path: "weapons", ico: "pistol", ct: 10, fx: () => pchsWep("ps", "generic"), rr: 40 },
-    { nm: "Raygun", path: "wepaons", ico: "raygun", ct: 50, fx: () => pchsWep("sp", "ray"), rr: 5 },
-    { nm: "Flamethrower", path: "weapons", ico: "flamethrower", ct: 100, fx: () => pchsWep("sp", "flame"), rr: 5 },
-    { nm: "SIG Sauer P250", path: "weapons", ico: "p250", ct: 20, fx: () => pchsWep("ps", "p250"), rr: 30 },
-    { nm: "Desert Eagle", path: "weapons", ico: "deagle", ct: 40, fx: () => pchsWep("ps", "deagle"), rr: 10 },
-    { nm: "KelTec P32", path: "weapons", ico: "p250", ct: 15, fx: () => pchsWep("ps", "keltec"), rr: 35 }
+    supWep("Raygun", "raygun", "sp", "ray", 50),
+    supWep("Flamethrower", "flamethrower", "sp", "flame", 100),
+    ucomWep("SIG Sauer P250", "p250", "ps", "p250", 20),
+    epicWep("Desert Eagle", "deagle", "ps", "deagle", 20),
+    rareWep("KelTec P32", "p250", "ps", "keltec", 15),
+    supWep("Wrath Sword", "wrathsword", "sp", "wrathsword", 50),
+    supWep("Anhiliator", "anher", "sp", "anh", 50)
 ] as const;
 const pchsUI: SceneUI[][] = [];
 const shopRFB = btn(() => {
