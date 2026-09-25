@@ -241,11 +241,17 @@ window.addEventListener("keypress", (e) => {
     if(e.code == "Slash") {
         const cheat = (prompt("Enter a cheat:") ?? "").split(" ").map(x => x.trim());
         const cheats = [
-            "earn"
+            "earn",
+            "give"
         ] as const;
         const [ch, ...arg] = [cheat[0] as (typeof cheats)[number], ...cheat.slice(1)];
         if(ch == "earn") {
             stat.mon += Number(arg[0]);
+        } else if(ch == "give") {
+            const w = wepSet.find(wp => wp.cn == arg[0]);
+            if(w) {
+                stat.armory.push(w);
+            }
         }
     }
 });
@@ -434,7 +440,7 @@ const heroGeorge: Hero = {
     path: "george",
     ico: "idle0",
     atk: () => heroMel(1),
-    dw: wepSword("Generic Sword", "generic", "george", 0, 0, 0, 0, 200, "pistol")
+    dw: wepSword("Generic Sword", "generic", "george", 0, 0, 0, 0, 200, "knife")
 } as const;
 const heroSet = [
     heroGunFred,
@@ -1128,6 +1134,7 @@ function showArmory() {
     showOvr();
     scene.addUI(armBk);
     const ws = [hero.dw, ...stat.armory.filter(w => w.ch == hero.path)];
+    armoryUI.splice(0);
     for(let i = 0; i < ws.length; i++) {
         const h = ws[i];
         const col = i % columns;
