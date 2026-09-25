@@ -1,4 +1,4 @@
-import { Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Cooldown, random, Img, chance, ButtonUI, SceneUI, TextUI, Local, FilePicker, ImgUI, isCol, mulberry32, mulberrySeed, randomx } from "../../phantom2d.js";
+import { Entity, objIs, PlayableCharacter, Scene, Vector, BulletObject, Angle, Cooldown, random, Img, chance, ButtonUI, SceneUI, TextUI, Local, FilePicker, ImgUI, isCol, mulberry32, mulberrySeed, randomx, wait } from "../../phantom2d.js";
 Img.config.set("root", "assets");
 //window.addEventListener("error", (e) => alert(`${e.message}, ${e.lineno}`))
 // Local.del("stat");
@@ -14,7 +14,8 @@ Img.config.set("root", "assets");
 const scene = new Scene({ canvas: "dng", w: 700, h: 700 });
 const size = 10;
 const nextXP = () => Math.floor(Math.pow(stat.lvl, 1.85)) + 1;
-const parseStat = () => JSON.parse(Local.get("stat") ?? `{ "xp": 0, "lvl": 1, "dmg": 1, "spd": 3, "bspd": 4, "hp": 5, "mhp": 5, "crit": 0, "luck": 0, "armor": 0, "dodge": 0, "mon": 0, "perks": [], "skill": [], "dskill": [], "ap": 0, "sc": 1, "armory": [], "bc": 0 }`, (k, v) => {
+const defStat = { "xp": 0, "lvl": 1, "dmg": 1, "spd": 3, "bspd": 4, "hp": 5, "mhp": 5, "crit": 0, "luck": 0, "armor": 0, "dodge": 0, "mon": 0, "perks": [], "skill": [], "dskill": [], "ap": 0, "sc": 1, "armory": [], "bc": 0 };
+const parseStat = () => JSON.parse(Local.get("stat") ?? JSON.stringify(defStat), (k, v) => {
     return typeof v == "string" && (v.startsWith("function") || v.includes("=>")) ? eval(v) : v;
 });
 var stat = parseStat();
@@ -162,7 +163,8 @@ window.addEventListener("keypress", (e) => {
         const cheat = (prompt("Enter a cheat:") ?? "").split(" ").map(x => x.trim());
         const cheats = [
             "earn",
-            "give"
+            "give",
+            "cst"
         ];
         const [ch, ...arg] = [cheat[0], ...cheat.slice(1)];
         if (ch == "earn") {
@@ -173,7 +175,14 @@ window.addEventListener("keypress", (e) => {
             if (w) {
                 stat.armory.push(w);
             }
+            else
+                console.log(`Unknown weapon: ${arg[0]}`);
         }
+        else if (ch == "cst") {
+            Object.assign(stat, defStat);
+        }
+        else
+            console.log(`Unknown command: ${ch}`);
     }
 });
 var pDed = false;
@@ -279,7 +288,7 @@ const createWepFunc = (typ) => {
 const wepPistol = createWepFunc("ps");
 const wepSword = createWepFunc("sw");
 const wepSpecial = createWepFunc("sp");
-const buller = (func, cnt, rot, life, spd, includeBC, then) => {
+const buller = async (func, cnt, rot, life, spd, includeBC, then, delay) => {
     for (let j = 0; j < stat.sc; j++)
         for (let i = 0; i < cnt + (includeBC ? stat.bc : 0); i++) {
             const o = func(plr.x, plr.y, rot(), (e) => { if (objIs(e, Enemy)) {
@@ -290,13 +299,15 @@ const buller = (func, cnt, rot, life, spd, includeBC, then) => {
             plrBuls.push(o);
             o.expire(life, scene);
             then?.();
+            if (delay)
+                await wait(delay);
         }
 };
-const heroGun = (shots, roff, life = 5000, then) => buller(bulGenr, shots, () => Angle.roff(scene.rotToMouse(plr), roff), life, stat.bspd, true, then);
-const heroMel = (swings, life = 90, then) => buller(melGenr, swings, () => scene.rotToMouse(plr), life, stat.bspd * 1.5, false, then);
-const heroRayGun = (roff, then) => buller(rayGenr, 30, () => Angle.roff(scene.rotToMouse(plr), roff), 500, stat.bspd * 5, false, then);
-const heroFlamer = (then) => buller(fireGenr, 50, () => Angle.roff(scene.rotToMouse(plr), 30), 50, stat.bspd * 5, false, then);
-const heroBeam = (then) => buller(beamGenr, 25, () => Angle.rad(random(0, 361)), 500, stat.bspd * 3.5, true, then);
+const heroGun = (shots, roff, life = 5000, then, delay) => buller(bulGenr, shots, () => Angle.roff(scene.rotToMouse(plr), roff), life, stat.bspd, true, then, delay);
+const heroMel = (swings, life = 90, then, delay) => buller(melGenr, swings, () => scene.rotToMouse(plr), life, stat.bspd * 1.5, false, then, delay);
+const heroRayGun = (roff, then, delay) => buller(rayGenr, 30, () => Angle.roff(scene.rotToMouse(plr), roff), 500, stat.bspd * 5, false, then, delay);
+const heroFlamer = (then, delay) => buller(fireGenr, 50, () => Angle.roff(scene.rotToMouse(plr), 30), 50, stat.bspd * 5, false, then, delay);
+const heroBeam = (then, delay) => buller(beamGenr, 25, () => Angle.rad(random(0, 361)), 500, stat.bspd * 3.5, true, then, delay);
 const heroGunFred = {
     nm: "Gun Fred",
     ds: "A bald man with a short temper. No one knows how he got here.",
@@ -346,10 +357,10 @@ const wepSet = [
     wepSpecial("Flamethrower", "flame", "gunfred", 0, 0, 0, 0, 10, "flamethrower", () => heroFlamer()),
     wepSpecial("Wrath Sword", "wrathsword", "george", 3, 0, 0, 3, 180, "wrathsword", () => heroMel(3, undefined, () => {
         const v = Angle.toVector(scene.rotToMouse(plr));
-        v.scale(1.65);
+        v.scale(1.5 + stat.spd);
         v.add(plr.getPos());
         plr.setPos(v);
-    })),
+    }, 100)),
     wepSpecial("Annihilator", "anh", "gunfred", 0, -2, 5, 0, 300, "anher", () => heroBeam())
 ];
 var eqWep = wepSet[0];
