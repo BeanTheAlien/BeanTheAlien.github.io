@@ -289,7 +289,7 @@ const heroGun = (shots, roff, life = 5000, then) => buller(bulGenr, shots, () =>
 const heroMel = (swings, life = 90, then) => buller(melGenr, swings, () => scene.rotToMouse(plr), life, stat.bspd * 1.5, false, then);
 const heroRayGun = (roff, then) => buller(rayGenr, 30, () => Angle.roff(scene.rotToMouse(plr), roff), 500, stat.bspd * 5, false, then);
 const heroFlamer = (then) => buller(fireGenr, 50, () => Angle.roff(scene.rotToMouse(plr), 30), 50, stat.bspd * 5, false, then);
-const heroBeam = (then) => buller(beamGenr, 5, () => Angle.rad(random(0, 361)), 500, stat.bspd * 3.5, true, then);
+const heroBeam = (then) => buller(beamGenr, 25, () => Angle.rad(random(0, 361)), 500, stat.bspd * 3.5, true, then);
 const heroGunFred = {
     nm: "Gun Fred",
     ds: "A bald man with a short temper. No one knows how he got here.",
@@ -340,9 +340,10 @@ const wepSet = [
     wepSpecial("Wrath Sword", "wrathsword", "george", 3, 0, 0, 3, 180, "wrathsword", () => heroMel(3, undefined, () => {
         const v = Angle.toVector(scene.rotToMouse(plr));
         v.scale(1.65);
+        v.add(plr.getPos());
         plr.setPos(v);
     })),
-    wepSpecial("Annihilator", "anh", "gunfred", 0, 0.5, 0, 0, 300, "anher", () => heroBeam())
+    wepSpecial("Annihilator", "anh", "gunfred", 0, -2, 5, 0, 300, "anher", () => heroBeam())
 ];
 var eqWep = wepSet[0];
 const equip = (wep) => {
@@ -925,7 +926,8 @@ const shopRFB = btn(() => {
         stat.mon -= 5;
         pchsUI.forEach(p => scene.rmUI(...p));
         pchsUI.splice(0);
-        newPchUIs();
+        hideShop();
+        showShop();
     }
 }, 300, "Refresh", -50);
 function newPchUIs() {
@@ -963,7 +965,6 @@ function newPchUIs() {
         ];
         pchsUI.push(uis);
     }
-    pchsUI.forEach(x => scene.addUI(...x));
 }
 function showShop() {
     hideSS();

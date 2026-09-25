@@ -1896,6 +1896,37 @@ class Vector {
     compareTo(vec) {
         return Math.hypot(vec.x - this.x, vec.y - this.y);
     }
+    set(vec) {
+        this.x = vec.x;
+        this.y = vec.y;
+    }
+    static add(v0, v1) {
+        return new Vector(v0.x + v1.x, v0.y + v1.y);
+    }
+    add(vec) {
+        this.set(Vector.add(this, vec));
+    }
+    static sub(v0, v1) {
+        return new Vector(v0.x - v1.x, v0.y - v1.y);
+    }
+    sub(vec) {
+        this.set(Vector.sub(this, vec));
+    }
+    static mult(v0, v1) {
+        return new Vector(v0.x * v1.x, v0.y * v1.y);
+    }
+    mult(vec) {
+        this.set(Vector.mult(this, vec));
+    }
+    static div(v0, v1) {
+        return new Vector(v0.x / v1.x, v0.y / v1.y);
+    }
+    div(vec) {
+        this.set(Vector.div(this, vec));
+    }
+    div2(vec) {
+        this.set(Vector.div(vec, this));
+    }
 }
 class DualLerpDevice {
     scene;
@@ -3450,7 +3481,7 @@ class Angle {
      * @returns An angle +-`roffVal` from `inRadSource` (in radians).
      */
     static roff(inRadSource, roffVal) {
-        return Angle.rad(random(Angle.deg(inRadSource) - roffVal, Angle.deg(inRadSource) + roffVal));
+        return Angle.rad(random(Angle.deg(inRadSource - roffVal), Angle.deg(inRadSource + roffVal)));
     }
     /**
      * Convert an angle from deg => rad or rad => deg.
