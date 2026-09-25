@@ -244,7 +244,8 @@ window.addEventListener("keypress", (e) => {
         const cheats = [
             "earn",
             "give",
-            "cst"
+            "cst",
+            "stat"
         ] as const;
         const [ch, ...arg] = [cheat[0] as (typeof cheats)[number], ...cheat.slice(1)];
         if(ch == "earn") {
@@ -259,6 +260,9 @@ window.addEventListener("keypress", (e) => {
                 if(arg.includes(k)) continue;
                 Object.assign(stat, { [k]: defStat[k as keyof Stat] });
             }
+        } else if(ch == "stat") {
+            if(!Object.keys(stat).includes(arg[0])) return console.log(`Unknown key: ${arg[0]}`);
+            stat[arg[0] as keyof Stat] = !Number.isNaN(Number(arg[1])) ? Number(arg[1]) as any : arg[1] as any;
         }
         else console.log(`Unknown command: ${ch}`);
     }

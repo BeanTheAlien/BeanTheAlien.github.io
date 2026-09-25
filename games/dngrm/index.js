@@ -164,7 +164,8 @@ window.addEventListener("keypress", (e) => {
         const cheats = [
             "earn",
             "give",
-            "cst"
+            "cst",
+            "stat"
         ];
         const [ch, ...arg] = [cheat[0], ...cheat.slice(1)];
         if (ch == "earn") {
@@ -179,7 +180,16 @@ window.addEventListener("keypress", (e) => {
                 console.log(`Unknown weapon: ${arg[0]}`);
         }
         else if (ch == "cst") {
-            Object.assign(stat, defStat);
+            for (const k of Object.keys(stat)) {
+                if (arg.includes(k))
+                    continue;
+                Object.assign(stat, { [k]: defStat[k] });
+            }
+        }
+        else if (ch == "stat") {
+            if (!Object.keys(stat).includes(arg[0]))
+                return console.log(`Unknown key: ${arg[0]}`);
+            stat[arg[0]] = !Number.isNaN(Number(arg[1])) ? Number(arg[1]) : arg[1];
         }
         else
             console.log(`Unknown command: ${ch}`);
