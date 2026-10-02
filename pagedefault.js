@@ -49,3 +49,7 @@ document.body.prepend(topbarContainer);
         add([signin]);
     }
 })();
+
+const script = document.createElement("script");
+script.src = "/error.js";
+document.body.appendChild(script);
