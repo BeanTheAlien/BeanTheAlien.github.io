@@ -2761,6 +2761,120 @@ class Vector {
     div2(vec: Vector) {
         this.set(Vector.div(vec, this));
     }
+    /**
+     * Generates a new `Joint` from this position.
+     * @param strength The gravity strength to use.
+     * @returns A new `Joint`.
+     */
+    trace(strength?: number) {
+        return new Joint(this.x, this.y, strength);
+    }
+}
+/**
+ * Used for ragdoll bone joints.
+ */
+class Joint extends Vector {
+    ox: number;
+    oy: number;
+    strength: number;
+    damp: number;
+    vx: number;
+    vy: number;
+    constructor(x: number, y: number);
+    constructor(x: number, y: number, strength: number);
+    constructor(x: number, y: number, strength?: number);
+    constructor(x: number, y: number, strength: number, damp: number);
+    constructor(x: number, y: number, strength?: number, damp?: number) {
+        super(x, y);
+        this.ox = x;
+        this.oy = y;
+        this.strength = strength ?? 0;
+        this.damp = damp ?? 0.99;
+        this.vx = 0;
+        this.vy = 0;
+    }
+    update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.vx = 0;
+        this.vy = 0;
+        // slight damping
+        const vx = (this.x - this.ox) * this.damp;
+        const vy = (this.y - this.oy) * this.damp;
+        this.ox = this.x;
+        this.oy = this.y;
+        this.x += vx;
+        this.y += vy + this.strength;
+    }
+}
+/**
+ * Ragdoll bone constaint for 2 joints.
+ */
+class Bone {
+    j1: Joint;
+    j2: Joint;
+    len: number;
+    constructor(j1: Joint, j2: Joint, len?: number) {
+        this.j1 = j1;
+        this.j2 = j2;
+        this.len = len ?? Math.hypot(j2.x - j1.x, j2.y - j1.y);
+    }
+    resolve() {
+        const dx = this.j2.x - this.j1.x;
+        const dy = this.j2.y - this.j1.y;
+        const dist = Math.hypot(dx, dy);
+        const diff = (this.len - dist) / dist * 0.5;
+        const ox = dx * diff;
+        const oy = dy * diff;
+        this.j1.x -= ox;
+        this.j1.y -= oy;
+        this.j2.x += ox;
+        this.j2.y += oy;
+    }
+    update() {
+        this.j1.update();
+        this.j2.update();
+    }
+}
+interface SkeletonOptions {
+    pass?: number;
+    bn: Bone[];
+    bc: string;
+    jc: string;
+    bw: number;
+    jr: number;
+    scene: Scene;
+}
+class Skeleton implements Renderable {
+    bn: Bone[];
+    pass: number;
+    bc: string;
+    jc: string;
+    bw: number;
+    jr: number;
+    scene: Scene;
+    constructor(opts: SkeletonOptions) {
+        this.bn = opts.bn;
+        this.pass = opts.pass ?? 5;
+        this.bc = opts.bc;
+        this.jc = opts.jc;
+        this.bw = opts.bw;
+        this.jr = opts.jr;
+        this.scene = opts.scene;
+    }
+    render() {
+        // draw bones
+        this.scene.ctx.lineWidth = this.bw;
+        this.bn.forEach(b => this.scene.lnsk([b.j1, b.j2], this.bc));
+        // draw joints
+        this.bn.map(j => [j.j1, j.j2]).forEach(j => j.forEach(jj => this.scene.circ(jj.x, jj.y, this.jr, this.jc)));
+    }
+    update() {
+        this.bn.forEach(b => b.update());
+        for(let i = 0; i < this.pass; i++) {
+            this.bn.forEach(b => b.resolve());
+        }
+    }
 }
 type LerpDeviceLerpMode = "once" | "bounce";
 abstract class DualLerpDevice<P, T> {
@@ -3297,6 +3411,12 @@ class Scene {
     set color(color: FillStyle) {
         this.ctx.fillStyle = color;
     }
+    get colorsk(): FillStyle {
+        return this.ctx.strokeStyle;
+    }
+    set colorsk(color: FillStyle) {
+        this.ctx.strokeStyle = color;
+    }
     get alpha(): number {
         return this.ctx.globalAlpha;
     }
@@ -3317,10 +3437,24 @@ class Scene {
         this.rect(0, 0, this.width, this.height, color);
     }
     ray(origin: Vector, angle: number, dist: number, color: string) {
-        this.ctx.strokeStyle = color;
+        this.colorsk = color;
         this.ctx.beginPath();
         this.ctx.moveTo(origin.x, origin.y);
         this.ctx.lineTo(origin.x + Math.cos(angle) * dist, origin.y + Math.sin(angle) * dist);
+        this.ctx.stroke();
+    }
+    ln(points: Vector[], color: string) {
+        this.color = color;
+        this.ctx.beginPath();
+        this.ctx.moveTo(points[0].x, points[0].y);
+        for(let i = 1; i < points.length; i++) this.ctx.lineTo(points[i].x, points[i].y);
+        this.ctx.stroke();
+    }
+    lnsk(points: Vector[], color: string) {
+        this.colorsk = color;
+        this.ctx.beginPath();
+        this.ctx.moveTo(points[0].x, points[0].y);
+        for(let i = 1; i < points.length; i++) this.ctx.lineTo(points[i].x, points[i].y);
         this.ctx.stroke();
     }
     clear() {
@@ -3868,10 +4002,16 @@ class Scene {
         this.color = color;
         this.ctx.fill();
     }
+    circ(x: number, y: number, r: number, color: string) {
+        this.oval(x, y, r, r, color);
+    }
     rgrad(x: number, y: number, r: number, ...stops: (string | [number, string])[]) {
         const g = this.ctx.createRadialGradient(x, y, r, x, y, r);
         for(let i = 0; i < stops.length; i++) if(Array.isArray(stops)) g.addColorStop(stops[i][0] as number, stops[i][1]); else g.addColorStop(i, stops[i]);
         return g;
+    }
+    col(e: Entity) {
+        return this.items.some(x => isCol(e, x));
     }
 }
 /**
@@ -4398,7 +4538,7 @@ class Angle {
      * @returns An angle +-`roffVal` from `inRadSource` (in radians).
      */
     static roff(inRadSource: number, roffVal: number) {
-        return Angle.rad(random(Angle.deg(inRadSource - roffVal), Angle.deg(inRadSource + roffVal)));
+        return Angle.rad(random(Angle.deg(inRadSource) - roffVal, Angle.deg(inRadSource) + roffVal));
     }
     /**
      * Convert an angle from deg => rad or rad => deg.
@@ -5963,6 +6103,8 @@ export {
 
     Spawner, Perlin,
 
-    randomx, mulberrySeed
+    randomx, mulberrySeed,
+
+    Joint, Bone, Skeleton
 };
 export type { Renderable, Constructor, AbstractConstructor, KeyCode };

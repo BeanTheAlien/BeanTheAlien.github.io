@@ -18,6 +18,6 @@
 // document.body.appendChild(gamelist);
 
 import { create } from "../redirectbtns.js";
-create([["Flappy Bird", "bird"], ["Dungeon", "dng"], ["Pong", "pong"], ["Snake", "snake"], ["RPG", "rpg"], ["PvZ", "pvz"], ["Chess 2: Electric Boogaloo", "chess"], ["Big Boo Battlegrounds", "bbb"], ["Dungeon Game: Remastered", "dngrm"]]);
+create([["Flappy Bird", "bird"], ["Dungeon", "dng"], ["Pong", "pong"], ["Snake", "snake"], ["RPG", "rpg"], ["PvZ", "pvz"], ["Chess 2: Electric Boogaloo", "chess"], ["Big Boo Battlegrounds", "bbb"], ["Dungeon Game: Remastered", "dngrm"], ["Deer Obliterator: The Final Drive", "drobl"]]);
 create([["Dream Games", "dreams"]]);
 create([["SLU Clicker", "slu"]]);
