@@ -8,7 +8,11 @@ Object.assign(div.style, {
     position: "fixed",
     top: "10px",
     pointerEvents: "none",
-    left: "50vw"
+    left: "50%",
+    transform: "translateX(-50%)",
+    alignItems: "center",
+    width: "min(600px, calc(100vw - 20px))",
+    zIndex: "9999"
 });
 document.body.appendChild(div);
 window.addEventListener("error", (e) => {
@@ -16,10 +20,25 @@ window.addEventListener("error", (e) => {
     Object.assign(d.style, {
         backgroundColor: "#830000",
         border: "5px solid #570000",
-        padding: "12px"
+        padding: "12px",
+        boxSizing: "border-box",
+        width: "100%",
+        overflowWrap: "anywhere",
+        pointerEvents: "auto",
+        cursor: "pointer"
     });
-    d.innerHTML = `${e.message}<br><br>(at ln ${e.lineno}, col ${e.colno})`;
+    d.textContent = `${e.message}\n\n(at ln ${e.lineno}, col ${e.colno} in ${e.filename})\n\n${e.error.stack}`;
+    d.style.whiteSpace = "pre-wrap";
     div.appendChild(d);
-    const rms = () => div.removeChild(d);
-    setTimeout(rms, 5000);
+    const rms = () => d.remove();
+    let t = setTimeout(rms, 10000);
+    d.addEventListener("click", () => {
+        if(t) {
+            clearTimeout(t);
+            t = null;
+            d.style.backgroundColor = "#812500"
+        } else {
+            rms();
+        }
+    });
 });
