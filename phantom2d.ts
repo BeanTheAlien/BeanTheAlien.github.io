@@ -2823,6 +2823,15 @@ class Bone {
         const dx = this.j2.x - this.j1.x;
         const dy = this.j2.y - this.j1.y;
         const dist = Math.hypot(dx, dy);
+        if(dist == 0) {
+            if(this.len == 0) return;
+            const offset = this.len / 2;
+            this.j1.x -= offset;
+            this.j2.x += offset;
+            this.j1.ox -= offset;
+            this.j2.ox += offset;
+            return;
+        }
         const diff = (this.len - dist) / dist * 0.5;
         const ox = dx * diff;
         const oy = dy * diff;
@@ -2838,6 +2847,7 @@ class Bone {
 }
 interface SkeletonOptions {
     pass?: number;
+    soft?: boolean;
     bn: Bone[];
     bc: string;
     jc: string;
@@ -2847,7 +2857,16 @@ interface SkeletonOptions {
 }
 class Skeleton implements Renderable {
     bn: Bone[];
+    joints: Joint[];
+    /**
+     * The skeleton's rigid constraints for rigidbody skeleton.
+     */
+    rig: Bone[];
     pass: number;
+    /**
+     * Whether this skeleton should be simulating rigidbody or softbody physics.
+     */
+    soft: boolean;
     bc: string;
     jc: string;
     bw: number;
@@ -2855,12 +2874,34 @@ class Skeleton implements Renderable {
     scene: Scene;
     constructor(opts: SkeletonOptions) {
         this.bn = opts.bn;
+        this.joints = [];
+        this.rig = [];
+        this.#syncJoints();
         this.pass = opts.pass ?? 5;
+        this.soft = opts.soft ?? false;
         this.bc = opts.bc;
         this.jc = opts.jc;
         this.bw = opts.bw;
         this.jr = opts.jr;
         this.scene = opts.scene;
+    }
+    setSoft(enabled = true) {
+        this.soft = enabled;
+    }
+    #syncJoints() {
+        const joints = new Set<Joint>();
+        this.bn.forEach(b => {
+            joints.add(b.j1);
+            joints.add(b.j2);
+        });
+        if(this.joints.length == joints.size && this.joints.every(j => joints.has(j))) return;
+        this.joints = Array.from(joints);
+        this.rig = [];
+        for(let i = 0; i < this.joints.length; i++) {
+            for(let j = i + 1; j < this.joints.length; j++) {
+                this.rig.push(new Bone(this.joints[i], this.joints[j]));
+            }
+        }
     }
     render() {
         // draw bones
@@ -2870,9 +2911,11 @@ class Skeleton implements Renderable {
         this.bn.map(j => [j.j1, j.j2]).forEach(j => j.forEach(jj => this.scene.circ(jj.x, jj.y, this.jr, this.jc)));
     }
     update() {
-        this.bn.forEach(b => b.update());
+        this.#syncJoints();
+        this.joints.forEach(j => j.update());
+        const constraints = this.soft ? this.bn : this.rig;
         for(let i = 0; i < this.pass; i++) {
-            this.bn.forEach(b => b.resolve());
+            constraints.forEach(b => b.resolve());
         }
     }
 }
