@@ -1,9 +1,9 @@
-import { Bone, Joint, Scene, Skeleton } from "../../phantom2d.js";
-const scene = new Scene({ canvas: "deer", w: 600, h: 600 });
+import { Bone, Entity, FloorObject, Img, Joint, objIs, PlayableCharacter, Scene, Skeleton } from "../../phantom2d.js";
+const scene = new Scene({ canvas: "deer", w: 600, h: 600, border: "2px solid red" });
 
 function Deer() {
     const sp = 20;
-    const strength = 0.65;
+    const strength = 0.35;
     const head = [
         // head 0
         new Joint(0, 0, strength),
@@ -88,7 +88,7 @@ function Deer() {
     ];
     return new Skeleton({
         bn: bones,
-        pass: 12,
+        pass: 50,
         bc: "#794a03",
         jc: "#ffd900",
         bw: 5,
@@ -96,22 +96,94 @@ function Deer() {
         scene
     });
 }
-const deer = Deer();
-scene.addMisc(deer);
+class DeerEnt extends Entity {
+    skeleton: Skeleton;
+    hit: boolean;
+    constructor(skeleton: Skeleton, x: number) {
+        super({ color: "rgba(0,0,0,0)" });
+        this.skeleton = skeleton;
+        // Move both current and previous joint positions so the deer spawns at x.
+        skeleton.joints.forEach(j => {
+            j.x += x;
+            j.ox += x;
+        });
+        this.#syncBounds();
+        this.upd = () => this.#syncBounds();
+        this.mark = false;
+        this.hit = false;
+    }
+    #syncBounds() {
+        const xs = this.skeleton.joints.map(j => j.x);
+        const ys = this.skeleton.joints.map(j => j.y);
+        const minX = Math.min(...xs);
+        const minY = Math.min(...ys);
+        this.x = minX;
+        this.y = minY;
+        this.width = Math.max(...xs) - minX;
+        this.height = Math.max(...ys) - minY;
+    }
+}
+
+function SpawnDeer(x: number) {
+    const skeleton = Deer();
+    const deer = new DeerEnt(skeleton, x);
+    scene.addMisc(skeleton); // Draw and update the skeleton
+    scene.add(deer);         // Include its hitbox in entity collisions
+    return deer;
+}
+const car = new PlayableCharacter({ strength: 0.35, render: () => {
+    scene.img(carspr, car.x, car.y, car.width, car.height);
+}, width: 15, height: 10, color: "rbga(0,0,0,0)", collide: (e) => {
+    if(objIs(e, DeerEnt)) {
+        e.skeleton.setSoft();
+        if(!e.hit) {
+            e.skeleton.joints.forEach(j => {
+                j.damp = 0.95;
+                j.vx += p.vx;
+                j.vy += p.vy;
+            });
+        }
+        e.hit = true;
+    }
+}, upd: () => {
+    if(car.y + car.height >= scene.height) {
+        car.y = scene.height - car.height;
+        car.onGround = true;
+    }
+} });
+car.use("enhancedphys", { scene });
+const p = car.comp("enhancedphys");
+const fs = 0.85;
+car.binds(["a", () => {
+    p.addForceX(-fs);
+}], ["d", () => {
+    p.addForceX(fs);
+}], ["w", () => {
+    if(!car.onGround) return;
+    car.jump(fs*8);
+    car.onGround = false;
+}]);
+Img.config.set("root", "assets");
+const carspr = new Img("car/2012toyotacamry.jpg");
+SpawnDeer(200);
+scene.add(car);
 
 scene.start(() => {
-    const lowestY = Math.max(...deer.joints.map(j => j.y));
-    if(lowestY <= scene.height) return;
-    const offset = scene.height - lowestY;
-    deer.joints.forEach(j => {
-        if(deer.soft) {
-            if(j.y > scene.height) {
-                j.y = scene.height;
-                j.oy = scene.height;
+    scene.misc.forEach(deer => {
+        const dr = deer as Skeleton;
+        const lowestY = Math.max(...dr.joints.map(j => j.y));
+        if(lowestY <= scene.height) return;
+        const offset = scene.height - lowestY;
+        dr.joints.forEach(j => {
+            if(dr.soft) {
+                if(j.y > scene.height) {
+                    j.y = scene.height;
+                    j.oy = scene.height;
+                }
+            } else {
+                j.y += offset;
+                j.oy += offset;
             }
-        } else {
-            j.y += offset;
-            j.oy += offset;
-        }
+        });
     });
 });
