@@ -1,5 +1,5 @@
 import { Bone, Entity, FloorObject, Img, Joint, objIs, PlayableCharacter, Scene, Skeleton } from "../../phantom2d.js";
-const scene = new Scene({ canvas: "deer", w: 600, h: 600, border: "2px solid red" });
+const scene = new Scene({ canvas: "deer", w: 1000, h: 600, border: "2px solid red" });
 
 function Deer() {
     const sp = 20;
@@ -131,9 +131,7 @@ function SpawnDeer(x: number) {
     scene.add(deer);         // Include its hitbox in entity collisions
     return deer;
 }
-const car = new PlayableCharacter({ strength: 0.35, render: () => {
-    scene.img(carspr, car.x, car.y, car.width, car.height);
-}, width: 15, height: 10, color: "rbga(0,0,0,0)", collide: (e) => {
+const car = new PlayableCharacter({ strength: 0.35, width: 85, height: 40, color: "rgba(0,0,0,0)", collide: (e) => {
     if(objIs(e, DeerEnt)) {
         e.skeleton.setSoft();
         if(!e.hit) {
@@ -151,13 +149,16 @@ const car = new PlayableCharacter({ strength: 0.35, render: () => {
         car.onGround = true;
     }
 } });
+var dir = 1;
 car.use("enhancedphys", { scene });
 const p = car.comp("enhancedphys");
 const fs = 0.85;
 car.binds(["a", () => {
     p.addForceX(-fs);
+    dir = -1;
 }], ["d", () => {
     p.addForceX(fs);
+    dir = 1;
 }], ["w", () => {
     if(!car.onGround) return;
     car.jump(fs*8);
@@ -186,4 +187,12 @@ scene.start(() => {
             }
         });
     });
+    scene.ctx.save();
+    // 1. Move the context origin to the center of the car
+    scene.ctx.translate(car.x + car.width / 2, car.y + car.height / 2);
+    // 2. Flip horizontally (-1) and keep vertical scale normal (1)
+    scene.ctx.scale(-dir, 1);
+    // 3. Draw the image offset by half its size so it centers on the origin
+    scene.img(carspr, -car.width / 2, -car.height / 2, car.width, car.height);
+    scene.ctx.restore();
 });
