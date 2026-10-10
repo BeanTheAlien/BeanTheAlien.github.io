@@ -109,7 +109,6 @@ class DeerEnt extends Entity {
         });
         this.#syncBounds();
         this.upd = () => this.#syncBounds();
-        this.mark = false;
         this.hit = false;
     }
     #syncBounds() {
@@ -127,8 +126,8 @@ class DeerEnt extends Entity {
 function SpawnDeer(x: number) {
     const skeleton = Deer();
     const deer = new DeerEnt(skeleton, x);
-    scene.addMisc(skeleton); // Draw and update the skeleton
-    scene.add(deer);         // Include its hitbox in entity collisions
+    scene.addMisc(skeleton); // draw and update the skeleton
+    scene.add(deer); // include hitbox in entity collisions
     return deer;
 }
 const car = new PlayableCharacter({ strength: 0.35, width: 85, height: 40, color: "rgba(0,0,0,0)", collide: (e) => {
