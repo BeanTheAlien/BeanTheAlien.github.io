@@ -28,7 +28,7 @@ document.body.prepend(topbarContainer);
         user.className = "drop";
         const u = (await net.json("user")).u;
         const username = u.username;
-        const pfp = (await net.json("getpfp"))?.pfp.pfp ?? "/missingcontent.png";
+        const pfp = (await net.json("getpfp"))?.pfp ?? "/missingcontent.png";
         const isAdmin = u.role == "admin";
         user.innerHTML = `
             <ul>
