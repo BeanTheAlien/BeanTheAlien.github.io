@@ -1,4 +1,4 @@
-import { Bone, Entity, FloorObject, Img, Joint, objIs, PlayableCharacter, Scene, Skeleton } from "../../phantom2d.js";
+import { Bone, Entity, FloorObject, Img, Joint, KeyedTextUI, objIs, PlayableCharacter, random, Scene, Skeleton, Spawner } from "../../phantom2d.js";
 const scene = new Scene({ canvas: "deer", w: 1000, h: 600, border: "2px solid red" });
 
 function Deer() {
@@ -133,14 +133,17 @@ function SpawnDeer(x: number) {
 const car = new PlayableCharacter({ strength: 0.35, width: 85, height: 40, color: "rgba(0,0,0,0)", collide: (e) => {
     if(objIs(e, DeerEnt)) {
         e.skeleton.setSoft();
+        e.skeleton.joints.forEach(j => j.strength = 0.15);
         if(!e.hit) {
             e.skeleton.joints.forEach(j => {
                 j.damp = 0.95;
                 j.vx += p.vx;
-                j.vy += p.vy;
+                j.vy += -p.vy - 15;
             });
+            murder.val++;
         }
         e.hit = true;
+        setTimeout(() => scene.rm(e), 7500);
     }
 }, upd: () => {
     if(car.y + car.height >= scene.height) {
@@ -167,6 +170,11 @@ Img.config.set("root", "assets");
 const carspr = new Img("car/2012toyotacamry.jpg");
 SpawnDeer(200);
 scene.add(car);
+const spawn = setInterval(() => SpawnDeer(random(200, scene.width - 200)), 5000);
+const murder = new KeyedTextUI<number>({ scene, change: (v) => `Murder: ${v}`, x: scene.width / 2, y: 50 });
+murder.val = 0;
+scene.addUI(murder);
+scene.font = "15px Comic Sans MS";
 
 scene.start(() => {
     scene.misc.forEach(deer => {
