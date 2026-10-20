@@ -173,10 +173,25 @@ scene.add(car);
 const spawn = setInterval(() => SpawnDeer(random(200, scene.width - 200)), 5000);
 const murder = new KeyedTextUI<number>({ scene, change: (v) => `Murder: ${v}`, x: scene.width / 2, y: 50 });
 murder.val = 0;
-scene.addUI(murder);
 scene.font = "15px Comic Sans MS";
+const time = new KeyedTextUI<number>({ scene, change: (v) => `Time: ${v}`, x: scene.width / 2, y: 75 });
+time.val = 0;
+setInterval(() => {
+    time.val = time.val > 24 ? 0 : time.val+1;
+}, 1000);
+scene.addUI(murder, time);
 
 scene.start(() => {
+    // 20 - 6 night
+    // 7 - 10 dawn
+    // 11 - 15 noon
+    // 16 - 19 dusk
+    const tmc = (20 <= time.val && time.val <= 24) || (0 <= time.val && time.val <= 6) ? "#033369" :
+        (7 <= time.val && time.val <= 10) ? "#0052af" :
+        (11 <= time.val && time.val <= 15) ? "#06c9a8" :
+        (16 <= time.val && time.val <= 19) ? "#0052af" :
+        "#fff"
+    scene.bg(tmc);
     scene.misc.forEach(deer => {
         const dr = deer as Skeleton;
         const lowestY = Math.max(...dr.joints.map(j => j.y));
