@@ -1,4 +1,4 @@
-import { Bone, Entity, FloorObject, Img, Joint, KeyedTextUI, objIs, PlayableCharacter, random, Scene, Skeleton, Spawner } from "../../phantom2d.js";
+import { Bone, Entity, FloorObject, Img, Joint, KeyedTextUI, objIs, Perlin, PlayableCharacter, random, Scene, Skeleton, Spawner } from "../../phantom2d.js";
 const scene = new Scene({ canvas: "deer", w: 1000, h: 600, border: "2px solid red" });
 
 function Deer() {
@@ -180,6 +180,8 @@ setInterval(() => {
     time.val = time.val > 24 ? 0 : time.val+1;
 }, 1000);
 scene.addUI(murder, time);
+const perlin = new Perlin();
+// perlin.noise();
 
 scene.start(() => {
     // 20 - 6 night
