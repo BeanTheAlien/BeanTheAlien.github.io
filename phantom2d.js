@@ -2730,7 +2730,7 @@ class Scene {
         this.__detmc(m, c, c, f1, f2);
     }
     __detmfs(m, c) {
-        this.__detmcr(m, c, this.ctx.fill, this.ctx.stroke);
+        this.__detmcr(m, c, () => this.ctx.fill(), () => this.ctx.stroke());
     }
     __rect(x, y, w, h, c, m) {
         this.__detmcr(m, c, () => this.ctx.fillRect(x, y, w, h), () => this.ctx.strokeRect(x, y, w, h));

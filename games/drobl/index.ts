@@ -181,9 +181,10 @@ setInterval(() => {
 }, 1000);
 scene.addUI(murder, time);
 const perlin = Perlin.terrain1D({ frq: 0.8, amp: 400, bh: 200, fy: 0.5 });
-// perlin.noise();
 
 scene.start(() => {
+    const n = perlin.next(0);
+    scene.rect(0, scene.height - n, scene.width, n, "#0d6e04");
     // 20 - 6 night
     // 7 - 10 dawn
     // 11 - 15 noon
