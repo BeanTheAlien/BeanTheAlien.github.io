@@ -180,7 +180,7 @@ setInterval(() => {
     time.val = time.val > 24 ? 0 : time.val+1;
 }, 1000);
 scene.addUI(murder, time);
-const perlin = new Perlin();
+const perlin = Perlin.terrain1D({ frq: 0.8, amp: 400, bh: 200, fy: 0.5 });
 // perlin.noise();
 
 scene.start(() => {

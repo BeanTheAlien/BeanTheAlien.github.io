@@ -762,6 +762,11 @@ for (const [k, v] of Object.entries(KeyCodeMap)) {
         continue;
     KeyCodeMapReverse[v] = k;
 }
+var Color;
+(function (Color) {
+    Color["invis"] = "rgba(0, 0, 0, 0)";
+})(Color || (Color = {}));
+;
 /**
  * The root class of all entities, providing base functionality.
  * @since v0.0.0
@@ -810,6 +815,11 @@ class Entity {
      */
     color;
     /**
+     * The outline (stroke) color.
+     * @since v2.2.18
+     */
+    colorsk;
+    /**
      * The storage for listeners for events.
      * @since v0.0.0
      */
@@ -829,6 +839,8 @@ class Entity {
      */
     legCol;
     render;
+    bounds;
+    ct;
     constructor(opts) {
         this.collide = opts?.collide ?? ((o) => { });
         this.upd = opts?.upd ?? NoFunc;
@@ -840,9 +852,11 @@ class Entity {
         this.height = opts?.height ?? Entity.defaults.get("height") ?? 0;
         this.evStore = new Store();
         this.color = opts?.color ?? Entity.defaults.get("color") ?? "#fff";
+        this.colorsk = opts?.color ?? Entity.defaults.get("color") ?? Color.invis;
+        this.ct = {};
         if (opts?.custom)
             for (const [k, v] of Object.entries(opts.custom)) {
-                this[k] = v;
+                this.ct[k] = v;
             }
         this.comps = new Store();
         this.moveMode = opts?.moveMode ?? "move";
@@ -855,6 +869,7 @@ class Entity {
             this.expire(opts.expr, opts.scene);
         }
         this.render = opts?.render ?? NoFunc;
+        this.bounds = new ItemBox();
     }
     setPos(x, y, z) {
         if (typeof x == "number" && typeof y == "number") {
@@ -1066,6 +1081,14 @@ class Entity {
         for (const c of this.comps.values()) {
             c.upd();
         }
+        this.bounds.forEach(b => {
+            if (b.axis == "x") {
+                this.clampPosX(b.min, b.max);
+            }
+            else {
+                this.clampPosY(b.min, b.max);
+            }
+        });
     }
     /**
      * Returns the string representation of this object.
@@ -1244,6 +1267,12 @@ class Entity {
         const d = Math.sqrt(dx * dx + dy * dy);
         this.x += (dx / d) * spd;
         this.y += (dy / d) * spd;
+    }
+    bound(boundary) {
+        this.bounds.add(boundary);
+    }
+    unbound(boundary) {
+        this.bounds.rm(boundary);
     }
 }
 /**
@@ -2025,6 +2054,7 @@ class Skeleton {
     bw;
     jr;
     scene;
+    bounds;
     constructor(opts) {
         this.bn = opts.bn;
         this.joints = [];
@@ -2037,6 +2067,7 @@ class Skeleton {
         this.bw = opts.bw;
         this.jr = opts.jr;
         this.scene = opts.scene;
+        this.bounds = new ItemBox();
     }
     setSoft(enabled = true) {
         this.soft = enabled;
@@ -2071,6 +2102,71 @@ class Skeleton {
         for (let i = 0; i < this.pass; i++) {
             constraints.forEach(b => b.resolve());
         }
+        this.bounds.forEach(b => {
+            const next = (k) => {
+                const lx = Math.max(...(k == "x" ? this.jx : this.jy));
+                if (lx <= b.max)
+                    return;
+                const o = b.max - lx;
+                this.joints.forEach(j => {
+                    if (this.soft) {
+                        if (j[k] > b.max) {
+                            j[k] = b.max;
+                            j[k == "x" ? "ox" : "oy"] = b.max;
+                        }
+                    }
+                    else {
+                        j[k] += o;
+                        j[k == "x" ? "ox" : "oy"] += o;
+                    }
+                });
+            };
+            if (b.axis == "x") {
+                next("x");
+            }
+            else {
+                next("y");
+            }
+        });
+    }
+    get jy() {
+        return this.joints.map(j => j.y);
+    }
+    get jx() {
+        return this.joints.map(j => j.x);
+    }
+    bound(boundary) {
+        this.bounds.add(boundary);
+    }
+    unbound(boundary) {
+        this.bounds.rm(boundary);
+    }
+}
+class SkeletalEntity extends Entity {
+    sk;
+    constructor(opts) {
+        super(opts);
+        this.sk = opts.sk;
+        const x = opts.x ?? 0;
+        const y = opts.y ?? 0;
+        this.sk.joints.forEach(j => {
+            j.x += x;
+            j.ox += x;
+            j.y += y;
+            j.oy += y;
+        });
+        this.upd = () => this.#syncBounds();
+        this.#syncBounds();
+    }
+    #syncBounds() {
+        const xs = this.sk.joints.map(j => j.x);
+        const ys = this.sk.joints.map(j => j.y);
+        const minX = Math.min(...xs);
+        const minY = Math.min(...ys);
+        this.x = minX;
+        this.y = minY;
+        this.width = Math.max(...xs) - minX;
+        this.height = Math.max(...ys) - minY;
     }
 }
 class DualLerpDevice {
@@ -2247,6 +2343,14 @@ class Sound {
     play() {
         this.aud.play();
     }
+    /**
+     * Fires a one-shot player for this sound.
+     *
+     * Creates a clone of this `Sound` object and plays it.
+     */
+    fire() {
+        clone(this).play();
+    }
     pause() {
         this.aud.pause();
     }
@@ -2347,7 +2451,33 @@ class Items {
 }
 /**
  * The root canvas to display content.
+ *
+ * Since v2.2.18, methods that end in `""` *fill*,
+ * and methods that end in `"s"` *stroke*.
+ *
+ * Since v2.2.19, methods that end in `"c"` assume the
+ * last color applied, such that the color is `this.color`.
  * @since v0.0.0
+ * @example Fill vs Stroke methods.
+ * ```
+ * const scene = new Scene({ canvas: "hello" });
+ * // rect will be at (0, 0), 10px wide, 10px tall and red
+ * // filling a rect
+ * scene.rect(0, 0, 10, 10, "red");
+ * // stroking a rect
+ * scene.rects(0, 0, 10, 10, "red");
+ * ```
+ * @example Color-assuming method.
+ * ```
+ * const scene = new Scene({ canvas: "hello" });
+ * // apply a red color
+ * scene.color = "red";
+ * // rect will be at (0, 0), 10px wide, 10px tall and red
+ * // filling a rect (assuming color)
+ * scene.rectc(0, 0, 10, 10);
+ * // stroking a rect (assuming color)
+ * scene.rectsc(0, 0, 10, 10);
+ * ```
  */
 class Scene {
     static config;
@@ -2491,8 +2621,20 @@ class Scene {
     filter(cb) {
         return this.items.filter(cb);
     }
+    deepFilter(cb) {
+        this.items.stuff = this.filter(cb);
+    }
     filterUI(cb) {
         return this.ui.filter(cb);
+    }
+    deepFilterUI(cb) {
+        this.ui.stuff = this.filterUI(cb);
+    }
+    filterMisc(cb) {
+        return this.misc.filter(cb);
+    }
+    deepFilterMisc(cb) {
+        this.misc.stuff = this.filterMisc(cb);
     }
     on(name, handle) {
         this.evMng.on(name, handle);
@@ -2569,9 +2711,80 @@ class Scene {
     drawImg(path, x, y, w, h) {
         this.img(new Img(path), x, y, w, h);
     }
+    __detm(m, f1, f2) {
+        if (m == "f")
+            f1();
+        else
+            f2();
+    }
+    __detmc(m, c1, c2, f1, f2) {
+        this.__detm(m, () => {
+            this.color = c1;
+            f1();
+        }, () => {
+            this.colorsk = c2;
+            f2();
+        });
+    }
+    __detmcr(m, c, f1, f2) {
+        this.__detmc(m, c, c, f1, f2);
+    }
+    __detmfs(m, c) {
+        this.__detmcr(m, c, this.ctx.fill, this.ctx.stroke);
+    }
+    __rect(x, y, w, h, c, m) {
+        this.__detmcr(m, c, () => this.ctx.fillRect(x, y, w, h), () => this.ctx.strokeRect(x, y, w, h));
+    }
+    /**
+     * Fills a rect at `(x, y)` with dimensions `w`x`h`.
+     *
+     * Filled color is `color`.
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param w The width.
+     * @param h The height.
+     * @param color The fill color.
+     */
     rect(x, y, w, h, color) {
-        this.color = color;
-        this.ctx.fillRect(x, y, w, h);
+        this.__rect(x, y, w, h, color, "f");
+    }
+    /**
+     * Fills a rect at `(x, y)` with dimensions `w`x`h`.
+     *
+     * Filled color is this color (`this.color`).
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param w The width.
+     * @param h The height.
+     */
+    rectc(x, y, w, h) {
+        this.rect(x, y, w, h, this.color);
+    }
+    /**
+     * Strokes a rect at `(x, y)` with dimensions `w`x`h`.
+     *
+     * Stroked color is `color`.
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param w The width.
+     * @param h The height.
+     * @param color The stroke color.
+     */
+    rects(x, y, w, h, color) {
+        this.__rect(x, y, w, h, color, "s");
+    }
+    /**
+     * Strokes a rect at `(x, y)` with dimensions `w`x`h`.
+     *
+     * Stroked color is this color (`this.color`).
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param w The width.
+     * @param h The height.
+     * @param color The stroke color.
+     */
+    rectsc(x, y, w, h) {
+        this.rects(x, y, w, h, this.color);
     }
     bg(color) {
         this.rect(0, 0, this.width, this.height, color);
@@ -2628,9 +2841,9 @@ class Scene {
     }
     render() {
         this.items.forEach(i => {
-            this.rectRotd(i.x, i.y, i.width, i.height, i.rot, i.color);
+            this.rectRotd(i.x, i.y, i.width, i.height, i.rot, i.color, i.colorsk);
             i.child.forEach(c => {
-                this.rectRotd(c.x, c.y, c.width, c.height, c.rot, c.color, i.x, i.y);
+                this.rectRotd(c.x, c.y, c.width, c.height, c.rot, c.color, c.colorsk, i.x, i.y);
             });
         });
         // UI will be rendered in a fixed position
@@ -2644,6 +2857,7 @@ class Scene {
                 this.ctx.rotate(u.rot);
                 this.alpha = u.alpha;
                 this.rect(-w2, -h2, u.width, u.height, u.color);
+                this.rects(-w2, -h2, u.width, u.height, u.colorsk);
                 this.ctx.restore();
             }
             // for other rendering (other than a core rectangle)
@@ -2653,7 +2867,7 @@ class Scene {
         // render misc items
         this.misc.forEach(m => m.render());
     }
-    rectRotd(ex, ey, w, h, rot, color, offX = 0, offY = 0) {
+    rectRotd(ex, ey, w, h, rot, color, colorsk, offX = 0, offY = 0) {
         let ox = 0;
         let oy = 0;
         if (this.fol) {
@@ -2694,6 +2908,7 @@ class Scene {
         }
         this.ctx.scale(this.scaleX, this.scaleY);
         this.rect(nx, ny, w, h, color);
+        this.rects(nx, ny, w, h, colorsk);
         this.ctx.restore();
     }
     __appendPost(func) {
@@ -2862,6 +3077,33 @@ class Scene {
         });
         save.trigger(this.toDataURL(format, quality));
     }
+    /**
+     * Creates a screenshot of the canvas.
+     *
+     * Uses the canvas's content (filtering elements of types present in `hideList`) as the image content.
+     *
+     * Creates a clone, removing elements of type present in `hideList` off-screen, then orphans the clone.
+     * @param file The file name.
+     * @param hideList Elements to be hidden from the final screenshot.
+     * @param format The image format to use.
+     * @param quality The quality (if avaliable) to use.
+     */
+    screenshotWith(file, hideList = [], format = "image/png", quality = 1) {
+        const orphan = clone(this);
+        // lose elements of type
+        // since deepFilter with false
+        // with filter everything
+        // we lose all objects
+        if (hideList.includes("ent"))
+            orphan.deepFilter(() => false);
+        if (hideList.includes("ui"))
+            orphan.deepFilterUI(() => false);
+        if (hideList.includes("rend"))
+            orphan.deepFilterMisc(() => false);
+        // force another render pass
+        orphan.render();
+        orphan.screenshot(file, format, quality);
+    }
     find(cb) {
         return this.items.find(cb);
     }
@@ -2924,8 +3166,54 @@ class Scene {
     unfollow() {
         this.fol = undefined;
     }
-    text(text, x, y, maxWidth) {
-        this.ctx.fillText(text, x, y, maxWidth);
+    __text(text, x, y, color, m, maxWidth) {
+        this.__detmcr(m, color, () => this.ctx.fillText(text, x, y, maxWidth), () => this.ctx.strokeText(text, x, y, maxWidth));
+    }
+    /**
+     * Fills text at `(x, y)` with a max width of `maxWidth` (if specified).
+     *
+     * Filled color is `color`.
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param color The fill color.
+     * @param maxWidth The maximum width.
+     */
+    text(text, x, y, color, maxWidth) {
+        this.__text(text, x, y, color, "f", maxWidth);
+    }
+    /**
+     * Fills text at `(x, y)` with a max width of `maxWidth` (if specified).
+     *
+     * Filled color is this color (`this.color`).
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param maxWidth The maximum width.
+     */
+    textc(text, x, y, maxWidth) {
+        this.text(text, x, y, this.color, maxWidth);
+    }
+    /**
+     * Strokes text at `(x, y)` with a max width of `maxWidth` (if specified).
+     *
+     * Stroked color is `color`.
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param color The stroke color.
+     * @param maxWidth The maximum width.
+     */
+    texts(text, x, y, color, maxWidth) {
+        this.__text(text, x, y, color, "s", maxWidth);
+    }
+    /**
+     * Strokes text at `(x, y)` with a max width of `maxWidth` (if specified).
+     *
+     * Stroked color is this color (`this.color`).
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param maxWidth The maximum width.
+     */
+    textsc(text, x, y, maxWidth) {
+        this.texts(text, x, y, this.color, maxWidth);
     }
     get align() {
         return this.ctx.textAlign;
@@ -3017,7 +3305,7 @@ class Scene {
     mouseInRect(rectPos, rectW, rectH) {
         return Vector.inRect(this.mousePos, rectPos, rectW, rectH);
     }
-    frustum(x, y, r0, r1, h, fillColor, strokeColor, lineWidth) {
+    frustum(x, y, r0, r1, h, fillColor, lineWidth) {
         const topY = y - h;
         this.ctx.beginPath();
         // 1. Draw Bottom Base (flat line in side view)
@@ -3030,30 +3318,134 @@ class Scene {
         // 4. Close path (Side Slope Left)
         this.ctx.closePath();
         // Style the frustum
-        this.ctx.fillStyle = fillColor;
+        this.color = fillColor;
         this.ctx.fill();
-        this.ctx.strokeStyle = strokeColor ?? fillColor;
+    }
+    frustums(x, y, r0, r1, h, strokeColor, lineWidth) {
+        const topY = y - h;
+        this.ctx.beginPath();
+        // 1. Draw Bottom Base (flat line in side view)
+        this.ctx.moveTo(x - r0, y);
+        this.ctx.lineTo(x + r0, y);
+        // 2. Draw Side Slope Right
+        this.ctx.lineTo(x + r1, topY);
+        // 3. Draw Top Base (flat line)
+        this.ctx.lineTo(x - r1, topY);
+        // 4. Close path (Side Slope Left)
+        this.ctx.closePath();
+        // Style the frustum
+        this.colorsk = strokeColor;
         this.ctx.lineWidth = lineWidth ?? 2;
         this.ctx.stroke();
     }
-    triangle(p0, p1, p2, color) {
+    __tri(p0, p1, p2, color, m) {
         this.ctx.beginPath();
         this.ctx.moveTo(p0.x, p0.y);
         this.ctx.lineTo(p1.x, p1.y);
         this.ctx.lineTo(p2.x, p2.y);
         this.ctx.closePath();
-        this.color = color;
-        this.ctx.fill();
+        this.__detmfs(m, color);
     }
-    cone(p0, p1, rad, color) {
+    /**
+     * Fills a triangle with left-point `p0`, right-point `p1` and top-point `p2`.
+     *
+     * Filled color is `color`.
+     * @param p0 The left-coord.
+     * @param p1 The right-coord.
+     * @param p2 The top-coord.
+     * @param color The fill color.
+     */
+    tri(p0, p1, p2, color) {
+        this.__tri(p0, p1, p2, color, "f");
+    }
+    /**
+     * Fills a triangle with left-point `p0`, right-point `p1` and top-point `p2`.
+     *
+     * Filled color is this color (`this.color`).
+     * @param p0 The left-coord.
+     * @param p1 The right-coord.
+     * @param p2 The top-coord.
+     */
+    tric(p0, p1, p2) {
+        this.tri(p0, p1, p2, this.color);
+    }
+    /**
+     * Strokes a triangle with left-point `p0`, right-point `p1` and top-point `p2`.
+     *
+     * Stroked color is `color`.
+     * @param p0 The left-coord.
+     * @param p1 The right-coord.
+     * @param p2 The top-coord.
+     * @param color The stroke color.
+     */
+    tris(p0, p1, p2, color) {
+        this.__tri(p0, p1, p2, color, "s");
+    }
+    /**
+     * Strokes a triangle with left-point `p0`, right-point `p1` and top-point `p2`.
+     *
+     * Stroked color is this color (`this.color`).
+     * @param p0 The left-coord.
+     * @param p1 The right-coord.
+     * @param p2 The top-coord.
+     */
+    trisc(p0, p1, p2) {
+        this.tris(p0, p1, p2, this.color);
+    }
+    __cone(p0, p1, rad, color, m) {
         this.ctx.beginPath();
         this.ctx.moveTo(p0.x, p0.y);
         this.ctx.lineTo(p1.x, p1.y);
         this.ctx.ellipse(p0.x, p1.y, rad.x, rad.y, 0, Math.PI, 0, true);
         this.ctx.lineTo(p0.x, p0.y);
         this.ctx.closePath();
-        this.color = color;
-        this.ctx.fill();
+        this.__detmfs(m, color);
+    }
+    /**
+     * Fills a cone from `p0` to `p1` with a radius of `rad`.
+     *
+     * Filled color is `color`.
+     * @param p0 The left-coord.
+     * @param p1 The right-coord.
+     * @param rad The radius.
+     * @param color The fill color.
+     */
+    cone(p0, p1, rad, color) {
+        this.__cone(p0, p1, rad, color, "f");
+    }
+    /**
+     * Fills a cone from `p0` to `p1` with a radius of `rad`.
+     *
+     * Filled color is this color (`this.color`).
+     * @param p0 The left-coord.
+     * @param p1 The right-coord.
+     * @param rad The radius.
+     */
+    conec(p0, p1, rad) {
+        this.cone(p0, p1, rad, this.color);
+    }
+    /**
+     * Strokes a cone from `p0` to `p1` with a radius of `rad`.
+     *
+     * Stroked color is `color`.
+     * @param p0 The left-coord.
+     * @param p1 The right-coord.
+     * @param rad The radius.
+     * @param color The stroke color.
+     */
+    cones(p0, p1, rad, color) {
+        this.__cone(p0, p1, rad, color, "s");
+    }
+    /**
+     * Strokes a cone from `p0` to `p1` with a radius of `rad`.
+     *
+     * Stroked color is this color (`this.color`).
+     * @param p0 The left-coord.
+     * @param p1 The right-coord.
+     * @param rad The radius.
+     */
+    conesc(p0, p1, rad) {
+        this.cones(p0, p1, rad, this.color);
     }
     addMisc(...items) {
         this.misc.add(...items);
@@ -3132,14 +3524,109 @@ class Scene {
         this.scaleX = sx;
         this.scaleY = sy;
     }
-    oval(x, y, rx, ry, color) {
+    __oval(x, y, rx, ry, color, m) {
         this.ctx.beginPath();
         this.ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI);
-        this.color = color;
-        this.ctx.fill();
+        this.__detmfs(m, color);
     }
+    /**
+     * Fills an oval at `(x, y)` with a x radius of `rx` and y radius of `ry`.
+     *
+     * Filled color is `color`.
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param rx The x radius.
+     * @param ry The y radius.
+     * @param color The fill color.
+     */
+    oval(x, y, rx, ry, color) {
+        this.__oval(x, y, rx, ry, color, "f");
+    }
+    /**
+     * Fills an oval at `(x, y)` with a x radius of `rx` and y radius of `ry`.
+     *
+     * Filled color is this color (`this.color`).
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param rx The x radius.
+     * @param ry The y radius.
+     */
+    ovalc(x, y, rx, ry) {
+        this.oval(x, y, rx, ry, this.color);
+    }
+    /**
+     * Strokes an oval at `(x, y)` with a x radius of `rx` and y radius of `ry`.
+     *
+     * Stroked color is `color`.
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param rx The x radius.
+     * @param ry The y radius.
+     * @param color The stroke color.
+     */
+    ovals(x, y, rx, ry, color) {
+        this.__oval(x, y, rx, ry, color, "s");
+    }
+    /**
+     * Strokes an oval at `(x, y)` with a x radius of `rx` and y radius of `ry`.
+     *
+     * Stroked color is this color (`this.color`).
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param rx The x radius.
+     * @param ry The y radius.
+     * @param color The stroke color.
+     */
+    ovalsc(x, y, rx, ry) {
+        this.ovals(x, y, rx, ry, this.color);
+    }
+    /**
+     * Fills a circle at `(x, y)` with a radius of `r`.
+     *
+     * Filled color is `color`.
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param r The radius.
+     * @param color The fill color.
+     */
     circ(x, y, r, color) {
         this.oval(x, y, r, r, color);
+    }
+    /**
+     * Fills a circle at `(x, y)` with a radius of `r`.
+     *
+     * Filled color is this color (`this.color`).
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param r The radius.
+     * @param color The fill color.
+     */
+    circc(x, y, r) {
+        this.circ(x, y, r, this.color);
+    }
+    /**
+     * Strokes a circle at `(x, y)` with a radius of `r`.
+     *
+     * Stroked color is `color`.
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param r The radius.
+     * @param color The stroke color.
+     */
+    circs(x, y, r, color) {
+        this.ovals(x, y, r, r, color);
+    }
+    /**
+     * Strokes a circle at `(x, y)` with a radius of `r`.
+     *
+     * Stroked color is this color (`this.color`).
+     * @param x The x-coord.
+     * @param y The y-coord.
+     * @param r The radius.
+     * @param color The stroke color.
+     */
+    circsc(x, y, r) {
+        this.circs(x, y, r, this.color);
     }
     rgrad(x, y, r, ...stops) {
         const g = this.ctx.createRadialGradient(x, y, r, x, y, r);
@@ -3451,6 +3938,9 @@ class Runtime {
         this.delta = 0;
         this.processId = -1;
     }
+    get started() {
+        return this.processId != -1;
+    }
 }
 /**
  * The geometric object root class.
@@ -3493,8 +3983,19 @@ class StorageRoot {
     get len() {
         return this.storage.length;
     }
+    /**
+     * Removes the key provided from the given Storage object if it exists.
+     * [MDN Reference](https://developer.mozilla.org/en-US/docs/Web/API/Storage/removeItem)
+     * @param k The key to remove.
+     * @returns The value that was present before removal.
+     */
     del(k) {
+        const v = this.get(k);
         this.storage.removeItem(k);
+        return v;
+    }
+    rm(k) {
+        return this.del(k);
     }
     clear() {
         this.storage.clear();
@@ -4109,6 +4610,7 @@ class SceneUI {
     height;
     rot;
     color;
+    colorsk;
     rend;
     upd;
     alpha;
@@ -4128,6 +4630,7 @@ class SceneUI {
         this.height = opts.h ?? 0;
         this.rot = opts.rot ?? 0;
         this.color = opts.color ?? "#fff";
+        this.colorsk = opts.color ?? Color.invis;
         this.rend = opts.rend ?? NoFunc;
         this.upd = opts.upd ?? NoFunc;
         this.child = new ChildUI();
@@ -4288,31 +4791,24 @@ class TextUI extends SceneUI {
         this.rendRect = false;
     }
     render() {
-        this.scene.color = this.color;
         const f = this.scene.font;
         if (this.font)
             this.scene.font = this.font;
-        this.scene.text(this.tx, this.x, this.y, this.mw);
+        this.scene.text(this.tx, this.x, this.y, this.color, this.mw);
         this.scene.font = f;
         super.render();
     }
 }
 class KeyedTextUI extends TextUI {
     change;
-    v;
     constructor(opts) {
         super(opts);
         this.change = opts.change;
-        this.v = shallow();
         if (opts.val)
-            this.val = opts.val;
+            this.tx = this.change(opts.val);
     }
     set val(newVal) {
         this.tx = this.change(newVal);
-        this.v = newVal;
-    }
-    get val() {
-        return this.v;
     }
 }
 class MenuUI extends SceneUI {
@@ -4656,25 +5152,6 @@ class Spawner {
         this.itvl.stop();
     }
 }
-// type HistoryCache<T> = [keyof T, T[keyof T], T[keyof T]];
-// class History<T> {
-//     hist: HistoryCache<T>[];
-//     ptr: number;
-//     constructor() {
-//         this.hist = [];
-//         this.ptr = 0;
-//     }
-//     cache(cache: HistoryCache<T>) {
-//         this.hist.push(cache);
-//         this.ptr++;
-//     }
-//     point(pointer: number) {
-//         this.ptr = pointer;
-//     }
-//     read() {
-//         return this.hist[this.ptr];
-//     }
-// }
 class Perlin {
     perm;
     constructor() {
@@ -4708,6 +5185,54 @@ class Perlin {
         const A = p[X] + Y;
         const B = p[X + 1] + Y;
         return lerp(v, lerp(u, this.grad(p[A], x, y), this.grad(p[B], x - 1, y)), lerp(u, this.grad(p[A + 1], x, y - 1), this.grad(p[B + 1], x - 1, y - 1)));
+    }
+    static terrain1D(opt) {
+        return new PerlinTerrain1D(opt);
+    }
+}
+class PerlinTerrain1D {
+    perlin;
+    /**
+     * The frequency for terrain generation.
+     *
+     * Higher values dictate more hills (in quantity and jaggedness).
+     *
+     * Refers to 'frequency'.
+     */
+    frq;
+    /**
+     * The maximum height variance between hills.
+     *
+     * Refers to 'amplitude'.
+     */
+    amp;
+    /**
+     * The height that hills start leveling out.
+     *
+     * Refers to 'baseline height'.
+     */
+    bh;
+    /**
+     * The fixed, arbitary y-level to slice.
+     *
+     * Refers to 'fixed y'.
+     */
+    fy;
+    constructor(opt) {
+        this.perlin = new Perlin();
+        this.frq = opt.frq;
+        this.amp = opt.amp;
+        this.bh = opt.bh;
+        this.fy = opt.fy;
+    }
+    /**
+     * Returns the next generated surface height.
+     * @param x The x-coordinate of the world.
+     * @returns The newly-generated surface height.
+     */
+    next(x) {
+        const n = this.perlin.noise(x * this.frq, this.fy);
+        return this.bh + (((n + 1) / 2) * this.amp);
     }
 }
 /**
@@ -4939,4 +5464,10 @@ function mulberry32(a) {
         return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
     };
 }
-export { Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, FloorObject, Aircraft, Weapon, Gun, Pistol, Burst, SceneUI, ButtonUI, TextUI, MenuUI, ImgUI, ProgressUI, KeyedTextUI, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, DebugRay, Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag, External, MultiRaycast, ConeRaycast, ConeDebugRay, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, randItem, lerp, mulberry32, Local, LocalDeprecated, Session, Clipboard, Cookies, Params, Comp, HealthComp, InvComp, EnhancedPhysicsComp, GravityComp, Trigger, Itvl, FixedItvl, KeyInputs, LerpDevice, VectorBasedLerpDevice, VectorLerpDevice, EntityLerpDevice, SceneUILerpDevice, EntityRotationLerpDevice, AngleBasedLerpDevice, SceneUIRotationLerpDevice, ParamKey, Spawner, Perlin, randomx, mulberrySeed, Joint, Bone, Skeleton };
+function clamp(val, min, max) {
+    return Math.min(Math.max(val, min), max);
+}
+function clone(object) {
+    return Object.assign({}, object);
+}
+export { Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, FloorObject, Aircraft, Weapon, Gun, Pistol, Burst, SceneUI, ButtonUI, TextUI, MenuUI, ImgUI, ProgressUI, KeyedTextUI, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, DebugRay, Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag, External, MultiRaycast, ConeRaycast, ConeDebugRay, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, randItem, lerp, mulberry32, Local, LocalDeprecated, Session, Clipboard, Cookies, Params, Comp, HealthComp, InvComp, EnhancedPhysicsComp, GravityComp, Trigger, Itvl, FixedItvl, KeyInputs, LerpDevice, VectorBasedLerpDevice, VectorLerpDevice, EntityLerpDevice, SceneUILerpDevice, EntityRotationLerpDevice, AngleBasedLerpDevice, SceneUIRotationLerpDevice, ParamKey, Spawner, Perlin, randomx, mulberrySeed, Joint, Bone, Skeleton, SkeletalEntity, clamp, clone, Color, PerlinTerrain1D };
