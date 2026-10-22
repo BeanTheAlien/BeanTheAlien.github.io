@@ -4800,15 +4800,21 @@ class TextUI extends SceneUI {
     }
 }
 class KeyedTextUI extends TextUI {
+    v;
     change;
     constructor(opts) {
         super(opts);
         this.change = opts.change;
+        this.v = shallow();
         if (opts.val)
-            this.tx = this.change(opts.val);
+            this.val = opts.val;
     }
     set val(newVal) {
+        this.v = newVal;
         this.tx = this.change(newVal);
+    }
+    get val() {
+        return this.v;
     }
 }
 class MenuUI extends SceneUI {

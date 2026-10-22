@@ -5882,14 +5882,20 @@ interface KeyedTextUIOptions<T> extends TextUIOptions {
     change: (newValue: T) => string;
 }
 class KeyedTextUI<T> extends TextUI {
+    v: T;
     change: (v: T) => string;
     constructor(opts: KeyedTextUIOptions<T>) {
         super(opts);
         this.change = opts.change;
-        if(opts.val) this.tx = this.change(opts.val);
+        this.v = shallow<T>();
+        if(opts.val) this.val = opts.val;
     }
     set val(newVal: T) {
+        this.v = newVal;
         this.tx = this.change(newVal);
+    }
+    get val() {
+        return this.v;
     }
 }
 interface MenuUIOptions extends SceneUIOptions {
