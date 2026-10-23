@@ -1,4 +1,4 @@
-import { Bone, Entity, Img, Joint, KeyedTextUI, objIs, Perlin, PlayableCharacter, random, Scene, Skeleton } from "../../phantom2d.js";
+import { Bone, Entity, FloorObject, Img, Joint, KeyedTextUI, objIs, Perlin, PlayableCharacter, random, Scene, Skeleton } from "../../phantom2d.js";
 const scene = new Scene({ canvas: "deer", w: 1000, h: 600, border: "2px solid red" });
 function Deer() {
     const sp = 20;
@@ -155,9 +155,11 @@ const p = car.comp("enhancedphys");
 const fs = 0.85;
 car.binds(["a", () => {
         p.addForceX(-fs);
+        lateChg = true;
         dir = -1;
     }], ["d", () => {
         p.addForceX(fs);
+        lateChg = true;
         dir = 1;
     }], ["w", () => {
         if (!car.onGround)
@@ -179,8 +181,32 @@ setInterval(() => {
     time.val = time.val > 24 ? 0 : time.val + 1;
 }, 1000);
 scene.addUI(murder, time);
-const perlin = Perlin.terrain1D({ frq: 0.8, amp: 100, bh: 0, fy: 0.5 });
+const perlin = Perlin.terrain1D({ frq: 0.3, amp: 5, bh: 0, fy: 0.5 });
+/**
+ * Tracker for the active world x.
+ */
+var wx = 0;
+/**
+ * The last x for the car.
+ */
+var cwx = 0;
+/**
+ * Whether the world x has changed lately.
+ *
+ * Avoids pushing new generations when the world x hasn't changed.
+ */
+var lateChg = false;
+/**
+ * A series of (up to) 10 generations of Perlin terrain.
+ *
+ * Used to draw the terrain.
+ */
+const gen = [];
 scene.start(() => {
+    if (lateChg)
+        wx += car.x - cwx;
+    cwx = car.x;
+    scene.rm(...gen);
     // 20 - 6 night
     // 7 - 10 dawn
     // 11 - 15 noon
@@ -191,8 +217,22 @@ scene.start(() => {
                 (16 <= time.val && time.val <= 19) ? "#0052af" :
                     "#fff";
     scene.bg(tmc);
-    const n = perlin.next(car.x);
-    scene.rect(0, scene.height - n, scene.width, n, "#0d6e04");
+    // push a generation
+    // only when change lately
+    const n = perlin.next(wx);
+    if (lateChg)
+        gen.push(new FloorObject({ x: wx, y: scene.height - n, width: scene.width / (gen.length + 1), height: n, color: "#0d6e04" }));
+    lateChg = false;
+    console.log(scene.width / (gen.length + 1));
+    // enforce max length 10
+    // shift-out to not lose new gen
+    if (gen.length >= 10) {
+        gen.shift();
+    }
+    // now draw the generations
+    // (works, bc scene.width / 1 will fill whole width)
+    // (for when 1 generation has been created)
+    scene.add(...gen);
     scene.misc.forEach(deer => {
         const dr = deer;
         const lowestY = Math.max(...dr.joints.map(j => j.y));
