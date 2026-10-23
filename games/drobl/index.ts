@@ -164,18 +164,25 @@ const car = new PlayableCharacter({ strength: 0.35, width: 85, height: 40, color
     // }
 } });
 var dir = 1;
+interface Car {
+    benzin: number;
+    fs: number;
+}
+const crs: Car = {
+    benzin: 1000,
+    fs: 0.85
+};
 car.use("enhancedphys", { scene });
 const p = car.comp("enhancedphys");
-const fs = 0.85;
 car.binds(["a", () => {
-    p.addForceX(-fs);
+    p.addForceX(-crs.fs);
     dir = -1;
 }], ["d", () => {
-    p.addForceX(fs);
+    p.addForceX(crs.fs);
     dir = 1;
 }], ["w", () => {
     if(!car.onGround) return;
-    car.jump(fs*8);
+    car.jump(crs.fs*8);
     car.onGround = false;
 }]);
 Img.config.set("root", "assets");
@@ -189,7 +196,7 @@ scene.font = "15px Comic Sans MS";
 const time = new KeyedTextUI<number>({ scene, change: (v) => `Time: ${v}`, x: scene.width / 2, y: 75 });
 time.val = 0;
 setInterval(() => {
-    time.val = time.val > 24 ? 0 : time.val+1;
+    time.val = time.val >= 24 ? 0 : time.val+1;
 }, 1000);
 scene.addUI(murder, time);
 const perlin = Perlin.terrain1D({ frq: 0.003, amp: 10, bh: 20, fy: 0.5 });
@@ -233,11 +240,12 @@ scene.start(() => {
     // 7 - 10 dawn
     // 11 - 15 noon
     // 16 - 19 dusk
-    const tmc = (20 <= time.val && time.val <= 24) || (0 <= time.val && time.val <= 6) ? "#033369" :
+    const tmc = (20 <= time.val) || (0 <= time.val && time.val <= 6) ? "#033369" :
         (7 <= time.val && time.val <= 10) ? "#0052af" :
         (11 <= time.val && time.val <= 15) ? "#06c9a8" :
         (16 <= time.val && time.val <= 19) ? "#0052af" :
         "#fff"
+    console.log(tmc, time.val);
     scene.bg(tmc);
     updateTerrain();
     scene.misc.forEach(deer => {
