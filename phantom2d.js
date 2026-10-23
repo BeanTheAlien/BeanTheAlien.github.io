@@ -3638,7 +3638,7 @@ class Scene {
         return g;
     }
     col(e) {
-        return this.items.some(x => isCol(e, x));
+        return this.items.some(x => x !== e && isCol(e, x));
     }
 }
 /**

@@ -1,4 +1,4 @@
-import { Bone, Entity, FloorObject, Img, Joint, KeyedTextUI, objIs, Perlin, PlayableCharacter, random, Scene, Skeleton, Spawner } from "../../phantom2d.js";
+import { Bone, Color, Entity, FloorObject, Img, Joint, KeyedTextUI, objIs, Perlin, PlayableCharacter, random, Scene, Skeleton, Spawner } from "../../phantom2d.js";
 const scene = new Scene({ canvas: "deer", w: 1000, h: 600, border: "2px solid red" });
 
 function Deer() {
@@ -125,12 +125,19 @@ class DeerEnt extends Entity {
 
 function SpawnDeer(x: number) {
     const skeleton = Deer();
+    const render = skeleton.render.bind(skeleton);
+    skeleton.render = () => {
+        scene.ctx.save();
+        scene.ctx.translate(scene.goff.x, 0);
+        render();
+        scene.ctx.restore();
+    };
     const deer = new DeerEnt(skeleton, x);
     scene.addMisc(skeleton); // draw and update the skeleton
     scene.add(deer); // include hitbox in entity collisions
     return deer;
 }
-const car = new PlayableCharacter({ strength: 0.35, width: 85, height: 40, color: "rgba(0,0,0,0)", collide: (e) => {
+const car = new PlayableCharacter({ strength: 0.35, width: 85, height: 40, color: "red" /*Color.invis*/, collide: (e) => {
     if(objIs(e, DeerEnt)) {
         e.skeleton.setSoft();
         e.skeleton.joints.forEach(j => j.strength = 0.15);
@@ -146,10 +153,10 @@ const car = new PlayableCharacter({ strength: 0.35, width: 85, height: 40, color
         setTimeout(() => scene.rm(e), 7500);
     }
 }, upd: () => {
-    if(car.y + car.height >= scene.height) {
-        car.y = scene.height - car.height;
-        car.onGround = true;
-    }
+    // if(car.y + car.height >= scene.height) {
+    //     car.y = scene.height - car.height;
+    //     car.onGround = true;
+    // }
 } });
 var dir = 1;
 car.use("enhancedphys", { scene });
@@ -157,11 +164,9 @@ const p = car.comp("enhancedphys");
 const fs = 0.85;
 car.binds(["a", () => {
     p.addForceX(-fs);
-    lateChg = true;
     dir = -1;
 }], ["d", () => {
     p.addForceX(fs);
-    lateChg = true;
     dir = 1;
 }], ["w", () => {
     if(!car.onGround) return;
@@ -172,7 +177,7 @@ Img.config.set("root", "assets");
 const carspr = new Img("car/2012toyotacamry.jpg");
 SpawnDeer(200);
 scene.add(car);
-const spawn = setInterval(() => SpawnDeer(random(200, scene.width - 200)), 5000);
+const spawn = setInterval(() => SpawnDeer(car.x + random(-scene.width / 2 + 100, scene.width / 2 - 100)), 5000);
 const murder = new KeyedTextUI<number>({ scene, change: (v) => `Murder: ${v}`, x: scene.width / 2, y: 50 });
 murder.val = 0;
 scene.font = "15px Comic Sans MS";
@@ -182,32 +187,43 @@ setInterval(() => {
     time.val = time.val > 24 ? 0 : time.val+1;
 }, 1000);
 scene.addUI(murder, time);
-const perlin = Perlin.terrain1D({ frq: 0.3, amp: 5, bh: 0, fy: 0.5 });
-/**
- * Tracker for the active world x.
- */
-var wx = 0;
-/**
- * The last x for the car.
- */
-var cwx = 0;
-/**
- * Whether the world x has changed lately.
- * 
- * Avoids pushing new generations when the world x hasn't changed.
- */
-var lateChg = false;
-/**
- * A series of (up to) 10 generations of Perlin terrain.
- * 
- * Used to draw the terrain.
- */
+const perlin = Perlin.terrain1D({ frq: 0.003, amp: 10, bh: 20, fy: 0.5 });
+const terrainSegmentWidth = 10;
+let nextTerrainX = -scene.width / 2;
 const gen: FloorObject[] = [];
 
+function addTerrainSegment(x: number, atStart = false) {
+    const height = perlin.next(x);
+    const floor = new FloorObject({
+        x,
+        y: scene.height - height,
+        width: terrainSegmentWidth,
+        height,
+        color: "#0d6e04"
+    });
+    if(atStart) gen.unshift(floor);
+    else gen.push(floor);
+    scene.add(floor);
+}
+
+function updateTerrain() {
+    const leftEdge = car.x - scene.width / 2;
+    const rightEdge = car.x + scene.width / 2;
+    while(nextTerrainX <= rightEdge) {
+        addTerrainSegment(nextTerrainX);
+        nextTerrainX += terrainSegmentWidth;
+    }
+    while(gen.length > 0 && gen[0].x > leftEdge) {
+        addTerrainSegment(gen[0].x - terrainSegmentWidth, true);
+    }
+    while(gen.length > 0 && gen[0].x + gen[0].width < leftEdge - terrainSegmentWidth) {
+        const oldFloor = gen.shift();
+        if(oldFloor) scene.rm(oldFloor);
+    }
+}
+
 scene.start(() => {
-    if(lateChg) wx += car.x - cwx;
-    cwx = car.x;
-    scene.rm(...gen);
+    scene.goff.x = scene.width / 2 - car.x;
     // 20 - 6 night
     // 7 - 10 dawn
     // 11 - 15 noon
@@ -218,21 +234,7 @@ scene.start(() => {
         (16 <= time.val && time.val <= 19) ? "#0052af" :
         "#fff"
     scene.bg(tmc);
-    // push a generation
-    // only when change lately
-    const n = perlin.next(wx);
-    if(lateChg) gen.push(new FloorObject({ x: wx, y: scene.height - n, width: scene.width / (gen.length + 1), height: n, color: "#0d6e04" }));
-    lateChg = false;
-    console.log(scene.width / (gen.length + 1));
-    // enforce max length 10
-    // shift-out to not lose new gen
-    if(gen.length >= 10) {
-        gen.shift();
-    }
-    // now draw the generations
-    // (works, bc scene.width / 1 will fill whole width)
-    // (for when 1 generation has been created)
-    scene.add(...gen);
+    updateTerrain();
     scene.misc.forEach(deer => {
         const dr = deer as Skeleton;
         const lowestY = Math.max(...dr.joints.map(j => j.y));
@@ -252,10 +254,11 @@ scene.start(() => {
     });
     scene.ctx.save();
     // 1. Move the context origin to the center of the car
-    scene.ctx.translate(car.x + car.width / 2, car.y + car.height / 2);
+    scene.ctx.translate(scene.width / 2 + car.width / 2, car.y + car.height / 2);
     // 2. Flip horizontally (-1) and keep vertical scale normal (1)
     scene.ctx.scale(-dir, 1);
     // 3. Draw the image offset by half its size so it centers on the origin
     scene.img(carspr, -car.width / 2, -car.height / 2, car.width, car.height);
     scene.ctx.restore();
+    if(!scene.col(car)) car.onGround = false;
 });
