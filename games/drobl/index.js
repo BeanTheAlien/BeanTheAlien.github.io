@@ -123,6 +123,7 @@ class DeerEnt extends Entity {
 }
 function SpawnDeer(x) {
     if (scene.misc.stuff.length > 20) {
+        scene.rmMisc(...scene.misc.stuff.slice(20));
         scene.misc.stuff.length = 20;
     }
     const skeleton = Deer();
