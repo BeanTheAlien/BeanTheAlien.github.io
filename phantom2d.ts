@@ -6388,10 +6388,17 @@ class Perlin {
         const A = p[X] + Y;
         const B = p[X + 1] + Y;
 
-        return lerp(v, 
-            lerp(u, this.grad(p[A], x, y), this.grad(p[B], x - 1, y)),
-            lerp(u, this.grad(p[A + 1], x, y - 1), this.grad(p[B + 1], x - 1, y - 1))
+        const lower = lerp(
+            this.grad(p[A], x, y),
+            this.grad(p[B], x - 1, y),
+            u
         );
+        const upper = lerp(
+            this.grad(p[A + 1], x, y - 1),
+            this.grad(p[B + 1], x - 1, y - 1),
+            u
+        );
+        return lerp(lower, upper, v);
     }
     static terrain1D(opt: Terrain1DOptions) {
         return new PerlinTerrain1D(opt);

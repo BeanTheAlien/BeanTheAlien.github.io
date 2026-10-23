@@ -1,4 +1,4 @@
-import { Bone, Entity, FloorObject, Img, Joint, KeyedTextUI, objIs, Perlin, PlayableCharacter, random, Scene, Skeleton } from "../../phantom2d.js";
+import { Bone, Color, Entity, FloorObject, Img, Joint, KeyedTextUI, objIs, Perlin, PlayableCharacter, random, Scene, Skeleton } from "../../phantom2d.js";
 const scene = new Scene({ canvas: "deer", w: 1000, h: 600, border: "2px solid red" });
 function Deer() {
     const sp = 20;
@@ -122,6 +122,9 @@ class DeerEnt extends Entity {
     }
 }
 function SpawnDeer(x) {
+    if (scene.misc.stuff.length > 20) {
+        scene.misc.stuff.length = 20;
+    }
     const skeleton = Deer();
     const render = skeleton.render.bind(skeleton);
     skeleton.render = () => {
@@ -135,7 +138,7 @@ function SpawnDeer(x) {
     scene.add(deer); // include hitbox in entity collisions
     return deer;
 }
-const car = new PlayableCharacter({ strength: 0.35, width: 85, height: 40, color: "red" /*Color.invis*/, collide: (e) => {
+const car = new PlayableCharacter({ strength: 0.35, width: 85, height: 40, color: Color.invis, collide: (e) => {
         if (objIs(e, DeerEnt)) {
             e.skeleton.setSoft();
             e.skeleton.joints.forEach(j => j.strength = 0.15);
@@ -151,8 +154,9 @@ const car = new PlayableCharacter({ strength: 0.35, width: 85, height: 40, color
             setTimeout(() => scene.rm(e), 7500);
         }
     }, upd: () => {
-        // if(car.y + car.height >= scene.height) {
-        //     car.y = scene.height - car.height;
+        // const mx = Math.max(...gen.map(g => g.y));
+        // if(car.y + car.height >= mx) {
+        //     car.y = mx - car.height;
         //     car.onGround = true;
         // }
     } });
