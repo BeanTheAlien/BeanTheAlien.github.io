@@ -237,19 +237,12 @@ scene.start(() => {
     updateTerrain();
     scene.misc.forEach(deer => {
         const dr = deer as Skeleton;
-        const lowestY = Math.max(...dr.joints.map(j => j.y));
-        if(lowestY <= scene.height) return;
-        const offset = scene.height - lowestY;
         dr.joints.forEach(j => {
-            if(dr.soft) {
-                if(j.y > scene.height) {
-                    j.y = scene.height;
-                    j.oy = scene.height;
-                }
-            } else {
-                j.y += offset;
-                j.oy += offset;
-            }
+            const floor = gen.find(g => j.x >= g.x && j.x < g.x + g.width);
+            if(!floor || j.y <= floor.y) return;
+            j.y = floor.y;
+            j.oy = floor.y;
+            j.vy = 0;
         });
     });
     scene.ctx.save();
