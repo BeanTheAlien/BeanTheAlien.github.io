@@ -157,9 +157,13 @@ const p = car.comp("enhancedphys");
 const fs = 0.85;
 car.binds(["a", () => {
     p.addForceX(-fs);
+    wx -= fs;
+    lateChg = true;
     dir = -1;
 }], ["d", () => {
     p.addForceX(fs);
+    wx += fs;
+    lateChg = true;
     dir = 1;
 }], ["w", () => {
     if(!car.onGround) return;
@@ -181,6 +185,22 @@ setInterval(() => {
 }, 1000);
 scene.addUI(murder, time);
 const perlin = Perlin.terrain1D({ frq: 0.8, amp: 100, bh: 0, fy: 0.5 });
+/**
+ * Tracker for the active world x.
+ */
+var wx = 0;
+/**
+ * Whether the world x has changed lately.
+ * 
+ * Avoids pushing new generations when the world x hasn't changed.
+ */
+var lateChg = false;
+/**
+ * A series of (up to) 10 generations of Perlin terrain.
+ * 
+ * Used to draw the terrain.
+ */
+const gen: number[] = [];
 
 scene.start(() => {
     // 20 - 6 night
@@ -193,8 +213,21 @@ scene.start(() => {
         (16 <= time.val && time.val <= 19) ? "#0052af" :
         "#fff"
     scene.bg(tmc);
-    const n = perlin.next(car.x);
-    scene.rect(0, scene.height - n, scene.width, n, "#0d6e04");
+    // push a generation
+    // only when change lately
+    if(lateChg) gen.push(perlin.next(wx));
+    lateChg = false;
+    // enforce max length 10
+    // shift-out to not lose new gen
+    if(gen.length >= 10) {
+        gen.shift();
+    }
+    // now draw the generations
+    // (works, bc scene.width / 1 will fill whole width)
+    // (for when 1 generation has been created)
+    for(let i = 0; i < gen.length; i++) {
+        scene.rect(0, scene.height - gen[i], scene.width / (i + 1), gen[i], "#0d6e04");
+    }
     scene.misc.forEach(deer => {
         const dr = deer as Skeleton;
         const lowestY = Math.max(...dr.joints.map(j => j.y));
