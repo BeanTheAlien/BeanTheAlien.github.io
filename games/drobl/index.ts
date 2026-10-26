@@ -229,6 +229,25 @@ rocketUI.val = 0;
 crsUISeries.push(rocketUI);
 scene.addUI(...crsUISeries);
 
+interface Upgrade {
+    then: () => void;
+    cnt: number;
+}
+const upgFactory = (k: string, then: Upgrade["then"]): Upgrade => {
+    return {
+        then: () => {
+            upgMap[k].cnt++;
+            then();
+        },
+        cnt: 0
+    };
+}
+const upgMap: Record<string, Upgrade> = {
+    engine: upgFactory("engine", () => {
+        crs.fs += 0.15;
+    })
+};
+
 function addTerrainSegment(x: number, atStart = false) {
     const height = perlin.next(x);
     const floor = new FloorObject({
