@@ -164,21 +164,36 @@ const car = new PlayableCharacter({ strength: 0.35, width: 85, height: 40, color
 var dir = 1;
 const crs = {
     benzin: 1000,
+    rocket: 50,
     fs: 0.85
 };
 car.use("enhancedphys", { scene });
 const p = car.comp("enhancedphys");
 car.binds(["a", () => {
+        if (crs.benzin <= 0)
+            return;
         p.addForceX(-crs.fs);
         dir = -1;
+        crs.benzin -= 1;
     }], ["d", () => {
+        if (crs.benzin <= 0)
+            return;
         p.addForceX(crs.fs);
         dir = 1;
+        crs.benzin -= 1;
     }], ["w", () => {
+        if (crs.benzin <= 0)
+            return;
         if (!car.onGround)
             return;
         car.jump(crs.fs * 8);
         car.onGround = false;
+        crs.benzin -= 1;
+    }], ["lshift", () => {
+        if (crs.rocket <= 0)
+            return;
+        p.addForceX(crs.fs * 10);
+        crs.rocket -= 1;
     }]);
 Img.config.set("root", "assets");
 const carspr = new Img("car/2012toyotacamry.jpg");
@@ -198,6 +213,19 @@ const perlin = Perlin.terrain1D({ frq: 0.003, amp: 10, bh: 20, fy: 0.5 });
 const terrainSegmentWidth = 10;
 let nextTerrainX = -scene.width / 2;
 const gen = [];
+const crsUISeries = [];
+const nextCRS = (k, v) => new KeyedTextUI({ scene, change: () => `${v}: ${crs[k]}`, x: scene.width / 2, y: 100 + (25 * crsUISeries.length) });
+const meter = (k, v, ext) => new KeyedTextUI({ scene, change: () => `${v}: ${Math.round(p[k])} ${ext}`, x: scene.width / 2, y: 100 + (25 * crsUISeries.length) });
+const spedometer = meter("vx", "Velocity", "m/s");
+spedometer.val = 0;
+crsUISeries.push(spedometer);
+const benzinUI = nextCRS("benzin", "Benzin");
+benzinUI.val = 0;
+crsUISeries.push(benzinUI);
+const rocketUI = nextCRS("rocket", "Rocket");
+rocketUI.val = 0;
+crsUISeries.push(rocketUI);
+scene.addUI(...crsUISeries);
 function addTerrainSegment(x, atStart = false) {
     const height = perlin.next(x);
     const floor = new FloorObject({
@@ -240,7 +268,6 @@ scene.start(() => {
             (11 <= time.val && time.val <= 15) ? "#06c9a8" :
                 (16 <= time.val && time.val <= 19) ? "#0052af" :
                     "#fff";
-    console.log(tmc, time.val);
     scene.bg(tmc);
     updateTerrain();
     scene.misc.forEach(deer => {
@@ -264,4 +291,7 @@ scene.start(() => {
     scene.ctx.restore();
     if (!scene.col(car))
         car.onGround = false;
+    spedometer.val = 0;
+    benzinUI.val = 0;
+    rocketUI.val = 0;
 });
