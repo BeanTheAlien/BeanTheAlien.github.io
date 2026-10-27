@@ -297,8 +297,9 @@ for (const [K, v] of Object.entries(upgMap)) {
             pointsHead.val = crs.dd;
         } });
     const updateUI = () => {
-        const cost = v.og * (growthRate ** v.cnt);
+        const cost = Math.ceil(v.og * (growthRate ** v.cnt));
         costText.tx = cost + " points";
+        console.log(crs.dd >= cost);
         button.styles = {
             idle: crs.dd >= cost ? "#2ae409" : "#d80b0b",
             hover: crs.dd >= cost ? "#1fb105" : "#ab0303",
