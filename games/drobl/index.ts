@@ -295,11 +295,12 @@ for(const [K, v] of Object.entries(upgMap)) {
     const textX = x + upgradeWidth / 2;
     const costText = new TextUI({ scene, x: textX, y: y + 50 });
     const button = new ButtonUI({ scene, x, y, w: upgradeWidth, h: 100, click: () => {
-        const cost = v.og * (growthRate ** v.cnt);
+        const cost = Math.ceil(v.og * (growthRate ** v.cnt));
         if(crs.dd < cost) return;
         v.then();
         crs.dd -= cost;
         refreshUpgUI.forEach(refresh => refresh());
+        pointsHead.val = crs.dd;
     } });
     const updateUI = () => {
         const cost = v.og * (growthRate ** v.cnt);
@@ -309,6 +310,7 @@ for(const [K, v] of Object.entries(upgMap)) {
             hover: crs.dd >= cost ? "#1fb105" : "#ab0303",
             click: crs.dd >= cost ? "#188f03" : "#800404"
         };
+        console.log(button.styles);
     };
     const title = new TextUI({ scene, x: textX, y: y + 25, tx: k });
     updateUI();
