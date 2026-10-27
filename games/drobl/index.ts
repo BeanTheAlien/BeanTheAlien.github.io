@@ -234,21 +234,63 @@ scene.addUI(...crsUISeries);
 interface Upgrade {
     then: () => void;
     cnt: number;
+    og: number;
 }
-const upgFactory = (k: string, then: Upgrade["then"]): Upgrade => {
+const upgFactory = (k: string, then: Upgrade["then"], og: number): Upgrade => {
     return {
         then: () => {
             upgMap[k].cnt++;
             then();
         },
-        cnt: 0
+        cnt: 0,
+        og
     };
 }
 const upgMap: Record<string, Upgrade> = {
     engine: upgFactory("engine", () => {
         crs.fs += 0.15;
-    })
+    }, 100),
+    rocket: upgFactory("rocket", () => {
+        crs.rocket += 1;
+    }, 150)
 };
+/**
+ * The exponential growth factor; the r-value of `g_0(r)^n`
+ */
+const growthRate = 1.15;
+/**
+ * The upgrade UI.
+ * 
+ * [0] => Button.
+ * [1] => Header text.
+ * [2] => Value text.
+ */
+const upgUI: [ButtonUI, TextUI, TextUI][] = [];
+let i = 0;
+const spacerY = 30;
+for(const [K, v] of Object.entries(upgMap)) {
+    const k = K.charAt(0).toUpperCase() + K.slice(1);
+    const rv = v.og * (growthRate ** v.cnt);
+    upgUI.push([
+        new ButtonUI({ scene, x: scene.width / 2 - 250 / 2, y: i * spacerY, w: 250, h: 100, click: () => {
+            v.then();
+            crs.dd -= rv;
+            upgUI[upgUI.length - 1][0].styles = styles();
+        } }),
+        new TextUI({ scene, x: scene.width / 2, y: i * spacerY + 25, tx: k }),
+        new TextUI({ scene, x: scene.width / 2, y: i * spacerY + 50, tx: rv + " points" })
+    ]);
+    const styles = () => {
+        const b = crs.dd >= rv;
+        return {
+            idle: b ? "#2ae409" : "#d80b0b",
+            hover: b ? "#1fb105" : "#ab0303",
+            click: b ? "#188f03" : "#800404"
+        };
+    };
+    upgUI[upgUI.length - 1][0].styles = styles();
+    i++;
+}
 
 const scoreSeries: TextUI[] = [];
 const nextScore = () => new TextUI({ scene, x: scene.width / 2, y: scene.height / 2 - 100 + (25 * scoreSeries.length) });
