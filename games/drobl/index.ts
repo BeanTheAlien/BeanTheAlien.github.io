@@ -164,12 +164,18 @@ const car = new PlayableCharacter({ strength: 0.35, width: 85, height: 40, color
     // }
 } });
 var dir = 1;
-interface Car {
-    dd: number;
+interface CoreCar {
     benzin: number;
     rocket: number;
+}
+interface Car extends CoreCar {
+    dd: number;
     fs: number;
 }
+const crsInit: CoreCar = {
+    benzin: 100,
+    rocket: 0
+};
 const crs: Car = {
     dd: 0,
     benzin: 100,
@@ -251,7 +257,7 @@ const upgMap: Record<string, Upgrade> = {
         crs.fs += 0.15;
     }, 100),
     rocket: upgFactory("rocket", () => {
-        crs.rocket += 1;
+        crsInit.rocket += 1;
     }, 150)
 };
 /**
@@ -304,7 +310,20 @@ scoreSeries.push(scoreMUI);
 const exitBut = new ButtonUI({ scene, x: scene.width / 2 - 250 / 2, y: scene.height / 2, w: 250, h: 50, styles: {
     idle: "#0c97d8", hover: "#014ad1", click: "#200cd8" }, click: () => {
         scoreQue = false;
+        // set the ignore in case an update
+        // passes while still processing
+        scoreQueIgn = true;
         scene.rmUI(outer, ...scoreSeries, exitBut, seriousExit);
+        // reset the values on crs to crsInit
+        for(const [k, v] of Object.entries(crsInit)) {
+            crs[k as keyof Car] = v;
+        }
+        // reset the ignore
+        scoreQueIgn = false;
+        already = false;
+        dir = 1;
+        car.setPosX(0);
+        murder.val = 0;
     }
 });
 const seriousExit = new TextUI({ scene, tx: "Done", x: exitBut.x + exitBut.width / 2, y: exitBut.y + 25 });
@@ -312,6 +331,14 @@ const seriousExit = new TextUI({ scene, tx: "Done", x: exitBut.x + exitBut.width
  * Whether the `scoreUI` is already queued to be appended to the scene on the next pass.
  */
 var scoreQue = false;
+/**
+ * Whether the value of `scoreQue` should be ignored.
+ */
+var scoreQueIgn = false;
+/**
+ * Whether things already got dealt with post-game-end.
+ */
+var already = false;
 var snapX = 0;
 // TODO
 // old deer
@@ -352,13 +379,14 @@ function updateTerrain() {
 scene.start(() => {
     scene.align = "center";
     scene.baseline = "middle";
-    if(scoreQue) {
+    if(scoreQue && !already) {
         scene.addUI(outer);
         scoreUI.tx = "Score";
         scoreDUI.tx = "Distance: " + snapX;
         scoreMUI.tx = "Murder: " + murder.val;
         scene.addUI(scoreUI, scoreDUI, scoreMUI, exitBut, seriousExit);
         crs.dd += snapX + murder.val;
+        already = true;
     }
     scene.goff.x = scene.width / 2 - car.x;
     // 20 - 6 night
@@ -394,7 +422,7 @@ scene.start(() => {
     spedometer.val = 0;
     benzinUI.val = 0;
     rocketUI.val = 0;
-    if(crs.benzin <= 0 && Math.floor(p.vx) <= 0 && !scoreQue) {
+    if(crs.benzin <= 0 && Math.floor(p.vx) <= 0 && !scoreQue && !scoreQueIgn) {
         scoreQue = true;
         // retain x on this pass
         snapX = Math.round(car.x);

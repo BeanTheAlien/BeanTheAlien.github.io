@@ -162,6 +162,10 @@ const car = new PlayableCharacter({ strength: 0.35, width: 85, height: 40, color
         // }
     } });
 var dir = 1;
+const crsInit = {
+    benzin: 100,
+    rocket: 0
+};
 const crs = {
     dd: 0,
     benzin: 100,
@@ -227,20 +231,61 @@ const rocketUI = nextCRS("rocket", "Rocket");
 rocketUI.val = 0;
 crsUISeries.push(rocketUI);
 scene.addUI(...crsUISeries);
-const upgFactory = (k, then) => {
+const upgFactory = (k, then, og) => {
     return {
         then: () => {
             upgMap[k].cnt++;
             then();
         },
-        cnt: 0
+        cnt: 0,
+        og
     };
 };
 const upgMap = {
     engine: upgFactory("engine", () => {
         crs.fs += 0.15;
-    })
+    }, 100),
+    rocket: upgFactory("rocket", () => {
+        crsInit.rocket += 1;
+    }, 150)
 };
+/**
+ * The exponential growth factor; the r-value of `g_0(r)^n`
+ */
+const growthRate = 1.15;
+/**
+ * The upgrade UI.
+ *
+ * [0] => Button.
+ * [1] => Header text.
+ * [2] => Value text.
+ */
+const upgUI = [];
+let i = 0;
+const spacerY = 30;
+for (const [K, v] of Object.entries(upgMap)) {
+    const k = K.charAt(0).toUpperCase() + K.slice(1);
+    const rv = v.og * (growthRate ** v.cnt);
+    upgUI.push([
+        new ButtonUI({ scene, x: scene.width / 2 - 250 / 2, y: i * spacerY, w: 250, h: 100, click: () => {
+                v.then();
+                crs.dd -= rv;
+                upgUI[upgUI.length - 1][0].styles = styles();
+            } }),
+        new TextUI({ scene, x: scene.width / 2, y: i * spacerY + 25, tx: k }),
+        new TextUI({ scene, x: scene.width / 2, y: i * spacerY + 50, tx: rv + " points" })
+    ]);
+    const styles = () => {
+        const b = crs.dd >= rv;
+        return {
+            idle: b ? "#2ae409" : "#d80b0b",
+            hover: b ? "#1fb105" : "#ab0303",
+            click: b ? "#188f03" : "#800404"
+        };
+    };
+    upgUI[upgUI.length - 1][0].styles = styles();
+    i++;
+}
 const scoreSeries = [];
 const nextScore = () => new TextUI({ scene, x: scene.width / 2, y: scene.height / 2 - 100 + (25 * scoreSeries.length) });
 const outer = new SceneUI({ scene, x: scene.width / 2 - 250, w: 500, h: 500, color: "#076fb4", colorsk: "#001275", y: scene.height / 2 - 250 });
@@ -254,7 +299,17 @@ const exitBut = new ButtonUI({ scene, x: scene.width / 2 - 250 / 2, y: scene.hei
         idle: "#0c97d8", hover: "#014ad1", click: "#200cd8"
     }, click: () => {
         scoreQue = false;
+        // set the ignore in case an update
+        // passes while still processing
+        scoreQueIgn = true;
         scene.rmUI(outer, ...scoreSeries, exitBut, seriousExit);
+        // reset the values on crs to crsInit
+        for (const [k, v] of Object.entries(crsInit)) {
+            crs[k] = v;
+        }
+        // reset the ignore
+        scoreQueIgn = false;
+        already = false;
     }
 });
 const seriousExit = new TextUI({ scene, tx: "Done", x: exitBut.x + exitBut.width / 2, y: exitBut.y + 25 });
@@ -262,6 +317,14 @@ const seriousExit = new TextUI({ scene, tx: "Done", x: exitBut.x + exitBut.width
  * Whether the `scoreUI` is already queued to be appended to the scene on the next pass.
  */
 var scoreQue = false;
+/**
+ * Whether the value of `scoreQue` should be ignored.
+ */
+var scoreQueIgn = false;
+/**
+ * Whether things already got dealt with post-game-end.
+ */
+var already = false;
 var snapX = 0;
 // TODO
 // old deer
@@ -302,13 +365,14 @@ function updateTerrain() {
 scene.start(() => {
     scene.align = "center";
     scene.baseline = "middle";
-    if (scoreQue) {
+    if (scoreQue && !already) {
         scene.addUI(outer);
         scoreUI.tx = "Score";
         scoreDUI.tx = "Distance: " + snapX;
         scoreMUI.tx = "Murder: " + murder.val;
         scene.addUI(scoreUI, scoreDUI, scoreMUI, exitBut, seriousExit);
         crs.dd += snapX + murder.val;
+        already = true;
     }
     scene.goff.x = scene.width / 2 - car.x;
     // 20 - 6 night
@@ -346,7 +410,7 @@ scene.start(() => {
     spedometer.val = 0;
     benzinUI.val = 0;
     rocketUI.val = 0;
-    if (crs.benzin <= 0 && Math.floor(p.vx) <= 0 && !scoreQue) {
+    if (crs.benzin <= 0 && Math.floor(p.vx) <= 0 && !scoreQue && !scoreQueIgn) {
         scoreQue = true;
         // retain x on this pass
         snapX = Math.round(car.x);
