@@ -347,6 +347,8 @@ const scoreDUI = nextScore();
 scoreSeries.push(scoreDUI);
 const scoreMUI = nextScore();
 scoreSeries.push(scoreMUI);
+const scorePUI = nextScore();
+scoreSeries.push(scorePUI);
 const exitBut = new ButtonUI({ scene, x: scene.width / 2 - 250 / 2, y: scene.height / 2, w: 250, h: 50, styles: {
     idle: "#0c97d8", hover: "#014ad1", click: "#200cd8" }, click: () => {
         scoreQue = false;
@@ -427,11 +429,13 @@ scene.start(() => {
         scoreUI.tx = "Score";
         scoreDUI.tx = "Distance: " + snapX;
         scoreMUI.tx = "Murder: " + murder.val;
-        scene.addUI(scoreUI, scoreDUI, scoreMUI, exitBut, seriousExit);
-        // convert snapX to decameters
+        // convert snapX to centimeters
         // since the value is otherwise in pixels
-        // use formula Pixels / 377.95276
-        crs.dd += Math.floor(snapX / 377.95276) + murder.val;
+        // use formula Pixels / 37.95276
+        const pt = Math.floor(snapX / 37.95276) + murder.val;
+        scorePUI.tx = "Points Earned: " + pt;
+        scene.addUI(scoreUI, scoreDUI, scoreMUI, scorePUI, exitBut, seriousExit);
+        crs.dd += pt;
         already = true;
     }
     scene.goff.x = scene.width / 2 - car.x;
