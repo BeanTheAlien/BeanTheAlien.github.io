@@ -1,4 +1,4 @@
-import { Bone, Color, Entity, FloorObject, Img, Joint, KeyedTextUI, objIs, Perlin, PlayableCharacter, random, Scene, Skeleton } from "../../phantom2d.js";
+import { Bone, ButtonUI, Color, Entity, FloorObject, Img, Joint, KeyedTextUI, objIs, Perlin, PlayableCharacter, random, Scene, SceneUI, Skeleton, TextUI } from "../../phantom2d.js";
 const scene = new Scene({ canvas: "deer", w: 1000, h: 600, border: "2px solid red" });
 function Deer() {
     const sp = 20;
@@ -163,8 +163,9 @@ const car = new PlayableCharacter({ strength: 0.35, width: 85, height: 40, color
     } });
 var dir = 1;
 const crs = {
-    benzin: 1000,
-    rocket: 50,
+    dd: 0,
+    benzin: 100,
+    rocket: 0,
     fs: 0.85
 };
 car.use("enhancedphys", { scene });
@@ -226,6 +227,47 @@ const rocketUI = nextCRS("rocket", "Rocket");
 rocketUI.val = 0;
 crsUISeries.push(rocketUI);
 scene.addUI(...crsUISeries);
+const upgFactory = (k, then) => {
+    return {
+        then: () => {
+            upgMap[k].cnt++;
+            then();
+        },
+        cnt: 0
+    };
+};
+const upgMap = {
+    engine: upgFactory("engine", () => {
+        crs.fs += 0.15;
+    })
+};
+const scoreSeries = [];
+const nextScore = () => new TextUI({ scene, x: scene.width / 2, y: scene.height / 2 - 100 + (25 * scoreSeries.length) });
+const outer = new SceneUI({ scene, x: scene.width / 2 - 250, w: 500, h: 500, color: "#076fb4", colorsk: "#001275", y: scene.height / 2 - 250 });
+const scoreUI = nextScore();
+scoreSeries.push(scoreUI);
+const scoreDUI = nextScore();
+scoreSeries.push(scoreDUI);
+const scoreMUI = nextScore();
+scoreSeries.push(scoreMUI);
+const exitBut = new ButtonUI({ scene, x: scene.width / 2 - 250 / 2, y: scene.height / 2, w: 250, h: 50, styles: {
+        idle: "#0c97d8", hover: "#014ad1", click: "#200cd8"
+    }, click: () => {
+        scoreQue = false;
+        scene.rmUI(outer, ...scoreSeries, exitBut, seriousExit);
+    }
+});
+const seriousExit = new TextUI({ scene, tx: "Done", x: exitBut.x + exitBut.width / 2, y: exitBut.y + 25 });
+/**
+ * Whether the `scoreUI` is already queued to be appended to the scene on the next pass.
+ */
+var scoreQue = false;
+var snapX = 0;
+// TODO
+// old deer
+// trump deer
+// communist deer
+// german deer
 function addTerrainSegment(x, atStart = false) {
     const height = perlin.next(x);
     const floor = new FloorObject({
@@ -258,6 +300,16 @@ function updateTerrain() {
     }
 }
 scene.start(() => {
+    scene.align = "center";
+    scene.baseline = "middle";
+    if (scoreQue) {
+        scene.addUI(outer);
+        scoreUI.tx = "Score";
+        scoreDUI.tx = "Distance: " + snapX;
+        scoreMUI.tx = "Murder: " + murder.val;
+        scene.addUI(scoreUI, scoreDUI, scoreMUI, exitBut, seriousExit);
+        crs.dd += snapX + murder.val;
+    }
     scene.goff.x = scene.width / 2 - car.x;
     // 20 - 6 night
     // 7 - 10 dawn
@@ -294,4 +346,9 @@ scene.start(() => {
     spedometer.val = 0;
     benzinUI.val = 0;
     rocketUI.val = 0;
+    if (crs.benzin <= 0 && Math.floor(p.vx) <= 0 && !scoreQue) {
+        scoreQue = true;
+        // retain x on this pass
+        snapX = Math.round(car.x);
+    }
 });
