@@ -209,7 +209,9 @@ Img.config.set("root", "assets");
 const carspr = new Img("car/2012toyotacamry.jpg");
 SpawnDeer(200);
 scene.add(car);
-const spawn = setInterval(() => SpawnDeer(car.x + random(-scene.width / 2 + 100, scene.width / 2 - 100)), 5000);
+const spawner = () => setInterval(() => SpawnDeer(car.x + random(-scene.width / 2 + 100, scene.width / 2 - 100)), 5000);
+const unspawner = () => clearInterval(spawn);
+var spawn = spawner();
 const murder = new KeyedTextUI<number>({ scene, change: (v) => `Murder: ${v}`, x: scene.width / 2, y: 50 });
 murder.val = 0;
 scene.font = "15px Comic Sans MS";
@@ -324,6 +326,9 @@ const exitBut = new ButtonUI({ scene, x: scene.width / 2 - 250 / 2, y: scene.hei
         dir = 1;
         car.setPosX(0);
         murder.val = 0;
+        scene.rmMisc(...scene.misc.stuff);
+        unspawner();
+        spawn = spawner();
     }
 });
 const seriousExit = new TextUI({ scene, tx: "Done", x: exitBut.x + exitBut.width / 2, y: exitBut.y + 25 });

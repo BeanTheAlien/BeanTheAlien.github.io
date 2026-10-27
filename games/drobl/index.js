@@ -310,6 +310,10 @@ const exitBut = new ButtonUI({ scene, x: scene.width / 2 - 250 / 2, y: scene.hei
         // reset the ignore
         scoreQueIgn = false;
         already = false;
+        dir = 1;
+        car.setPosX(0);
+        murder.val = 0;
+        scene.rmMisc(...scene.misc.stuff);
     }
 });
 const seriousExit = new TextUI({ scene, tx: "Done", x: exitBut.x + exitBut.width / 2, y: exitBut.y + 25 });
