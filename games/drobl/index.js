@@ -174,19 +174,26 @@ const crs = {
 };
 car.use("enhancedphys", { scene });
 const p = car.comp("enhancedphys");
+var inTheMenus = false;
 car.binds(["a", () => {
+        if (inTheMenus)
+            return;
         if (crs.benzin <= 0)
             return;
         p.addForceX(-crs.fs);
         dir = -1;
         crs.benzin -= 1;
     }], ["d", () => {
+        if (inTheMenus)
+            return;
         if (crs.benzin <= 0)
             return;
         p.addForceX(crs.fs);
         dir = 1;
         crs.benzin -= 1;
     }], ["w", () => {
+        if (inTheMenus)
+            return;
         if (crs.benzin <= 0)
             return;
         if (!car.onGround)
@@ -195,6 +202,8 @@ car.binds(["a", () => {
         car.onGround = false;
         crs.benzin -= 1;
     }], ["lshift", () => {
+        if (inTheMenus)
+            return;
         if (crs.rocket <= 0)
             return;
         p.addForceX(crs.fs * 10);
@@ -204,7 +213,9 @@ Img.config.set("root", "assets");
 const carspr = new Img("car/2012toyotacamry.jpg");
 SpawnDeer(200);
 scene.add(car);
-const spawn = setInterval(() => SpawnDeer(car.x + random(-scene.width / 2 + 100, scene.width / 2 - 100)), 5000);
+const spawner = () => setInterval(() => SpawnDeer(car.x + random(-scene.width / 2 + 100, scene.width / 2 - 100)), 5000);
+const unspawner = () => clearInterval(spawn);
+var spawn = spawner();
 const murder = new KeyedTextUI({ scene, change: (v) => `Murder: ${v}`, x: scene.width / 2, y: 50 });
 murder.val = 0;
 scene.font = "15px Comic Sans MS";
@@ -262,29 +273,60 @@ const growthRate = 1.15;
  */
 const upgUI = [];
 let i = 0;
-const spacerY = 30;
+const upgradeWidth = 250;
+const upgradeGap = 30;
+const upgradeCount = Object.keys(upgMap).length;
+const upgradeRowWidth = upgradeCount * upgradeWidth + (upgradeCount - 1) * upgradeGap;
+const refreshUpgUI = [];
 for (const [K, v] of Object.entries(upgMap)) {
     const k = K.charAt(0).toUpperCase() + K.slice(1);
-    const rv = v.og * (growthRate ** v.cnt);
-    upgUI.push([
-        new ButtonUI({ scene, x: scene.width / 2 - 250 / 2, y: i * spacerY, w: 250, h: 100, click: () => {
-                v.then();
-                crs.dd -= rv;
-                upgUI[upgUI.length - 1][0].styles = styles();
-            } }),
-        new TextUI({ scene, x: scene.width / 2, y: i * spacerY + 25, tx: k }),
-        new TextUI({ scene, x: scene.width / 2, y: i * spacerY + 50, tx: rv + " points" })
-    ]);
-    const styles = () => {
-        const b = crs.dd >= rv;
-        return {
-            idle: b ? "#2ae409" : "#d80b0b",
-            hover: b ? "#1fb105" : "#ab0303",
-            click: b ? "#188f03" : "#800404"
+    const x = (scene.width - upgradeRowWidth) / 2 + i * (upgradeWidth + upgradeGap);
+    const y = scene.height / 2 - 50;
+    const textX = x + upgradeWidth / 2;
+    const costText = new TextUI({ scene, x: textX, y: y + 50 });
+    const button = new ButtonUI({ scene, x, y, w: upgradeWidth, h: 100, click: () => {
+            const cost = v.og * (growthRate ** v.cnt);
+            if (crs.dd < cost)
+                return;
+            v.then();
+            crs.dd -= cost;
+            refreshUpgUI.forEach(refresh => refresh());
+        } });
+    const updateUI = () => {
+        const cost = v.og * (growthRate ** v.cnt);
+        costText.tx = cost + " points";
+        button.styles = {
+            idle: crs.dd >= cost ? "#2ae409" : "#d80b0b",
+            hover: crs.dd >= cost ? "#1fb105" : "#ab0303",
+            click: crs.dd >= cost ? "#188f03" : "#800404"
         };
     };
-    upgUI[upgUI.length - 1][0].styles = styles();
+    const title = new TextUI({ scene, x: textX, y: y + 25, tx: k });
+    updateUI();
+    refreshUpgUI.push(updateUI);
+    upgUI.push([button, title, costText]);
     i++;
+}
+const upgMenuOuter = new SceneUI({ scene, x: 0, y: 0, w: scene.width, h: scene.height, color: "#03552c" });
+const pointsHead = new KeyedTextUI({ scene, change: (v) => `${v} Points`, x: scene.width / 2, y: 100 });
+const doneUpg = new ButtonUI({ scene, x: scene.width / 2 - 125, w: 250, h: 50, y: scene.height - 75, click: hideUpg, styles: {
+        idle: "#06d444",
+        hover: "#04a133",
+        click: "#026921"
+    } });
+const doneUpgText = new TextUI({ scene, x: scene.width / 2, y: scene.height - 50, tx: "Done" });
+function showUpg() {
+    scene.addUI(upgMenuOuter, doneUpg, doneUpgText);
+    upgUI.forEach(u => scene.addUI(...u));
+    pointsHead.val = crs.dd;
+    scene.addUI(pointsHead);
+    inTheMenus = true;
+}
+function hideUpg() {
+    scene.rmUI(upgMenuOuter, doneUpg, doneUpgText, pointsHead);
+    upgUI.forEach(u => scene.rmUI(...u));
+    spawn = spawner();
+    inTheMenus = false;
 }
 const scoreSeries = [];
 const nextScore = () => new TextUI({ scene, x: scene.width / 2, y: scene.height / 2 - 100 + (25 * scoreSeries.length) });
@@ -314,6 +356,8 @@ const exitBut = new ButtonUI({ scene, x: scene.width / 2 - 250 / 2, y: scene.hei
         car.setPosX(0);
         murder.val = 0;
         scene.rmMisc(...scene.misc.stuff);
+        unspawner();
+        showUpg();
     }
 });
 const seriousExit = new TextUI({ scene, tx: "Done", x: exitBut.x + exitBut.width / 2, y: exitBut.y + 25 });
@@ -375,7 +419,11 @@ scene.start(() => {
         scoreDUI.tx = "Distance: " + snapX;
         scoreMUI.tx = "Murder: " + murder.val;
         scene.addUI(scoreUI, scoreDUI, scoreMUI, exitBut, seriousExit);
-        crs.dd += snapX + murder.val;
+        // convert snapX to decameters
+        // since the value is otherwise in pixels
+        // use formula Pixels / 377.95276
+        console.log(snapX / 377.95276);
+        crs.dd += Math.floor(snapX / 377.95276) + murder.val;
         already = true;
     }
     scene.goff.x = scene.width / 2 - car.x;
