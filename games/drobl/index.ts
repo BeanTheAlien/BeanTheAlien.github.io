@@ -401,13 +401,13 @@ const upgFactory = (k: string, then: Upgrade["then"], og: number): Upgrade => {
 }
 const upgMap: Record<string, Upgrade> = {
     benzin: upgFactory("benzin", () => {
-        crsInit.benzin += 10;
+        crsInit.benzin += 25;
     }, 50),
     engine: upgFactory("engine", () => {
         crs.fs += 0.15;
     }, 100),
     rocket: upgFactory("rocket", () => {
-        crsInit.rocket += 1;
+        crsInit.rocket += 5;
     }, 150),
     wedge: upgFactory("wedge", () => {
         crsInit.wedge = clamp(crsInit.wedge + 1, Wedge.None, Wedge.Big);
