@@ -1,4 +1,4 @@
-import { Bone, ButtonUI, chance, Color, Entity, FloorObject, Img, Joint, KeyedTextUI, objIs, Perlin, PlayableCharacter, randItem, random, Scene, SceneUI, Skeleton, Spawner, TextUI } from "../../phantom2d.js";
+import { Bone, ButtonUI, chance, clamp, Color, Entity, FloorObject, Img, Joint, KeyedTextUI, objIs, Perlin, PlayableCharacter, randItem, random, Scene, SceneUI, Skeleton, Spawner, TextUI } from "../../phantom2d.js";
 const scene = new Scene({ canvas: "deer", w: 1000, h: 600, border: "2px solid red" });
 
 const sp = 20;
@@ -328,7 +328,7 @@ const upgMap: Record<string, Upgrade> = {
         crsInit.rocket += 1;
     }, 150),
     wedge: upgFactory("wedge", () => {
-        crsInit.wedge = crsInit.wedge + 1 <= Wedge.Big ? crsInit.wedge + 1 : Wedge.Big;
+        crsInit.wedge = clamp(crsInit.wedge + 1, Wedge.None, Wedge.Big);
     }, 250)
 };
 /**
