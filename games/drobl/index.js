@@ -299,13 +299,11 @@ for (const [K, v] of Object.entries(upgMap)) {
     const updateUI = () => {
         const cost = Math.ceil(v.og * (growthRate ** v.cnt));
         costText.tx = cost + " points";
-        console.log(crs.dd >= cost);
         button.styles = {
-            idle: crs.dd >= cost ? "#2ae409" : "#d80b0b",
+            idle: crs.dd >= cost ? "#25cf07" : "#d80b0b",
             hover: crs.dd >= cost ? "#1fb105" : "#ab0303",
             click: crs.dd >= cost ? "#188f03" : "#800404"
         };
-        console.log(button.styles);
     };
     const title = new TextUI({ scene, x: textX, y: y + 25, tx: k });
     updateUI();
@@ -327,6 +325,7 @@ function showUpg() {
     pointsHead.val = crs.dd;
     scene.addUI(pointsHead);
     inTheMenus = true;
+    refreshUpgUI.forEach(r => r());
 }
 function hideUpg() {
     scene.rmUI(upgMenuOuter, doneUpg, doneUpgText, pointsHead);
