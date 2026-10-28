@@ -272,6 +272,11 @@ const car = new PlayableCharacter({ strength: 0.35, width: 85, height: 40, color
                 j.vy += -p.vy - 15;
             });
             murder.val++;
+            // also slow down the player (why the wedge exists)
+            // slowing factor
+            const slow = 2.5;
+            // divide by wedge + 1 to avoid NaN
+            p.addForceX(slow / (crs.wedge + 1));
         }
         e.hit = true;
         setTimeout(() => scene.rm(e), 7500);
@@ -378,8 +383,11 @@ window.addEventListener("keydown", (e) => {
         const h = prompt("Enter Hack") ?? "";
         if(h == "" || !h.length) return;
         const s = h.split(" ");
+        // numeric branch
         if(s[0] == "benzin") {
             crs.benzin = Number(s[1]);
+        } else if(s[0] == "giveme") {
+            crs.dd = Number(s[1]);
         }
     }
 });
