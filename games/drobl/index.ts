@@ -276,7 +276,7 @@ const car = new PlayableCharacter({ strength: 0.35, width: 85, height: 40, color
             // slowing factor
             const slow = 2.5;
             // divide by wedge + 1 to avoid NaN
-            p.addForceX(slow / (crs.wedge + 1));
+            p.addForceX(-(slow / (crs.wedge + 1)));
         }
         e.hit = true;
         setTimeout(() => scene.rm(e), 7500);
@@ -422,7 +422,7 @@ const upgMap: Record<string, Upgrade> = {
     }, 150),
     wedge: upgFactory("wedge", () => {
         crsInit.wedge = clamp(crsInit.wedge + 1, Wedge.None, Wedge.Big);
-    }, 250)
+    }, 250, Wedge.Big)
 };
 /**
  * The exponential growth factor; the r-value of `g_0(r)^n`
@@ -461,7 +461,7 @@ for(const [K, v] of Object.entries(upgMap)) {
     const updateUI = () => {
         const cost = Math.ceil(v.og * (growthRate ** v.cnt));
         const rmx = v.max && v.cnt >= v.max;
-        costText.tx = cost + " points";
+        costText.tx = !rmx ? cost + " points" : "";
         button.styles = {
             idle: !rmx ? (crs.dd >= cost ? "#25cf07" : "#d80b0b") : "#979797",
             hover: !rmx ? (crs.dd >= cost ? "#1fb105" : "#ab0303") : "#6b6b6b",

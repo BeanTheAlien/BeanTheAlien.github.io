@@ -275,7 +275,7 @@ const car = new PlayableCharacter({ strength: 0.35, width: 85, height: 40, color
                 // slowing factor
                 const slow = 2.5;
                 // divide by wedge + 1 to avoid NaN
-                p.addForceX(slow / (crs.wedge + 1));
+                p.addForceX(-(slow / (crs.wedge + 1)));
             }
             e.hit = true;
             setTimeout(() => scene.rm(e), 7500);
@@ -392,14 +392,17 @@ window.addEventListener("keydown", (e) => {
         }
     }
 });
-const upgFactory = (k, then, og) => {
+const upgFactory = (k, then, og, max) => {
     return {
         then: () => {
+            if (max && upgMap[k].cnt >= max)
+                return;
             upgMap[k].cnt++;
             then();
         },
         cnt: 0,
-        og
+        og,
+        max
     };
 };
 const upgMap = {
@@ -414,7 +417,7 @@ const upgMap = {
     }, 150),
     wedge: upgFactory("wedge", () => {
         crsInit.wedge = clamp(crsInit.wedge + 1, Wedge.None, Wedge.Big);
-    }, 250)
+    }, 250, Wedge.Big)
 };
 /**
  * The exponential growth factor; the r-value of `g_0(r)^n`
@@ -444,7 +447,7 @@ for (const [K, v] of Object.entries(upgMap)) {
     const costText = new TextUI({ scene, x: textX, y: y + 50 });
     const button = new ButtonUI({ scene, x, y, w: upgradeWidth, h: 100, click: () => {
             const cost = Math.ceil(v.og * (growthRate ** v.cnt));
-            if (crs.dd < cost)
+            if (crs.dd < cost || (v.max && v.cnt >= v.max))
                 return;
             v.then();
             crs.dd -= cost;
@@ -453,11 +456,12 @@ for (const [K, v] of Object.entries(upgMap)) {
         } });
     const updateUI = () => {
         const cost = Math.ceil(v.og * (growthRate ** v.cnt));
-        costText.tx = cost + " points";
+        const rmx = v.max && v.cnt >= v.max;
+        costText.tx = !rmx ? cost + " points" : "";
         button.styles = {
-            idle: crs.dd >= cost ? "#25cf07" : "#d80b0b",
-            hover: crs.dd >= cost ? "#1fb105" : "#ab0303",
-            click: crs.dd >= cost ? "#188f03" : "#800404"
+            idle: !rmx ? (crs.dd >= cost ? "#25cf07" : "#d80b0b") : "#979797",
+            hover: !rmx ? (crs.dd >= cost ? "#1fb105" : "#ab0303") : "#6b6b6b",
+            click: !rmx ? (crs.dd >= cost ? "#188f03" : "#800404") : "#3f3f3f"
         };
     };
     const title = new TextUI({ scene, x: textX, y: y + 25, tx: k });
