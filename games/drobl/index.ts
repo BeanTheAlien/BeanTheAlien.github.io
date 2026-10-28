@@ -214,9 +214,15 @@ const car = new PlayableCharacter({ strength: 0.35, width: 85, height: 40, color
     // }
 } });
 var dir = 1;
+enum Wedge {
+    None,
+    Small,
+    Big
+}
 interface CoreCar {
     benzin: number;
     rocket: number;
+    wedge: Wedge;
 }
 interface Car extends CoreCar {
     dd: number;
@@ -224,13 +230,15 @@ interface Car extends CoreCar {
 }
 const crsInit: CoreCar = {
     benzin: 100,
-    rocket: 0
+    rocket: 0,
+    wedge: Wedge.None
 };
 const crs: Car = {
     dd: 0,
     benzin: 100,
     rocket: 0,
-    fs: 0.85
+    fs: 0.85,
+    wedge: Wedge.None
 };
 car.use("enhancedphys", { scene });
 const p = car.comp("enhancedphys");
@@ -318,7 +326,10 @@ const upgMap: Record<string, Upgrade> = {
     }, 100),
     rocket: upgFactory("rocket", () => {
         crsInit.rocket += 1;
-    }, 150)
+    }, 150),
+    wedge: upgFactory("wedge", () => {
+        crsInit.wedge = crsInit.wedge + 1 <= Wedge.Big ? crsInit.wedge + 1 : Wedge.Big;
+    }, 250)
 };
 /**
  * The exponential growth factor; the r-value of `g_0(r)^n`
