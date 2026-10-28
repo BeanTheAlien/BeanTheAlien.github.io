@@ -254,7 +254,7 @@ const upgFactory = (k, then, og) => {
 };
 const upgMap = {
     benzin: upgFactory("benzin", () => {
-        crsInit.benzin += 50;
+        crsInit.benzin += 5;
     }, 50),
     engine: upgFactory("engine", () => {
         crs.fs += 0.15;
@@ -265,8 +265,10 @@ const upgMap = {
 };
 /**
  * The exponential growth factor; the r-value of `g_0(r)^n`
+ *
+ * Changed from 1.15, 1.35 since it wasn't enough growth
  */
-const growthRate = 1.15;
+const growthRate = 1.35;
 /**
  * The upgrade UI.
  *

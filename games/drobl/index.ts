@@ -261,7 +261,7 @@ const upgFactory = (k: string, then: Upgrade["then"], og: number): Upgrade => {
 }
 const upgMap: Record<string, Upgrade> = {
     benzin: upgFactory("benzin", () => {
-        crsInit.benzin += 50;
+        crsInit.benzin += 5;
     }, 50),
     engine: upgFactory("engine", () => {
         crs.fs += 0.15;
@@ -272,6 +272,8 @@ const upgMap: Record<string, Upgrade> = {
 };
 /**
  * The exponential growth factor; the r-value of `g_0(r)^n`
+ * 
+ * Changed from 1.15 since it wasn't enough growth
  */
 const growthRate = 1.35;
 /**
