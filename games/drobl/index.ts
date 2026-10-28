@@ -1,4 +1,4 @@
-import { Bone, ButtonUI, chance, clamp, Color, Entity, FloorObject, Img, Joint, KeyedTextUI, objIs, Perlin, PlayableCharacter, randItem, random, Scene, SceneUI, Skeleton, Spawner, TextUI } from "../../phantom2d.js";
+import { Bone, ButtonUI, chance, clamp, Color, Entity, FloorObject, Img, Joint, KeyedTextUI, objIs, Perlin, PlayableCharacter, randItem, random, Scene, SceneUI, Skeleton, Spawner, Tag, TextUI } from "../../phantom2d.js";
 const scene = new Scene({ canvas: "deer", w: 1000, h: 600, border: "2px solid red" });
 
 const sp = 20;
@@ -128,6 +128,8 @@ function Box() {
         scene
     });
 }
+const DeerNametag = new Tag("Deer");
+const BoxNametag = new Tag("Box");
 class SkeleEnt extends Entity {
     skeleton: Skeleton;
     hit: boolean;
@@ -138,16 +140,16 @@ class SkeleEnt extends Entity {
         skeleton.joints.forEach(j => {
             j.x += x;
             j.ox += x;
-            if(y) {
+            if(y !== undefined) {
                 j.y += y;
                 j.oy += y;
             }
         });
-        this.#syncBounds();
-        this.upd = () => this.#syncBounds();
+        this.syncBounds();
+        this.upd = () => this.syncBounds();
         this.hit = false;
     }
-    #syncBounds() {
+    syncBounds() {
         const xs = this.skeleton.joints.map(j => j.x);
         const ys = this.skeleton.joints.map(j => j.y);
         const minX = Math.min(...xs);
@@ -159,10 +161,18 @@ class SkeleEnt extends Entity {
     }
 }
 
+const boxes: SkeleEnt[] = [];
+const deerEntities: SkeleEnt[] = [];
 function SpawnDeer(x: number) {
-    if(scene.misc.stuff.length > 20) {
-        scene.rmMisc(...scene.misc.stuff.slice(20));
-        scene.misc.stuff.length = 20;
+    for(let i = deerEntities.length - 1; i >= 0; i--) {
+        if(!scene.has(deerEntities[i]!)) deerEntities.splice(i, 1);
+    }
+    if(deerEntities.length >= 20) {
+        const oldestDeer = deerEntities.shift();
+        if(oldestDeer) {
+            scene.rm(oldestDeer);
+            scene.rmMisc(oldestDeer.skeleton);
+        }
     }
     const skeleton = Deer();
     const render = skeleton.render.bind(skeleton);
@@ -175,6 +185,8 @@ function SpawnDeer(x: number) {
     const deer = new SkeleEnt(skeleton, x);
     scene.addMisc(skeleton); // draw and update the skeleton
     scene.add(deer); // include hitbox in entity collisions
+    deer.tags.add(DeerNametag);
+    deerEntities.push(deer);
     return deer;
 }
 function SpawnBox(x: number, y?: number) {
@@ -189,7 +201,65 @@ function SpawnBox(x: number, y?: number) {
     const box = new SkeleEnt(skeleton, x, y);
     scene.addMisc(skeleton);
     scene.add(box);
+    box.tags.add(BoxNametag);
+    boxes.push(box);
     return box;
+}
+function moveBox(box: SkeleEnt, x: number, y: number) {
+    box.skeleton.joints.forEach(j => {
+        j.x += x;
+        j.ox += x;
+        j.y += y;
+        j.oy += y;
+    });
+    box.syncBounds();
+}
+function collideBoxes() {
+    const leftEdge = car.x - scene.width / 2 - boxSize * 2;
+    for(let i = boxes.length - 1; i >= 0; i--) {
+        const box = boxes[i];
+        if(box && (!scene.has(box) || box.x + box.width < leftEdge)) {
+            scene.rm(box);
+            scene.rmMisc(box.skeleton);
+            boxes.splice(i, 1);
+        }
+    }
+    for(let i = 0; i < boxes.length; i++) {
+        const a = boxes[i];
+        if(!a || !scene.has(a)) continue;
+        for(let j = i + 1; j < boxes.length; j++) {
+            const b = boxes[j];
+            if(!b || !scene.has(b)) continue;
+            a.syncBounds();
+            b.syncBounds();
+            const overlapX = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x);
+            const overlapY = Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y);
+            if(overlapX <= 0 || overlapY <= 0) continue;
+
+            const horizontal = overlapX < overlapY;
+            const normalX = horizontal ? (b.x + b.width / 2 < a.x + a.width / 2 ? -1 : 1) : 0;
+            const normalY = horizontal ? 0 : (b.y + b.height / 2 < a.y + a.height / 2 ? -1 : 1);
+            const overlap = horizontal ? overlapX : overlapY;
+            moveBox(a, -normalX * overlap / 2, -normalY * overlap / 2);
+            moveBox(b, normalX * overlap / 2, normalY * overlap / 2);
+
+            const averageVelocity = (box: SkeleEnt, axis: "x" | "y") =>
+                box.skeleton.joints.reduce((sum, joint) => sum + joint[axis] - joint[axis == "x" ? "ox" : "oy"], 0) / box.skeleton.joints.length;
+            const relativeVelocity = (averageVelocity(b, "x") - averageVelocity(a, "x")) * normalX
+                + (averageVelocity(b, "y") - averageVelocity(a, "y")) * normalY;
+            if(relativeVelocity < 0) {
+                const impulse = -(1.1 * relativeVelocity) / 2;
+                a.skeleton.joints.forEach(j => {
+                    j.ox += impulse * normalX;
+                    j.oy += impulse * normalY;
+                });
+                b.skeleton.joints.forEach(j => {
+                    j.ox -= impulse * normalX;
+                    j.oy -= impulse * normalY;
+                });
+            }
+        }
+    }
 }
 const car = new PlayableCharacter({ strength: 0.35, width: 85, height: 40, color: Color.invis, collide: (e) => {
     if(objIs(e, SkeleEnt)) {
@@ -205,6 +275,7 @@ const car = new PlayableCharacter({ strength: 0.35, width: 85, height: 40, color
         }
         e.hit = true;
         setTimeout(() => scene.rm(e), 7500);
+        setTimeout(() => scene.rmMisc(e.skeleton), 7500);
     }
 }, upd: () => {
     // const mx = Math.max(...gen.map(g => g.y));
@@ -302,6 +373,17 @@ rocketUI.val = 0;
 crsUISeries.push(rocketUI);
 scene.addUI(...crsUISeries);
 
+window.addEventListener("keydown", (e) => {
+    if(e.code == "Slash") {
+        const h = prompt("Enter Hack") ?? "";
+        if(h == "" || !h.length) return;
+        const s = h.split(" ");
+        if(s[0] == "benzin") {
+            crs.benzin = Number(s[1]);
+        }
+    }
+});
+
 interface Upgrade {
     then: () => void;
     cnt: number;
@@ -319,7 +401,7 @@ const upgFactory = (k: string, then: Upgrade["then"], og: number): Upgrade => {
 }
 const upgMap: Record<string, Upgrade> = {
     benzin: upgFactory("benzin", () => {
-        crsInit.benzin += 5;
+        crsInit.benzin += 10;
     }, 50),
     engine: upgFactory("engine", () => {
         crs.fs += 0.15;
@@ -421,6 +503,8 @@ const exitBut = new ButtonUI({ scene, x: scene.width / 2 - 250 / 2, y: scene.hei
         // passes while still processing
         scoreQueIgn = true;
         scene.rmUI(outer, ...scoreSeries, exitBut, seriousExit);
+        scene.rm(...boxes);
+        boxes.length = 0;
         // reset the values on crs to crsInit
         for(const [k, v] of Object.entries(crsInit)) {
             crs[k as keyof Car] = v;
@@ -456,17 +540,19 @@ var snapX = 0;
 // communist deer
 // german deer
 
-/**
- * Series of box patterns.
- * 
- * When an element of the array is a number, spawn with x; else, spawn at (x, y) for elements.
- */
+/** Box layouts use offsets measured in box widths and heights. */
+const boxSize = sp * 2;
+const boxSpawnCheckSpacing = boxSize * 8;
+let nextBoxSpawnCheckX = -scene.width / 2;
 const pattern = [
     //   [ ]
-    // [ ] [ ]
-    [0, 10, [5, 40]],
-    // [ ]
-    [0]
+    // [ ][ ][ ]
+    [[0, 0], [1, 0], [2, 0], [1, 1]],
+    // [ ][ ]
+    // [ ][ ]
+    [[0, 0], [1, 0], [0, 1], [1, 1]],
+    // [ ][ ][ ]
+    [[0, 0], [1, 0], [2, 0]]
 ];
 
 function addTerrainSegment(x: number, atStart = false) {
@@ -481,17 +567,15 @@ function addTerrainSegment(x: number, atStart = false) {
     if(atStart) gen.unshift(floor);
     else gen.push(floor);
     scene.add(floor);
-    // chance to spawn litter
-    if(chance(5)) {
-        // choose a pattern
-        const p = randItem(pattern);
-        p.forEach(n => {
-            if(Array.isArray(n)) {
-                SpawnBox(n[0], n[1]);
-            } else {
-                SpawnBox(n);
-            }
-        });
+    if(!atStart && x >= nextBoxSpawnCheckX) {
+        nextBoxSpawnCheckX = x + boxSpawnCheckSpacing;
+        if(chance(25)) {
+            // choose a pattern
+            const p = randItem(pattern);
+            p.forEach(([offsetX, offsetY]) => {
+                SpawnBox(x + offsetX * boxSize, floor.y - (offsetY + 1) * boxSize);
+            });
+        }
     }
 }
 function updateTerrain() {
@@ -549,6 +633,7 @@ scene.start(() => {
             j.vy = 0;
         });
     });
+    collideBoxes();
     scene.ctx.save();
     // 1. Move the context origin to the center of the car
     scene.ctx.translate(scene.width / 2 + car.width / 2, car.y + car.height / 2);
