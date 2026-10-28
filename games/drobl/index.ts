@@ -271,7 +271,7 @@ const car = new PlayableCharacter({ strength: 0.35, width: 85, height: 40, color
                 j.vx += p.vx;
                 j.vy += -p.vy - 15;
             });
-            murder.val++;
+            if(e.tags.has(DeerNametag)) murder.val++;
             // also slow down the player (why the wedge exists)
             // slowing factor
             const slow = 2.5;
