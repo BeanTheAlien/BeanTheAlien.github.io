@@ -396,15 +396,18 @@ interface Upgrade {
     then: () => void;
     cnt: number;
     og: number;
+    max?: number;
 }
-const upgFactory = (k: string, then: Upgrade["then"], og: number): Upgrade => {
+const upgFactory = (k: string, then: Upgrade["then"], og: number, max?: number): Upgrade => {
     return {
         then: () => {
+            if(max && upgMap[k].cnt >= max) return;
             upgMap[k].cnt++;
             then();
         },
         cnt: 0,
-        og
+        og,
+        max
     };
 }
 const upgMap: Record<string, Upgrade> = {
@@ -449,7 +452,7 @@ for(const [K, v] of Object.entries(upgMap)) {
     const costText = new TextUI({ scene, x: textX, y: y + 50 });
     const button = new ButtonUI({ scene, x, y, w: upgradeWidth, h: 100, click: () => {
         const cost = Math.ceil(v.og * (growthRate ** v.cnt));
-        if(crs.dd < cost) return;
+        if(crs.dd < cost || (v.max && v.cnt >= v.max)) return;
         v.then();
         crs.dd -= cost;
         refreshUpgUI.forEach(refresh => refresh());
@@ -457,11 +460,12 @@ for(const [K, v] of Object.entries(upgMap)) {
     } });
     const updateUI = () => {
         const cost = Math.ceil(v.og * (growthRate ** v.cnt));
+        const rmx = v.max && v.cnt >= v.max;
         costText.tx = cost + " points";
         button.styles = {
-            idle: crs.dd >= cost ? "#25cf07" : "#d80b0b",
-            hover: crs.dd >= cost ? "#1fb105" : "#ab0303",
-            click: crs.dd >= cost ? "#188f03" : "#800404"
+            idle: !rmx ? (crs.dd >= cost ? "#25cf07" : "#d80b0b") : "#979797",
+            hover: !rmx ? (crs.dd >= cost ? "#1fb105" : "#ab0303") : "#6b6b6b",
+            click: !rmx ? (crs.dd >= cost ? "#188f03" : "#800404") : "#3f3f3f"
         };
     };
     const title = new TextUI({ scene, x: textX, y: y + 25, tx: k });
