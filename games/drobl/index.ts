@@ -1,9 +1,9 @@
-import { Bone, ButtonUI, Color, Entity, FloorObject, Img, Joint, KeyedTextUI, objIs, Perlin, PlayableCharacter, random, Scene, SceneUI, Skeleton, Spawner, TextUI } from "../../phantom2d.js";
+import { Bone, ButtonUI, chance, Color, Entity, FloorObject, Img, Joint, KeyedTextUI, objIs, Perlin, PlayableCharacter, randItem, random, Scene, SceneUI, Skeleton, Spawner, TextUI } from "../../phantom2d.js";
 const scene = new Scene({ canvas: "deer", w: 1000, h: 600, border: "2px solid red" });
 
+const sp = 20;
+const strength = 0.35;
 function Deer() {
-    const sp = 20;
-    const strength = 0.35;
     const head = [
         // head 0
         new Joint(0, 0, strength),
@@ -96,16 +96,52 @@ function Deer() {
         scene
     });
 }
-class DeerEnt extends Entity {
+function Box() {
+    const core = [
+        new Joint(0, 0, strength),
+        new Joint(sp * 2, 0, strength),
+        new Joint(0, sp * 2, strength),
+        new Joint(sp * 2, sp * 2, strength)
+    ] as const;
+    // 0 1
+    // 0 2
+    // 1 3
+    // 2 3
+    // 0 3
+    // 2 1
+    const bones = [
+        new Bone(core[0], core[1]),
+        new Bone(core[0], core[2]),
+        new Bone(core[1], core[3]),
+        new Bone(core[2], core[3]),
+        // cross-section for stability
+        new Bone(core[0], core[3]),
+        new Bone(core[2], core[1])
+    ];
+    return new Skeleton({
+        bn: bones,
+        pass: 50,
+        bc: "#794a03",
+        jc: "#a96703",
+        bw: 5,
+        jr: 3,
+        scene
+    });
+}
+class SkeleEnt extends Entity {
     skeleton: Skeleton;
     hit: boolean;
-    constructor(skeleton: Skeleton, x: number) {
+    constructor(skeleton: Skeleton, x: number, y?: number) {
         super({ color: "rgba(0,0,0,0)" });
         this.skeleton = skeleton;
-        // Move both current and previous joint positions so the deer spawns at x.
+        // Move both current and previous joint positions so the skeleton spawns at x.
         skeleton.joints.forEach(j => {
             j.x += x;
             j.ox += x;
+            if(y) {
+                j.y += y;
+                j.oy += y;
+            }
         });
         this.#syncBounds();
         this.upd = () => this.#syncBounds();
@@ -136,13 +172,27 @@ function SpawnDeer(x: number) {
         render();
         scene.ctx.restore();
     };
-    const deer = new DeerEnt(skeleton, x);
+    const deer = new SkeleEnt(skeleton, x);
     scene.addMisc(skeleton); // draw and update the skeleton
     scene.add(deer); // include hitbox in entity collisions
     return deer;
 }
+function SpawnBox(x: number, y?: number) {
+    const skeleton = Box();
+    const render = skeleton.render.bind(skeleton);
+    skeleton.render = () => {
+        scene.ctx.save();
+        scene.ctx.translate(scene.goff.x, 0);
+        render();
+        scene.ctx.restore();
+    }
+    const box = new SkeleEnt(skeleton, x, y);
+    scene.addMisc(skeleton);
+    scene.add(box);
+    return box;
+}
 const car = new PlayableCharacter({ strength: 0.35, width: 85, height: 40, color: Color.invis, collide: (e) => {
-    if(objIs(e, DeerEnt)) {
+    if(objIs(e, SkeleEnt)) {
         e.skeleton.setSoft();
         e.skeleton.joints.forEach(j => j.strength = 0.15);
         if(!e.hit) {
@@ -395,6 +445,19 @@ var snapX = 0;
 // communist deer
 // german deer
 
+/**
+ * Series of box patterns.
+ * 
+ * When an element of the array is a number, spawn with x; else, spawn at (x, y) for elements.
+ */
+const pattern = [
+    //   [ ]
+    // [ ] [ ]
+    [0, 10, [5, 40]],
+    // [ ]
+    [0]
+];
+
 function addTerrainSegment(x: number, atStart = false) {
     const height = perlin.next(x);
     const floor = new FloorObject({
@@ -407,8 +470,19 @@ function addTerrainSegment(x: number, atStart = false) {
     if(atStart) gen.unshift(floor);
     else gen.push(floor);
     scene.add(floor);
+    // chance to spawn litter
+    if(chance(5)) {
+        // choose a pattern
+        const p = randItem(pattern);
+        p.forEach(n => {
+            if(Array.isArray(n)) {
+                SpawnBox(n[0], n[1]);
+            } else {
+                SpawnBox(n);
+            }
+        });
+    }
 }
-
 function updateTerrain() {
     const leftEdge = car.x - scene.width / 2;
     const rightEdge = car.x + scene.width / 2;
