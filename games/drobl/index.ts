@@ -282,10 +282,12 @@ const car = new PlayableCharacter({ strength: 0.35, width: 85, height: 40, color
             const slow = 2.5;
             // divide by wedge + 1 to avoid NaN
             p.addForceX(-(slow / (crs.wedge + 1)));
+            // FIX: avoid creating new timeouts
+            // for already-hit elements
+            setTimeout(() => scene.rm(e), 7500);
+            setTimeout(() => scene.rmMisc(e.skeleton), 7500);
         }
         e.hit = true;
-        setTimeout(() => scene.rm(e), 7500);
-        setTimeout(() => scene.rmMisc(e.skeleton), 7500);
     }
 }, upd: () => {
     // const mx = Math.max(...gen.map(g => g.y));
