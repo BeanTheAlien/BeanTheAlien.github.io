@@ -264,6 +264,10 @@ function collideBoxes() {
 const car = new PlayableCharacter({ strength: 0.35, width: 85, height: 40, color: Color.invis, collide: (e) => {
     if(objIs(e, SkeleEnt)) {
         e.skeleton.setSoft();
+        if(e.tags.has(BoxNametag)) {
+            // remove cross-section stability bones
+            e.skeleton.bn.splice(4, 2);
+        }
         e.skeleton.joints.forEach(j => j.strength = 0.15);
         if(!e.hit) {
             e.skeleton.joints.forEach(j => {
@@ -272,6 +276,7 @@ const car = new PlayableCharacter({ strength: 0.35, width: 85, height: 40, color
                 j.vy += -p.vy - 15;
             });
             if(e.tags.has(DeerNametag)) murder.val++;
+            else destruct.val++;
             // also slow down the player (why the wedge exists)
             // slowing factor
             const slow = 2.5;
@@ -353,20 +358,22 @@ const unspawner = () => clearInterval(spawn);
 var spawn = spawner();
 const murder = new KeyedTextUI<number>({ scene, change: (v) => `Murder: ${v}`, x: scene.width / 2, y: 50 });
 murder.val = 0;
+const destruct = new KeyedTextUI<number>({ scene, change: (v) => `Destruction: ${v}`, x: scene.width / 2, y: 75 });
+destruct.val = 0;
 scene.font = "15px Comic Sans MS";
-const time = new KeyedTextUI<number>({ scene, change: (v) => `Time: ${v}`, x: scene.width / 2, y: 75 });
+const time = new KeyedTextUI<number>({ scene, change: (v) => `Time: ${v}`, x: scene.width / 2, y: 100 });
 time.val = 0;
 setInterval(() => {
     time.val = time.val >= 24 ? 0 : time.val+1;
 }, 1000);
-scene.addUI(murder, time);
+scene.addUI(murder, destruct, time);
 const perlin = Perlin.terrain1D({ frq: 0.003, amp: 10, bh: 20, fy: 0.5 });
 const terrainSegmentWidth = 10;
 let nextTerrainX = -scene.width / 2;
 const gen: FloorObject[] = [];
 const crsUISeries: KeyedTextUI<number>[] = [];
-const nextCRS = (k: keyof Car, v: string) => new KeyedTextUI<number>({ scene, change: () => `${v}: ${crs[k]}`, x: scene.width / 2, y: 100 + (25 * crsUISeries.length) });
-const meter = (k: keyof typeof p, v: string, ext: string) => new KeyedTextUI<number>({ scene, change: () => `${v}: ${Math.round(p[k] as number)} ${ext}`, x: scene.width / 2, y: 100 + (25 * crsUISeries.length) });
+const nextCRS = (k: keyof Car, v: string) => new KeyedTextUI<number>({ scene, change: () => `${v}: ${crs[k]}`, x: scene.width / 2, y: 125 + (25 * crsUISeries.length) });
+const meter = (k: keyof typeof p, v: string, ext: string) => new KeyedTextUI<number>({ scene, change: () => `${v}: ${Math.round(p[k] as number)} ${ext}`, x: scene.width / 2, y: 125 + (25 * crsUISeries.length) });
 const spedometer = meter("vx", "Velocity", "m/s");
 spedometer.val = 0;
 crsUISeries.push(spedometer);
@@ -415,7 +422,7 @@ const upgMap: Record<string, Upgrade> = {
         crsInit.benzin += 35;
     }, 50),
     engine: upgFactory("engine", () => {
-        crs.fs += 0.15;
+        crs.fs += 0.25;
     }, 100),
     rocket: upgFactory("rocket", () => {
         crsInit.rocket += 5;
@@ -506,9 +513,11 @@ const scoreDUI = nextScore();
 scoreSeries.push(scoreDUI);
 const scoreMUI = nextScore();
 scoreSeries.push(scoreMUI);
+const scoreDDUI = nextScore();
+scoreSeries.push(scoreDDUI);
 const scorePUI = nextScore();
 scoreSeries.push(scorePUI);
-const exitBut = new ButtonUI({ scene, x: scene.width / 2 - 250 / 2, y: scene.height / 2, w: 250, h: 50, styles: {
+const exitBut = new ButtonUI({ scene, x: scene.width / 2 - 250 / 2, y: scene.height / 2 + 50, w: 250, h: 50, styles: {
     idle: "#0c97d8", hover: "#014ad1", click: "#200cd8" }, click: () => {
         scoreQue = false;
         // set the ignore in case an update
@@ -614,12 +623,14 @@ scene.start(() => {
         scoreUI.tx = "Score";
         scoreDUI.tx = "Distance: " + snapX;
         scoreMUI.tx = "Murder: " + murder.val;
+        scoreDDUI.tx = "Destruction: " + destruct.val;
         // convert snapX to centimeters
         // since the value is otherwise in pixels
         // use formula Pixels / 37.95276
-        const pt = Math.floor(snapX / 37.95276) + murder.val;
+        // also gain 1 pt for each 10 destructions
+        const pt = Math.floor(snapX / 37.95276) + murder.val + Math.floor(destruct.val / 10);
         scorePUI.tx = "Points Earned: " + pt;
-        scene.addUI(scoreUI, scoreDUI, scoreMUI, scorePUI, exitBut, seriousExit);
+        scene.addUI(scoreUI, scoreDUI, scoreMUI, scoreDDUI, scorePUI, exitBut, seriousExit);
         crs.dd += pt;
         already = true;
     }
