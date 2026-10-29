@@ -408,7 +408,7 @@ const upgFactory = (k, then, og, max) => {
 };
 const upgMap = {
     benzin: upgFactory("benzin", () => {
-        crsInit.benzin += 25;
+        crsInit.benzin += 35;
     }, 50),
     engine: upgFactory("engine", () => {
         crs.fs += 0.15;

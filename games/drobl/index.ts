@@ -412,7 +412,7 @@ const upgFactory = (k: string, then: Upgrade["then"], og: number, max?: number):
 }
 const upgMap: Record<string, Upgrade> = {
     benzin: upgFactory("benzin", () => {
-        crsInit.benzin += 25;
+        crsInit.benzin += 35;
     }, 50),
     engine: upgFactory("engine", () => {
         crs.fs += 0.15;
