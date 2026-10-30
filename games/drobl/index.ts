@@ -1,4 +1,4 @@
-import { Bone, ButtonUI, chance, clamp, Color, Entity, FloorObject, Img, Joint, KeyedTextUI, objIs, Perlin, PlayableCharacter, randItem, random, Scene, SceneUI, Skeleton, Spawner, Tag, TextUI } from "../../phantom2d.js";
+import { Bone, ButtonUI, chance, clamp, Color, Entity, FloorObject, Img, Joint, KeyedTextUI, objIs, Perlin, PlayableCharacter, randItem, random, Scene, SceneUI, Skeleton, Spawner, Tag, TextUI, Vector } from "../../phantom2d.js";
 const scene = new Scene({ canvas: "deer", w: 1000, h: 600, border: "2px solid red" });
 
 const sp = 20;
@@ -518,20 +518,12 @@ function hideUpg() {
     upgUI.forEach(u => scene.rmUI(...u));
     spawn = spawner();
     inTheMenus = false;
-    // clean up old misc
-    scene.rmMisc(...scene.misc.stuff);
-    // clean up old terrain / ents
-    scene.rm(...scene.filter(x => !x.tags.has(CarTag)));
-    boxes.length = 0;
-    deerEntities.length = 0;
-    gen.length = 0;
-    nextTerrainX = -scene.width / 2;
-    nextBoxSpawnCheckX = -scene.width / 2;
     // restore init state
     car.x = 0;
     car.y = 50;
     crs.benzin = crsInit.benzin;
     crs.rocket = crsInit.rocket;
+    waitDontTerrain = false;
 }
 
 const scoreSeries: TextUI[] = [];
@@ -547,6 +539,14 @@ const scoreDDUI = nextScore();
 scoreSeries.push(scoreDDUI);
 const scorePUI = nextScore();
 scoreSeries.push(scorePUI);
+/**
+ * Extra flag to prevent terrain generation.
+ * 
+ * Just cuz terain gen might still break through, even
+ * with the bug fix put in place, so this flag
+ * further prevents terrain from being generated.
+ */
+var waitDontTerrain = false;
 const exitBut = new ButtonUI({ scene, x: scene.width / 2 - 250 / 2, y: scene.height / 2 + 50, w: 250, h: 50, styles: {
     idle: "#0c97d8", hover: "#014ad1", click: "#200cd8" }, click: () => {
         scoreQue = false;
@@ -555,7 +555,22 @@ const exitBut = new ButtonUI({ scene, x: scene.width / 2 - 250 / 2, y: scene.hei
         scoreQueIgn = true;
         scene.rmUI(outer, ...scoreSeries, exitBut, seriousExit);
         scene.rm(...boxes);
+        // remove skeletons
+        scene.rmMisc(...boxes.map(b => b.skeleton));
         boxes.length = 0;
+        // move cleanup logic to prevent
+        // insane terrain gen which
+        // kills performance
+        // clean up old misc
+        scene.rmMisc(...scene.misc.stuff);
+        // clean up old terrain / ents
+        scene.rm(...scene.filter(x => !x.tags.has(CarTag)));
+        boxes.length = 0;
+        deerEntities.length = 0;
+        gen.length = 0;
+        nextTerrainX = -scene.width / 2;
+        nextBoxSpawnCheckX = -scene.width / 2;
+        waitDontTerrain = true;
         // reset the values on crs to crsInit
         for(const [k, v] of Object.entries(crsInit)) {
             crs[k as keyof Car] = v;
@@ -564,7 +579,7 @@ const exitBut = new ButtonUI({ scene, x: scene.width / 2 - 250 / 2, y: scene.hei
         scoreQueIgn = false;
         already = false;
         dir = 1;
-        car.setPosX(0);
+        car.setPos(new Vector(0, 50));
         murder.val = 0;
         destruct.val = 0;
         unspawner();
@@ -630,6 +645,7 @@ function addTerrainSegment(x: number, atStart = false) {
     }
 }
 function updateTerrain() {
+    if(waitDontTerrain) return;
     const leftEdge = car.x - scene.width / 2;
     const rightEdge = car.x + scene.width / 2;
     while(nextTerrainX <= rightEdge) {
