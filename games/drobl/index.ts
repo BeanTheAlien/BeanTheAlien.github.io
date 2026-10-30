@@ -280,22 +280,36 @@ const car = new PlayableCharacter({ strength: 0.35, width: 85, height: 40, color
             // also slow down the player (why the wedge exists)
             // slowing factor
             const slow = 2.5;
-            // divide by wedge + 1 to avoid NaN
-            p.addForceX(-(slow / (crs.wedge + 1)));
+            // only apply when existing
+            // velocity is positive
+            if(Math.sign(p.vx) == 1) {
+                // divide by wedge + 1 to avoid NaN
+                p.addForceX(-(slow / (crs.wedge + 1)));
+            }
             // FIX: avoid creating new timeouts
             // for already-hit elements
-            setTimeout(() => scene.rm(e), 7500);
-            setTimeout(() => scene.rmMisc(e.skeleton), 7500);
+            setTimeout(() => {
+                scene.rm(e);
+                scene.rmMisc(e.skeleton);
+            }, 7500);
         }
         e.hit = true;
     }
 }, upd: () => {
+    // prevent falling through floor
+    if(car.y + car.height >= scene.height) {
+        car.y = 100;
+    }
     // const mx = Math.max(...gen.map(g => g.y));
     // if(car.y + car.height >= mx) {
     //     car.y = mx - car.height;
     //     car.onGround = true;
     // }
 } });
+// create symbolic tag to avoid removing
+// when cleaning up terrain chunks
+const CarTag = new Tag("Car");
+car.tags.add(CarTag);
 var dir = 1;
 enum Wedge {
     None,
@@ -504,6 +518,20 @@ function hideUpg() {
     upgUI.forEach(u => scene.rmUI(...u));
     spawn = spawner();
     inTheMenus = false;
+    // clean up old misc
+    scene.rmMisc(...scene.misc.stuff);
+    // clean up old terrain / ents
+    scene.rm(...scene.filter(x => !x.tags.has(CarTag)));
+    boxes.length = 0;
+    deerEntities.length = 0;
+    gen.length = 0;
+    nextTerrainX = -scene.width / 2;
+    nextBoxSpawnCheckX = -scene.width / 2;
+    // restore init state
+    car.x = 0;
+    car.y = 50;
+    crs.benzin = crsInit.benzin;
+    crs.rocket = crsInit.rocket;
 }
 
 const scoreSeries: TextUI[] = [];
@@ -538,7 +566,7 @@ const exitBut = new ButtonUI({ scene, x: scene.width / 2 - 250 / 2, y: scene.hei
         dir = 1;
         car.setPosX(0);
         murder.val = 0;
-        scene.rmMisc(...scene.misc.stuff);
+        destruct.val = 0;
         unspawner();
         showUpg();
     }
