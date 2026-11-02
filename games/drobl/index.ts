@@ -1,4 +1,4 @@
-import { Bone, ButtonUI, chance, clamp, Color, Entity, FloorObject, Img, Joint, KeyedTextUI, objIs, Perlin, PlayableCharacter, randItem, random, Scene, SceneUI, Skeleton, Spawner, Tag, TextUI, Vector } from "../../phantom2d.js";
+import { Bone, ButtonUI, chance, clamp, Color, Entity, FloorObject, Img, Joint, KeyedTextUI, Local, objIs, Perlin, PlayableCharacter, randItem, random, Scene, SceneUI, Skeleton, Spawner, Tag, TextUI, Vector } from "../../phantom2d.js";
 const scene = new Scene({ canvas: "deer", w: 1000, h: 600, border: "2px solid red" });
 
 const sp = 20;
@@ -337,6 +337,25 @@ const crs: Car = {
     fs: 0.85,
     wedge: Wedge.None
 };
+function saveCRS() {
+    Local.set("drobl-saved-game", { ...crsInit, fs: crs.fs, dd: crs.dd });
+}
+function loadCRS() {
+    const out = Local.get("drobl-saved-game");
+    if(out) {
+        const p = JSON.parse(out);
+        crsInit.benzin = p.benzin;
+        crsInit.rocket = p.rocket;
+        crsInit.wedge = p.wedge;
+        crs.fs = p.fs;
+        crs.dd = p.dd;
+        Object.assign(crs, crsInit);
+        console.log("Loaded old save");
+    } else {
+        console.log("No save detected; no content loaded");
+    }
+}
+loadCRS();
 car.use("enhancedphys", { scene });
 const p = car.comp("enhancedphys");
 var inTheMenus = false;
@@ -427,6 +446,8 @@ const upgFactory = (k: string, then: Upgrade["then"], og: number, max?: number):
             if(max && upgMap[k].cnt >= max) return;
             upgMap[k].cnt++;
             then();
+            saveCRS();
+            console.log("Game saved successfully");
         },
         cnt: 0,
         og,
