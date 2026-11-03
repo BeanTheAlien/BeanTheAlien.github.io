@@ -19,9 +19,8 @@ const buttonHome = mk("Home", "/");
 const buttonGames = mk("Games", "/games/");
 const buttonProjects = mk("Projects", "/projects/");
 const buttonUserPages = mk("User Pages", "/userpages/");
-const buttonOptions = mk("Options", "/options/");
 // const buttonResources = mk("Resources", "/resources.html");
-add([buttonHome, buttonGames, buttonProjects, buttonUserPages, buttonOptions]);
+add([buttonHome, buttonGames, buttonProjects, buttonUserPages]);
 document.body.prepend(topbarContainer);
 (async () => {
     if((await net.json("verify")).r) {
@@ -37,6 +36,7 @@ document.body.prepend(topbarContainer);
                     <a class="dropbtn d-a">Yo, ${username}</a>
                     <div class="dropdown-content">
                     <a class="d-a" href="/profile">Profile</a>
+                    <a class="d-a" href="/options">Options</a>
                     ${isAdmin ? `
                         <br><a class="d-a" href="/admin/usermanager">User Manager</a>
                     ` : ""}

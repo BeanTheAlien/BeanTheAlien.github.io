@@ -42,3 +42,7 @@ window.addEventListener("error", (e) => {
         }
     });
 });
+function getEIgn(value = localStorage.getItem("error-ignore")) {
+    const parsed = typeof value == "string" ? JSON.parse(value) : value;
+    return Array.isArray(parsed) ? parsed : [];
+}
