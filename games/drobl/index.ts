@@ -586,7 +586,7 @@ const exitBut = new ButtonUI({ scene, x: scene.width / 2 - 250 / 2, y: scene.hei
         // insane terrain gen which
         // kills performance
         // clean up old misc
-        scene.rmMisc(...scene.misc.stuff);
+        scene.rmMisc(...scene.misc);
         // clean up old terrain / ents
         scene.rm(...scene.filter(x => !x.tags.has(CarTag)));
         boxes.length = 0;

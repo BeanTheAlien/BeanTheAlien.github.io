@@ -1,4 +1,4 @@
-import { Bone, ButtonUI, chance, clamp, Color, Entity, FloorObject, Img, Joint, KeyedTextUI, objIs, Perlin, PlayableCharacter, randItem, random, Scene, SceneUI, Skeleton, Tag, TextUI, Vector } from "../../phantom2d.js";
+import { Bone, ButtonUI, chance, clamp, Color, Entity, FloorObject, Img, Joint, KeyedTextUI, Local, objIs, Perlin, PlayableCharacter, randItem, random, Scene, SceneUI, Skeleton, Tag, TextUI, Vector } from "../../phantom2d.js";
 const scene = new Scene({ canvas: "deer", w: 1000, h: 600, border: "2px solid red" });
 const sp = 20;
 const strength = 0.35;
@@ -330,9 +330,32 @@ const crs = {
     fs: 0.85,
     wedge: Wedge.None
 };
+function saveCRS() {
+    Local.set("drobl-saved-game", { ...crsInit, fs: crs.fs, dd: crs.dd });
+    console.log("Game saved");
+}
+function loadCRS() {
+    const out = Local.get("drobl-saved-game");
+    if (out) {
+        const p = JSON.parse(out);
+        crsInit.benzin = p.benzin;
+        crsInit.rocket = p.rocket;
+        crsInit.wedge = p.wedge;
+        crs.fs = p.fs;
+        crs.dd = p.dd;
+        Object.assign(crs, crsInit);
+        console.log("Loaded old save");
+    }
+    else {
+        console.log("No save detected; no content loaded");
+    }
+}
+loadCRS();
+// autosave every min
+setInterval(saveCRS, 60000);
 car.use("enhancedphys", { scene });
 const p = car.comp("enhancedphys");
-var inTheMenus = false;
+var inTheMenus = true;
 car.binds(["a", () => {
         if (inTheMenus)
             return;
@@ -369,11 +392,12 @@ car.binds(["a", () => {
     }]);
 Img.config.set("root", "assets");
 const carspr = new Img("car/2012toyotacamry.jpg");
-SpawnDeer(200);
+//SpawnDeer(200);
 scene.add(car);
 const spawner = () => setInterval(() => SpawnDeer(car.x + random(-scene.width / 2 + 100, scene.width / 2 - 100)), 5000);
 const unspawner = () => clearInterval(spawn);
 var spawn = spawner();
+unspawner();
 const murder = new KeyedTextUI({ scene, change: (v) => `Murder: ${v}`, x: scene.width / 2, y: 50 });
 murder.val = 0;
 const destruct = new KeyedTextUI({ scene, change: (v) => `Destruction: ${v}`, x: scene.width / 2, y: 75 });
@@ -424,6 +448,7 @@ const upgFactory = (k, then, og, max) => {
                 return;
             upgMap[k].cnt++;
             then();
+            saveCRS();
         },
         cnt: 0,
         og,
@@ -543,7 +568,7 @@ scoreSeries.push(scorePUI);
  * with the bug fix put in place, so this flag
  * further prevents terrain from being generated.
  */
-var waitDontTerrain = false;
+var waitDontTerrain = true;
 const exitBut = new ButtonUI({ scene, x: scene.width / 2 - 250 / 2, y: scene.height / 2 + 50, w: 250, h: 50, styles: {
         idle: "#0c97d8", hover: "#014ad1", click: "#200cd8"
     }, click: () => {
@@ -560,7 +585,7 @@ const exitBut = new ButtonUI({ scene, x: scene.width / 2 - 250 / 2, y: scene.hei
         // insane terrain gen which
         // kills performance
         // clean up old misc
-        scene.rmMisc(...scene.misc.stuff);
+        scene.rmMisc(...scene.misc);
         // clean up old terrain / ents
         scene.rm(...scene.filter(x => !x.tags.has(CarTag)));
         boxes.length = 0;

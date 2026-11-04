@@ -23,9 +23,13 @@ class ArrayUtil {
         arr.push(...items);
     }
     static rm(arr: any[], ...items: any[]) {
+        ArrayUtil.rmx(arr, () => {}, ...items);
+    }
+    static rmx(arr: any[], then: Callback<any>, ...items: any[]) {
         for(const i of items) {
             if(ArrayUtil.has(arr, i)) {
                 arr.splice(arr.indexOf(i), 1);
+                then(i, 0, arr);
             }
         }
     }
@@ -182,7 +186,18 @@ type Frames = Img[];
 type MoveMode = "fixed" | "move";
 type Constructor<T> = new (...args: any[]) => T;
 type AbstractConstructor<T> = abstract new (...args: any[]) => T;
+/**
+ * The color (or other pattern) to fill with for the canvas.
+ * @deprecated Since v3.0.0.
+ */
 type FillStyle = string | CanvasGradient | CanvasPattern;
+/**
+ * Introduced as part of v3.0.0.
+ * 
+ * Global Fill Style, extension of the previous (now deprecated `FillStyle`).
+ * @since v3.0.0
+ */
+type GFill = FillStyle | Color;
 type Pair<A, B> = [A, B];
 type PCExecCDPair = Pair<Function, Cooldown>;
 type Real<T> = Exclude<T, null | undefined>;
@@ -316,10 +331,41 @@ class OutOfBoundsError extends ErrRoot {
         super("OutOfBoundsError", "Index exceeds length; could not get crucial value.");
     }
 }
+/**
+ * Thrown when `Color` receives a hexadecimal value that is not a critical length.
+ * @example
+ * ```
+ * // absurd example
+ * // total length 10
+ * // which is not a regular hex string
+ * const color = Color.fromHex("#fffffffff");
+ * ```
+ */
+class UnexpectedHexLengthError extends ErrRoot {
+    constructor(hex: string) {
+        super("UnexpectedHexLengthError", `Hex string '${hex}' has unexpected length of '${hex.length}'.`);
+    }
+}
+class __RootBadGridError extends ErrRoot {
+    constructor(name: string) {
+        super("BadGridRangeError", `Value of gridTemplate${name} must be a positive number when display is grid.`);
+    }
+}
+class BadGridColumnRangeError extends __RootBadGridError {
+    constructor() {
+        super("Columns");
+    }
+}
+class BadGridRowsRangeError extends __RootBadGridError {
+    constructor() {
+        super("Rows");
+    }
+}
 
 /**
  * A storage for items.
  * @since v0.0.0
+ * @deprecated Since v3.0.0.
  */
 class Store<TI, TO> {
     store: Map<TI, TO>;
@@ -392,6 +438,7 @@ class Store<TI, TO> {
  * 
  * Useful for array-based classes.
  * @since v1.0.8
+ * @deprecated Since v3.0.0. Replaced with arrays.
  */
 class ItemBox<T> {
     stuff: T[];
@@ -403,6 +450,9 @@ class ItemBox<T> {
     }
     rm(...stuff: T[]) {
         ArrayUtil.rm(this.stuff, ...stuff);
+    }
+    rmx(then: Callback<T>, ...stuff: T[]) {
+        ArrayUtil.rmx(this.stuff, then, ...stuff);
     }
     forEach(cb: Callback<T>) {
         this.stuff.forEach(cb);
@@ -469,14 +519,18 @@ interface EntityOptions {
     upd?: Function;
     /**
      * The display color.
+     * 
+     * Changed to `GFill` in v3.0.0.
      * @since v0.0.0
      */
-    color?: string;
+    color?: GFill;
     /**
      * The outline (stroke) color.
+     * 
+     * Changed to `GFill` in v3.0.0.
      * @since v2.2.18
      */
-    colorsk?: string;
+    colorsk?: GFill;
     /**
      * The movement mode.
      * @since v1.0.4
@@ -868,21 +922,21 @@ interface HealthCompOptions extends CompOptions {
      * Default to consuming the `PhantomHealthCompHurtEvent`.
      * @since v0.0.0
      */
-    onHurt?: PhantomEventHandle;
+    onHurt?: PhantomEventHandle<PhantomHealthCompHurtEvent>;
     /**
      * A handle for the die event.
      * 
      * Default to consuming the `PhantomHealthCompDieEvent`.
      * @since v0.0.0
      */
-    onDie?: PhantomEventHandle;
+    onDie?: PhantomEventHandle<PhantomHealthCompDieEvent>;
     /**
      * A handle for the heal event.
      * 
      * Default to consuming the `PhantomHealthCompHealEvent`.
      * @since v0.0.0
      */
-    onHeal?: PhantomEventHandle;
+    onHeal?: PhantomEventHandle<PhantomHealthCompHealEvent>;
 }
 /**
  * The options for a `InvComp`.
@@ -1478,13 +1532,83 @@ interface Bound<T extends XYAxis = XYAxis> {
 interface BoundX extends Bound<"x"> {}
 interface BoundY extends Bound<"y"> {}
 interface Boundaries {
-    bounds: ItemBox<Bound>;
+    bounds: Bound[];
     bound(boundary: Bound): void;
     unbound(boundary: Bound): void;
 }
-enum Color {
-    invis = "rgba(0, 0, 0, 0)"
-};
+class Color {
+    static invis = "rgba(0, 0, 0, 0)" as const;
+    r: number;
+    g: number;
+    b: number;
+    a: number;
+    constructor();
+    constructor(r: number, g: number, b: number);
+    constructor(r: number, g: number, b: number, a: number);
+    constructor(r?: number, g?: number, b?: number, a?: number) {
+        this.r = r ?? 0;
+        this.g = g ?? 0;
+        this.b = b ?? 0;
+        this.a = a ?? 255;
+    }
+    toHex() {
+        return `${this.r.toString(16)}${this.g.toString(16)}${this.b.toString(16)}${this.a.toString(16)}`;
+    }
+    static from(value: Color | string) {
+        if(objIs(value, Color)) {
+            // then simply return the value
+            return value;
+        } else {
+            // then we can return it from a hex string
+            return Color.fromHex(value);
+        }
+    }
+    static fromHex(hexString: string): Color {
+        if(hexString.length == 9) {
+            // then it starts with a #
+            // ...or not
+            if(!hexString.startsWith("#")) throw new UnexpectedHexLengthError(hexString);
+            return Color.fromHex(hexString.slice(1));
+        } else if(hexString.length == 8) {
+            // long (expected) hex string
+            return new Color(
+                // slice 0-1
+                parseInt(hexString.slice(0, 2), 16),
+                // slice 2-3
+                parseInt(hexString.slice(2, 4), 16),
+                // slice 4-5
+                parseInt(hexString.slice(4, 6), 16),
+                // slice 6-7
+                parseInt(hexString.slice(6, 8), 16)
+            );
+        } else if(hexString.length == 3 || hexString.length == 4) {
+            // create long hex string and re-process
+            // safely process alpha if present
+            return Color.fromHex(`${hexString.charAt(0).repeat(2)}${hexString.charAt(1).repeat(2)}${hexString.charAt(2).repeat(2)}${(hexString.charAt(3) ?? "0").repeat(2)}`);
+        } else if(hexString.length == 6) {
+            // otherwise re-process with alpha hex attached
+            return Color.fromHex(hexString + "FF");
+        } else {
+            throw new UnexpectedHexLengthError(hexString);
+        }
+    }
+    static lerp(a: Color | string, b: Color | string, time: number) {
+        const cl = (channel: keyof Color, c1: Color, c2: Color) => {
+            // C1 + (C2 - C1) * t
+            return (c1[channel] as number) + ((c2[channel] as number) - (c1[channel] as number)) * time;
+        };
+        // convert to colors
+        const c1 = Color.from(a);
+        const c2 = Color.from(b);
+        // run on each channel (r, g, b, a)
+        return new Color(
+            cl("r", c1, c2),
+            cl("g", c1, c2),
+            cl("b", c1, c2),
+            cl("a", c1, c2)
+        );
+    }
+}
 /**
  * The root class of all entities, providing base functionality.
  * @since v0.0.0
@@ -1531,12 +1655,12 @@ class Entity implements Boundaries {
      * The display color.
      * @since v0.0.0
      */
-    color: string;
+    color: GFill;
     /**
      * The outline (stroke) color.
      * @since v2.2.18
      */
-    colorsk: string;
+    colorsk: GFill;
     /**
      * The storage for listeners for events.
      * @since v0.0.0
@@ -1547,7 +1671,7 @@ class Entity implements Boundaries {
     evMng: PhantomEventManager;
     initState: SavedState;
     tags: TagList;
-    child: ItemBox<Entity>;
+    child: Entity[];
     /**
      * Whether legacy collision is enabled.
      * 
@@ -1557,7 +1681,7 @@ class Entity implements Boundaries {
      */
     legCol: boolean;
     render: Function;
-    bounds: ItemBox<Bound<XYAxis>>;
+    bounds: Bound<XYAxis>[];
     ct: Custom;
     constructor();
     constructor(opts: EntityOptions);
@@ -1583,13 +1707,13 @@ class Entity implements Boundaries {
         this.evMng = new PhantomEventManager(this, this.evStore);
         this.tags = new TagList();
         this.initState = new SavedState(this, "The state this object was in, at the time of construction.");
-        this.child = new ItemBox();
+        this.child = [];
         this.legCol = opts?.legCol ?? false;
         if(opts && "expr" in opts) {
             this.expire(opts.expr, opts.scene);
         }
         this.render = opts?.render ?? NoFunc;
-        this.bounds = new ItemBox();
+        this.bounds = [];
     }
     /**
      * Sets the position, based on a `Vector`.
@@ -1884,6 +2008,7 @@ class Entity implements Boundaries {
         if(this.uses(c)) throw new AlreadyUsingError();
         const _opts = (opts ?? {}) as CompOptions;
         this.comps.set(c, new (PhantomCompRecord[c])(this, _opts));
+        return this.comp(c);
     }
     /**
      * Removes a component.
@@ -2008,10 +2133,10 @@ class Entity implements Boundaries {
         this.y += (dy / d) * spd;
     }
     bound(boundary: Bound): void {
-        this.bounds.add(boundary);
+        ArrayUtil.add(this.bounds, boundary);
     }
     unbound(boundary: Bound): void {
-        this.bounds.rm(boundary);
+        ArrayUtil.rm(this.bounds, boundary);
     }
 }
 /**
@@ -2337,7 +2462,7 @@ class WallObject extends Entity {
 class FloorObject extends WallObject {
     constructor(opts: WallObjectOptions) {
         super(opts);
-        this.tags.add(new Tag("floor"));
+        ArrayUtil.add(this.tags, new Tag("floor"));
     }
     /**
      * Returns a new entity, based on options.
@@ -2549,20 +2674,14 @@ class PlayableCharacter extends Character {
 type KeyBinds = Store<KeyCode, Function>;
 type KeyBindsCD = Store<KeyCode, PCExecCDPair>;
 type Binding = [KeyCode, Function] | [KeyCode, Function, number];
-class KeyInputs {
+class KeyBinder {
     kbinds: KeyBinds;
-    keys: Store<string, boolean>;
     bindCD: KeyBindsCD;
-    constructor(binds?: KeyBinds) {
+    constructor(binds: KeyBinds | undefined, keyDown: (e: KeyboardEvent) => void, keyUp: (e: KeyboardEvent) => void) {
         this.kbinds = binds ?? new Store();
-        this.keys = new Store();
         this.bindCD = new Store();
-        window.addEventListener("keydown", (e) => {
-            this.keys.set(e.code, true);
-        });
-        window.addEventListener("keyup", (e) => {
-            this.keys.set(e.code, false);
-        });
+        window.addEventListener("keydown", keyDown);
+        window.addEventListener("keyup", keyUp);
     }
     bind(code: KeyCode, exec: Function): void;
     bind(code: KeyCode, exec: Function, cd: number): void;
@@ -2598,21 +2717,26 @@ class KeyInputs {
     bindCDOf(code: KeyCode): PCExecCDPair | undefined {
         return this.bindCD.get(code);
     }
+    exec(key: KeyCode) {
+        const e = this.kbinds.get(key);
+        const ce = this.bindCD.get(key);
+        if(e) {
+            e();
+        } else if(ce && ce[1].ready) {
+            ce[0]();
+            ce[1].consume();
+        }
+    }
+}
+class KeyInputs extends KeyBinder {
+    keys: Store<string, boolean>;
+    constructor(binds?: KeyBinds) {
+        super(binds, (e) => this.keys.set(e.code, true), (e) => this.keys.set(e.code, false));
+        this.keys = new Store();
+    }
     update() {
         for(const [k, v] of this.keys.items()) {
-            if(v) {
-                const _k = KeyCodeMapReverse[k] as KeyCode;
-                const exec = this.kbinds.get(_k);
-                const cdExec = this.bindCD.get(_k);
-                if(exec) {
-                    exec();
-                } else if(cdExec) {
-                    if(cdExec[1].ready) {
-                        cdExec[0]();
-                        cdExec[1].consume();
-                    }
-                }
-            }
+            if(v) this.exec(KeyCodeMapReverse[k] as KeyCode);
         }
     }
     isDown(key: string) {
@@ -2622,6 +2746,7 @@ class KeyInputs {
         return !this.isDown(key);
     }
 }
+const GlobalInputs = new KeyBinder(undefined, (e) => GlobalInputs.exec(e.code as KeyCode), () => {});
 interface AircraftOptions extends EntityOptions {
     scene: Scene;
     wing: number;
@@ -2700,6 +2825,15 @@ class Aircraft extends Entity {
         this.thrust += thrust;
     }
 }
+interface Positioned {
+    x: number;
+    y: number;
+}
+interface Container {
+    width: number;
+    height: number;
+}
+interface PositionedContainer extends Container, Positioned {}
 /**
  * A 2D vector.
  * 
@@ -2811,6 +2945,10 @@ class Vector {
     trace(strength?: number) {
         return new Joint(this.x, this.y, strength);
     }
+    centerIn(container: Container) {
+        this.x = this.x - (container.width / 2);
+        this.y = this.y - (container.height / 2);
+    }
 }
 /**
  * Used for ragdoll bone joints.
@@ -2914,7 +3052,7 @@ class Skeleton implements Renderable, Boundaries {
     bw: number;
     jr: number;
     scene: Scene;
-    bounds: ItemBox<Bound>;
+    bounds: Bound[];
     constructor(opts: SkeletonOptions) {
         this.bn = opts.bn;
         this.joints = [];
@@ -2927,7 +3065,7 @@ class Skeleton implements Renderable, Boundaries {
         this.bw = opts.bw;
         this.jr = opts.jr;
         this.scene = opts.scene;
-        this.bounds = new ItemBox();
+        this.bounds = []
     }
     setSoft(enabled = true) {
         this.soft = enabled;
@@ -2992,18 +3130,42 @@ class Skeleton implements Renderable, Boundaries {
         return this.joints.map(j => j.x);
     }
     bound(boundary: Bound) {
-        this.bounds.add(boundary);
+        ArrayUtil.add(this.bounds, boundary);
     }
     unbound(boundary: Bound) {
-        this.bounds.rm(boundary);
+        ArrayUtil.rm(this.bounds, boundary);
+    }
+    jointProp<K extends keyof Joint, V extends Joint[K]>(k: K, v: V): void;
+    jointProp<K extends keyof Joint, V extends Joint[K]>(k: K, v: (old: V) => V): void;
+    jointProp<K extends keyof Joint, V extends Joint[K]>(k: K, v: V | ((old: V) => V)) {
+        this.eachJoint(j => (typeof v == "function") ? (v as any)(j[k]) : v);
+    }
+    jointStrength(newStrength: number) {
+        this.jointProp("strength", newStrength);
+    }
+    jointDamp(newDamp: number) {
+        this.jointProp("damp", newDamp);
+    }
+    eachJoint(callback: Callback<Joint>) {
+        this.joints.forEach(callback);
     }
 }
-interface SkeletalEntityOptions extends EntityOptions {
-    sk: Skeleton;
+interface Clean {
+    clean(): void;
 }
-class SkeletalEntity extends Entity {
+interface SkEntCollidingStruct {
+    src: SkEnt[];
+    boss: Entity;
+    scene: Scene;
+}
+interface SkEntOptions extends EntityOptions {
     sk: Skeleton;
-    constructor(opts: SkeletalEntityOptions) {
+    colStruct?: SkEntCollidingStruct;
+}
+class SkEnt extends Entity {
+    sk: Skeleton;
+    colStruct?: SkEntCollidingStruct;
+    constructor(opts: SkEntOptions) {
         super(opts);
         this.sk = opts.sk;
         const x = opts.x ?? 0;
@@ -3014,10 +3176,71 @@ class SkeletalEntity extends Entity {
             j.y += y;
             j.oy += y;
         });
-        this.upd = () => this.#syncBounds();
-        this.#syncBounds();
+        this.upd = () => this.syncBounds();
+        this.syncBounds();
+        this.colStruct = opts.colStruct;
+        this.collide = () => {
+            if(this.colStruct) {
+                const b = this.colStruct.boss;
+                const s = this.colStruct.src;
+                const scene = this.colStruct.scene;
+                const leftEdge = b.x - scene.width / 2 - this.width * 2;
+                for(let i = s.length - 1; i >= 0; i--) {
+                    const x = s[i];
+                    if(x && (!scene.has(x) || x.x + x.width < leftEdge)) {
+                        scene.rm(x);
+                        scene.rmMisc(x.sk);
+                        s.splice(i, 1);
+                    }
+                }
+                for(let i = 0; i < s.length; i++) {
+                    const a = s[i];
+                    if(!a || !scene.has(a)) continue;
+                    for(let j = i + 1; j < s.length; j++) {
+                        const q = s[j];
+                        if(!q || !scene.has(q)) continue;
+                        a.syncBounds();
+                        q.syncBounds();
+                        const moveBox = (box: SkEnt, x: number, y: number) => {
+                            box.sk.joints.forEach(j => {
+                                j.x += x;
+                                j.ox += x;
+                                j.y += y;
+                                j.oy += y;
+                            });
+                            box.syncBounds();
+                        }
+                        const overlapX = Math.min(a.x + a.width, q.x + q.width) - Math.max(a.x, q.x);
+                        const overlapY = Math.min(a.y + a.height, q.y + q.height) - Math.max(a.y, q.y);
+                        if(overlapX <= 0 || overlapY <= 0) continue;
+                        const horizontal = overlapX < overlapY;
+                        const normalX = horizontal ? (q.x + q.width / 2 < a.x + a.width / 2 ? -1 : 1) : 0;
+                        const normalY = horizontal ? 0 : (q.y + q.height / 2 < a.y + a.height / 2 ? -1 : 1);
+                        const overlap = horizontal ? overlapX : overlapY;
+                        moveBox(a, -normalX * overlap / 2, -normalY * overlap / 2);
+                        moveBox(q, normalX * overlap / 2, normalY * overlap / 2);
+
+                        const averageVelocity = (box: SkEnt, axis: "x" | "y") =>
+                            box.sk.joints.reduce((sum, joint) => sum + joint[axis] - joint[axis == "x" ? "ox" : "oy"], 0) / box.sk.joints.length;
+                        const relativeVelocity = (averageVelocity(q, "x") - averageVelocity(a, "x")) * normalX
+                            + (averageVelocity(q, "y") - averageVelocity(a, "y")) * normalY;
+                        if(relativeVelocity < 0) {
+                            const impulse = -(1.1 * relativeVelocity) / 2;
+                            a.sk.joints.forEach(j => {
+                                j.ox += impulse * normalX;
+                                j.oy += impulse * normalY;
+                            });
+                            q.sk.joints.forEach(j => {
+                                j.ox -= impulse * normalX;
+                                j.oy -= impulse * normalY;
+                            });
+                        }
+                    }
+                }
+            }
+        }
     }
-    #syncBounds() {
+    syncBounds() {
         const xs = this.sk.joints.map(j => j.x);
         const ys = this.sk.joints.map(j => j.y);
         const minX = Math.min(...xs);
@@ -3200,6 +3423,9 @@ class Sound {
     play() {
         this.aud.play();
     }
+    stop() {
+        this.aud.pause();
+    }
     /**
      * Fires a one-shot player for this sound.
      * 
@@ -3228,6 +3454,104 @@ class Sound {
     }
     set vol(vol: number) {
         this.aud.volume = vol;
+    }
+    /**
+     * Promises a new `Promise` that is automatically resolved when `aud` is completed.
+     * @returns A `Promise` that resolves on end.
+     */
+    done() {
+        return new Promise((resolve) => {
+            const e = () => {
+                this.aud.removeEventListener("ended", e);
+                resolve(null);
+            }
+            this.aud.addEventListener("ended", e);
+        });
+    }
+    /**
+     * Loops this `Sound` for the specified amount of times.
+     * 
+     * Returns a `SoundLoop` controller.
+     * 
+     * When `count` is a non-finite value (such as `Infinity`), it does not subtract from the
+     * continued looping count. Instead, it continues looping indefinitely.
+     * @param count The amount of times to repeat (may be non-finite, like `Infinity`).
+     * @returns A `SoundLoop` controller.
+     */
+    loop(count: number) {
+        return new SoundLoop(this, count);
+    }
+}
+class SoundLoop {
+    count: number;
+    pre: boolean;
+    tgs: Sound;
+    constructor(tgs: Sound, count: number) {
+        this.count = count;
+        this.pre = false;
+        this.tgs = tgs;
+    }
+    /**
+     * Kills (aborts) the active loop.
+     */
+    kill() {
+        this.pre = true;
+    }
+    loop() {
+        if(this.pre || this.count <= 0) return;
+        if(Number.isFinite(this.count)) {
+            this.count--;
+        }
+        this.tgs.play();
+        this.tgs.done().then(() => this.loop());
+    }
+}
+class SoundQueue extends Array<Sound> {
+    active: boolean;
+    cur?: Sound;
+    constructor() {
+        super();
+        this.active = false;
+        this.cur = undefined;
+    }
+    add(...sounds: Sound[]): void;
+    add(sound: Sound, count: number): void;
+    add(sound: Sound, count?: number | Sound, ...sounds: Sound[]) {
+        if(typeof count == "number") {
+            for(let i = 0; i < count; i++) {
+                super.push(sound);
+            }
+        } else {
+            super.push(sound);
+            if(count) super.push(count);
+            super.push(...sounds);
+        }
+    }
+    async play() {
+        if(this.active) return;
+        this.active = true;
+        while(this.active && this.length > 0) {
+            // Peek at the first sound in the queue
+            this.cur = this[0];
+            this.cur.play();
+            await this.cur.done();
+            // If stopped while playing, break out before removing
+            if(!this.active) break;
+            // Remove the completed sound from the front of the queue
+            const c = this.shift(); 
+            if(c) {
+                ArrayUtil.rm(this, c);
+            }
+        }
+        this.cur = undefined;
+        this.active = false;
+    }
+    stop() {
+        this.active = false;
+        if(this.cur) {
+            this.cur.stop();
+            this.cur = undefined;
+        }
     }
 }
 /**
@@ -3379,6 +3703,41 @@ type FittingMode = "none" | "shrink" | "grow" | "fill";
 type GenericIdentifier = "ent" | "ui" | "rend";
 type DrawMethod = "f" | "s";
 /**
+ * Dictates a temporary value change, cleaned up afterwards to the original value.
+ */
+interface Temporary<T, K extends keyof T> {
+    /**
+     * What key is being assigned to.
+     */
+    key: K;
+    /**
+     * The original value (prior the assignment of the new value).
+     */
+    old: T[K];
+    /**
+     * Takes and assumes a new value for the key-value pair referenced by the key
+     * and returns a reference to this `Temporary` implementation.
+     * 
+     * Either done during construction (such as by `Scene`) or following return;
+     * see specific implementation documentation for details.
+     * @param newValue The new value to be assigned onto the parent.
+     * @returns A reference to this `Temporary`.
+     */
+    take(newValue: T[K]): Temporary<T, K>;
+    /**
+     * Completes an action, passing the parent taking the action in as a parameter
+     * and returning a reference to this `Temporary` implementation.
+     * @param thenRun The function to run, taking the parent that is managing the temporary change.
+     * @returns A reference to this `Temporary`.
+     */
+    then(thenRun: (parent: T) => void): Temporary<T, K>;
+    /**
+     * Completes the temporary exchange and swaps the new value
+     * with the previous, old value.
+     */
+    done(): void;
+}
+/**
  * The root canvas to display content.
  * 
  * Since v2.2.18, methods that end in `""` *fill*,
@@ -3422,7 +3781,7 @@ class Scene {
     static unloadListenerCreated: boolean = false;
     canvas: HTMLCanvasElement;
     ctx: CanvasRenderingContext2D;
-    items: ItemBox<Entity>;
+    items: Entity[];
     evStore: Store<EventType, EventHandle[]>;
     lvlStore: Store<string, Level>;
     mousePos: Vector;
@@ -3430,10 +3789,10 @@ class Scene {
     comps: Store<PhantomSceneCompType, SceneComp>;
     evMng: SceneEventManager;
     fol?: Entity;
-    ui: ItemBox<SceneUI>;
+    ui: SceneUI[];
     fontControl: SceneFont;
-    misc: ItemBox<Renderable>;
-    post: ItemBox<Function>;
+    misc: Renderable[];
+    post: Function[];
     dualRuntime: Runtime;
     scaleX: number;
     scaleY: number;
@@ -3458,7 +3817,7 @@ class Scene {
         const ctx = this.canvas.getContext("2d");
         if(!ctx) throw new NoContextError();
         this.ctx = ctx;
-        this.items = new ItemBox();
+        this.items = [];
         this.evStore = new Store();
         this.lvlStore = new Store();
         this.mousePos = new Vector(0, 0);
@@ -3468,13 +3827,13 @@ class Scene {
         this.runtime = new Runtime();
         this.comps = new Store();
         this.evMng = new SceneEventManager(this, this.evStore);
-        this.ui = new ItemBox();
+        this.ui = [];
         this.fontControl = {
             size: 10,
             family: "sans-serif"
         };
-        this.misc = new ItemBox();
-        this.post = new ItemBox();
+        this.misc = [];
+        this.post = [];
         this.dualRuntime = new Runtime();
         this.scaleX = 1;
         this.scaleY = 1;
@@ -3505,58 +3864,79 @@ class Scene {
         this.canvas.style.height = h;
     }
     add(...items: Entity[]) {
-        this.items.add(...items);
+        ArrayUtil.add(this.items, ...items);
     }
     addIf(predicate: PredicateEntity, ...items: Entity[]) {
-        this.items.add(...items.filter(predicate));
+        ArrayUtil.add(this.items, ...items.filter(predicate));
     }
     addIfNotHas(...items: Entity[]) {
         this.addIf(i => !this.has(i), ...items);
     }
     addUI(...items: SceneUI[]) {
-        this.ui.add(...items);
+        ArrayUtil.add(this.ui, ...items);
     }
     addUIIf(predicate: Predicate<SceneUI>, ...items: SceneUI[]) {
-        this.ui.add(...items.filter(predicate));
+        ArrayUtil.add(this.ui, ...items.filter(predicate));
     }
     addUIIfNotHas(...items: SceneUI[]) {
         this.addUIIf(u => !this.hasUI(u), ...items);
     }
+    isClean(value: any): value is Clean {
+        return "clean" in value && typeof value.clean == "function";
+    }
+    __globalOnRemove<T extends Entity | SceneUI | Renderable>(init: T, then?: Callback<T>, index?: number, src?: T[]) {
+        if(this.isClean(init)) {
+            init.clean();
+        }
+        if(then && index && src) {
+            then(init, index, src);
+        }
+    }
     rm(...items: Entity[]) {
-        this.items.rm(...items);
+        this.rmx(() => {}, ...items);
+    }
+    rmx(removed: Callback<Entity>, ...items: Entity[]) {
+        ArrayUtil.rmx(this.items, (e, i, a) => {
+            this.__globalOnRemove(e, removed, i, a);
+        }, ...items);
     }
     rmUI(...items: SceneUI[]) {
-        this.ui.rm(...items);
+        this.rmUIx(() => {}, ...items);
+    }
+    rmUIx(removed: Callback<SceneUI>, ...items: SceneUI[]) {
+        ArrayUtil.rmx(this.ui, (e, i, a) => {
+            this.__globalOnRemove(e, removed, i, a);
+        }, ...items);
     }
     has(...items: Entity[]): boolean {
-        return this.items.has(...items);
+        return ArrayUtil.has(this.items, ...items);
     }
     hasUI(...items: SceneUI[]): boolean {
-        return this.ui.has(...items);
+        return ArrayUtil.has(this.ui, ...items);
     }
     idxOf(item: Entity): number {
-        return this.items.stuff.indexOf(item);
+        return this.items.indexOf(item);
     }
     idxOfUI(item: SceneUI): number {
-        return this.ui.stuff.indexOf(item);
+        return this.ui.indexOf(item);
     }
     filter(cb: PredicateEntity): Entity[] {
         return this.items.filter(cb);
     }
     deepFilter(cb: PredicateEntity) {
-        this.items.stuff = this.filter(cb);
+        this.items = this.filter(cb);
     }
     filterUI(cb: Predicate<SceneUI>): SceneUI[] {
         return this.ui.filter(cb);
     }
     deepFilterUI(cb: Predicate<SceneUI>) {
-        this.ui.stuff = this.filterUI(cb);
+        this.ui = this.filterUI(cb);
     }
     filterMisc(cb: Predicate<Renderable>) {
         return this.misc.filter(cb);
     }
     deepFilterMisc(cb: Predicate<Renderable>) {
-        this.misc.stuff = this.filterMisc(cb);
+        this.misc = this.filterMisc(cb);
     }
     on<K extends EventType, E extends HTMLElementEventMap[K]>(name: K, handle: (event: E) => void) {
         this.evMng.on(name, handle as EventHandle);
@@ -3608,17 +3988,22 @@ class Scene {
         lvl.items = this.items;
         return lvl;
     }
+    demote(color: GFill): FillStyle {
+        return objIs(color, Color) ? color.toHex() : color;
+    }
     get color(): FillStyle {
         return this.ctx.fillStyle;
     }
-    set color(color: FillStyle) {
-        this.ctx.fillStyle = color;
+    set color(color: GFill) {
+        // reduce color to hex
+        // if it is a Color
+        this.ctx.fillStyle = this.demote(color);
     }
     get colorsk(): FillStyle {
         return this.ctx.strokeStyle;
     }
-    set colorsk(color: FillStyle) {
-        this.ctx.strokeStyle = color;
+    set colorsk(color: GFill) {
+        this.ctx.strokeStyle = this.demote(color);
     }
     get alpha(): number {
         return this.ctx.globalAlpha;
@@ -3636,7 +4021,7 @@ class Scene {
         if(m == "f") f1();
         else f2();
     }
-    __detmc(m: DrawMethod, c1: string, c2: string, f1: Function, f2: Function) {
+    __detmc(m: DrawMethod, c1: GFill, c2: GFill, f1: Function, f2: Function) {
         this.__detm(m, () => {
             this.color = c1;
             f1();
@@ -3645,13 +4030,13 @@ class Scene {
             f2();
         });
     }
-    __detmcr(m: DrawMethod, c: string, f1: Function, f2: Function) {
+    __detmcr(m: DrawMethod, c: GFill, f1: Function, f2: Function) {
         this.__detmc(m, c, c, f1, f2);
     }
-    __detmfs(m: DrawMethod, c: string) {
+    __detmfs(m: DrawMethod, c: GFill) {
         this.__detmcr(m, c, () => this.ctx.fill(), () => this.ctx.stroke());
     }
-    __rect(x: number, y: number, w: number, h: number, c: string, m: DrawMethod) {
+    __rect(x: number, y: number, w: number, h: number, c: GFill, m: DrawMethod) {
         this.__detmcr(m, c, () => this.ctx.fillRect(x, y, w, h), () => this.ctx.strokeRect(x, y, w, h));
     }
     /**
@@ -3664,7 +4049,7 @@ class Scene {
      * @param h The height.
      * @param color The fill color.
      */
-    rect(x: number, y: number, w: number, h: number, color: string) {
+    rect(x: number, y: number, w: number, h: number, color: GFill) {
         this.__rect(x, y, w, h, color, "f");
     }
     /**
@@ -3677,7 +4062,7 @@ class Scene {
      * @param h The height.
      */
     rectc(x: number, y: number, w: number, h: number) {
-        this.rect(x, y, w, h, this.color as string);
+        this.rect(x, y, w, h, this.color);
     }
     /**
      * Strokes a rect at `(x, y)` with dimensions `w`x`h`.
@@ -3689,7 +4074,7 @@ class Scene {
      * @param h The height.
      * @param color The stroke color.
      */
-    rects(x: number, y: number, w: number, h: number, color: string) {
+    rects(x: number, y: number, w: number, h: number, color: GFill) {
         this.__rect(x, y, w, h, color, "s");
     }
     /**
@@ -3703,26 +4088,26 @@ class Scene {
      * @param color The stroke color.
      */
     rectsc(x: number, y: number, w: number, h: number) {
-        this.rects(x, y, w, h, this.color as string);
+        this.rects(x, y, w, h, this.color);
     }
-    bg(color: string) {
+    bg(color: GFill) {
         this.rect(0, 0, this.width, this.height, color);
     }
-    ray(origin: Vector, angle: number, dist: number, color: string) {
+    ray(origin: Vector, angle: number, dist: number, color: GFill) {
         this.colorsk = color;
         this.ctx.beginPath();
         this.ctx.moveTo(origin.x, origin.y);
         this.ctx.lineTo(origin.x + Math.cos(angle) * dist, origin.y + Math.sin(angle) * dist);
         this.ctx.stroke();
     }
-    ln(points: Vector[], color: string) {
+    ln(points: Vector[], color: GFill) {
         this.color = color;
         this.ctx.beginPath();
         this.ctx.moveTo(points[0].x, points[0].y);
         for(let i = 1; i < points.length; i++) this.ctx.lineTo(points[i].x, points[i].y);
         this.ctx.stroke();
     }
-    lnsk(points: Vector[], color: string) {
+    lnsk(points: Vector[], color: GFill) {
         this.colorsk = color;
         this.ctx.beginPath();
         this.ctx.moveTo(points[0].x, points[0].y);
@@ -3739,12 +4124,12 @@ class Scene {
         this.testCols();
     }
     testCols() {
-        const len = this.items.stuff.length;
+        const len = this.items.length;
         for(let i = 0; i < len; i++) {
             for(let j = 0; j < len; j++) {
                 if(i == j) continue;
-                const a = this.items.stuff[i];
-                const b = this.items.stuff[j];
+                const a = this.items[i];
+                const b = this.items[j];
                 // if both a and b are using legacy
                 // collision detection, then run legacy
                 // instead of modern
@@ -3781,7 +4166,7 @@ class Scene {
         // render misc items
         this.misc.forEach(m => m.render());
     }
-    rectRotd(ex: number, ey: number, w: number, h: number, rot: number, color: string, colorsk: string, offX: number = 0, offY: number = 0) {
+    rectRotd(ex: number, ey: number, w: number, h: number, rot: number, color: GFill, colorsk: GFill, offX: number = 0, offY: number = 0) {
         let ox = 0;
         let oy = 0;
         if(this.fol) {
@@ -4028,7 +4413,7 @@ class Scene {
     }
     #tagTest(ent: Entity, tagName: Tag | string): boolean {
         if(objIs(tagName, Tag)) {
-            return ent.tags.has(tagName);
+            return ArrayUtil.has(ent.tags, tagName);
         } else {
             return ent.tags.some((t) => t.test(tagName));
         }
@@ -4084,7 +4469,7 @@ class Scene {
     unfollow() {
         this.fol = undefined;
     }
-    __text(text: string, x: number, y: number, color: string, m: DrawMethod, maxWidth?: number) {
+    __text(text: string, x: number, y: number, color: GFill, m: DrawMethod, maxWidth?: number) {
         this.__detmcr(m, color, () => this.ctx.fillText(text, x, y, maxWidth), () => this.ctx.strokeText(text, x, y, maxWidth));
     }
     /**
@@ -4096,7 +4481,7 @@ class Scene {
      * @param color The fill color.
      * @param maxWidth The maximum width.
      */
-    text(text: string, x: number, y: number, color: string, maxWidth?: number) {
+    text(text: string, x: number, y: number, color: GFill, maxWidth?: number) {
         this.__text(text, x, y, color, "f", maxWidth);
     }
     /**
@@ -4108,7 +4493,7 @@ class Scene {
      * @param maxWidth The maximum width.
      */
     textc(text: string, x: number, y: number, maxWidth?: number) {
-        this.text(text, x, y, this.color as string, maxWidth);
+        this.text(text, x, y, this.color, maxWidth);
     }
     /**
      * Strokes text at `(x, y)` with a max width of `maxWidth` (if specified).
@@ -4119,7 +4504,7 @@ class Scene {
      * @param color The stroke color.
      * @param maxWidth The maximum width.
      */
-    texts(text: string, x: number, y: number, color: string, maxWidth?: number) {
+    texts(text: string, x: number, y: number, color: GFill, maxWidth?: number) {
         this.__text(text, x, y, color, "s", maxWidth);
     }
     /**
@@ -4131,7 +4516,7 @@ class Scene {
      * @param maxWidth The maximum width.
      */
     textsc(text: string, x: number, y: number, maxWidth?: number) {
-        this.texts(text, x, y, this.color as string, maxWidth);
+        this.texts(text, x, y, this.color, maxWidth);
     }
     get align(): CanvasTextAlign {
         return this.ctx.textAlign;
@@ -4222,7 +4607,7 @@ class Scene {
     mouseInRect(rectPos: Vector, rectW: number, rectH: number): boolean {
         return Vector.inRect(this.mousePos, rectPos, rectW, rectH);
     }
-    frustum(x: number, y: number, r0: number, r1: number, h: number, fillColor: string, lineWidth?: number) {
+    frustum(x: number, y: number, r0: number, r1: number, h: number, fillColor: GFill, lineWidth?: number) {
         const topY = y - h;
         this.ctx.beginPath();
         // 1. Draw Bottom Base (flat line in side view)
@@ -4242,7 +4627,7 @@ class Scene {
         this.color = fillColor;
         this.ctx.fill();
     }
-    frustums(x: number, y: number, r0: number, r1: number, h: number, strokeColor: string, lineWidth?: number) {
+    frustums(x: number, y: number, r0: number, r1: number, h: number, strokeColor: GFill, lineWidth?: number) {
         const topY = y - h;
         this.ctx.beginPath();
         // 1. Draw Bottom Base (flat line in side view)
@@ -4263,7 +4648,7 @@ class Scene {
         this.ctx.lineWidth = lineWidth ?? 2;
         this.ctx.stroke();
     }
-    __tri(p0: Vector, p1: Vector, p2: Vector, color: string, m: DrawMethod) {
+    __tri(p0: Vector, p1: Vector, p2: Vector, color: GFill, m: DrawMethod) {
         this.ctx.beginPath();
         this.ctx.moveTo(p0.x, p0.y);
         this.ctx.lineTo(p1.x, p1.y);
@@ -4280,7 +4665,7 @@ class Scene {
      * @param p2 The top-coord.
      * @param color The fill color.
      */
-    tri(p0: Vector, p1: Vector, p2: Vector, color: string) {
+    tri(p0: Vector, p1: Vector, p2: Vector, color: GFill) {
         this.__tri(p0, p1, p2, color, "f");
     }
     /**
@@ -4292,7 +4677,7 @@ class Scene {
      * @param p2 The top-coord.
      */
     tric(p0: Vector, p1: Vector, p2: Vector) {
-        this.tri(p0, p1, p2, this.color as string);
+        this.tri(p0, p1, p2, this.color);
     }
     /**
      * Strokes a triangle with left-point `p0`, right-point `p1` and top-point `p2`.
@@ -4303,7 +4688,7 @@ class Scene {
      * @param p2 The top-coord.
      * @param color The stroke color.
      */
-    tris(p0: Vector, p1: Vector, p2: Vector, color: string) {
+    tris(p0: Vector, p1: Vector, p2: Vector, color: GFill) {
         this.__tri(p0, p1, p2, color, "s");
     }
     /**
@@ -4315,9 +4700,9 @@ class Scene {
      * @param p2 The top-coord.
      */
     trisc(p0: Vector, p1: Vector, p2: Vector) {
-        this.tris(p0, p1, p2, this.color as string);
+        this.tris(p0, p1, p2, this.color);
     }
-    __cone(p0: Vector, p1: Vector, rad: Vector, color: string, m: DrawMethod) {
+    __cone(p0: Vector, p1: Vector, rad: Vector, color: GFill, m: DrawMethod) {
         this.ctx.beginPath();
         this.ctx.moveTo(p0.x, p0.y);
         this.ctx.lineTo(p1.x, p1.y);
@@ -4335,7 +4720,7 @@ class Scene {
      * @param rad The radius.
      * @param color The fill color.
      */
-    cone(p0: Vector, p1: Vector, rad: Vector, color: string) {
+    cone(p0: Vector, p1: Vector, rad: Vector, color: GFill) {
         this.__cone(p0, p1, rad, color, "f");
     }
     /**
@@ -4347,7 +4732,7 @@ class Scene {
      * @param rad The radius.
      */
     conec(p0: Vector, p1: Vector, rad: Vector) {
-        this.cone(p0, p1, rad, this.color as string);
+        this.cone(p0, p1, rad, this.color);
     }
     /**
      * Strokes a cone from `p0` to `p1` with a radius of `rad`.
@@ -4358,7 +4743,7 @@ class Scene {
      * @param rad The radius.
      * @param color The stroke color.
      */
-    cones(p0: Vector, p1: Vector, rad: Vector, color: string) {
+    cones(p0: Vector, p1: Vector, rad: Vector, color: GFill) {
         this.__cone(p0, p1, rad, color, "s");
     }
     /**
@@ -4370,30 +4755,35 @@ class Scene {
      * @param rad The radius.
      */
     conesc(p0: Vector, p1: Vector, rad: Vector) {
-        this.cones(p0, p1, rad, this.color as string);
+        this.cones(p0, p1, rad, this.color);
     }
     addMisc(...items: Renderable[]) {
-        this.misc.add(...items);
+        ArrayUtil.add(this.misc, ...items);
     }
     rmMisc(...items: Renderable[]) {
-        this.misc.rm(...items);
+        this.rmMiscx(() => {}, ...items);
+    }
+    rmMiscx(removed: Callback<Renderable>, ...items: Renderable[]) {
+        ArrayUtil.rmx(this.misc, (e, i, a) => {
+            this.__globalOnRemove(e, removed, i, a);
+        }, ...items);
     }
     hasMisc(...items: Renderable[]) {
-        return this.misc.has(...items);
+        return ArrayUtil.has(this.misc, ...items);
     }
     postAdd(fn: Function) {
-        this.post.add(fn);
+        ArrayUtil.add(this.post, fn);
     }
     postRm(fn: Function) {
-        this.post.rm(fn);
+        ArrayUtil.rm(this.post, fn);
     }
     postHas(fn: Function) {
-        return this.post.has(fn);
+        return ArrayUtil.has(this.post, fn);
     }
     __sortByLayer() {
-        this.items.stuff.sort((a, b) => a.z - b.z);
+        this.items.sort((a, b) => a.z - b.z);
     }
-    *loopLvls(): Generator<Level, void, unknown> {
+    *loopLvls() {
         for(const lvl of this.lvlStore.items()) {
             yield lvl[1];
         }
@@ -4448,7 +4838,7 @@ class Scene {
         this.scaleX = sx;
         this.scaleY = sy;
     }
-    __oval(x: number, y: number, rx: number, ry: number, color: string, m: DrawMethod) {
+    __oval(x: number, y: number, rx: number, ry: number, color: GFill, m: DrawMethod) {
         this.ctx.beginPath();
         this.ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI);
         this.__detmfs(m, color);
@@ -4463,7 +4853,7 @@ class Scene {
      * @param ry The y radius.
      * @param color The fill color.
      */
-    oval(x: number, y: number, rx: number, ry: number, color: string) {
+    oval(x: number, y: number, rx: number, ry: number, color: GFill) {
         this.__oval(x, y, rx, ry, color, "f");
     }
     /**
@@ -4476,7 +4866,7 @@ class Scene {
      * @param ry The y radius.
      */
     ovalc(x: number, y: number, rx: number, ry: number) {
-        this.oval(x, y, rx, ry, this.color as string);
+        this.oval(x, y, rx, ry, this.color);
     }
     /**
      * Strokes an oval at `(x, y)` with a x radius of `rx` and y radius of `ry`.
@@ -4488,7 +4878,7 @@ class Scene {
      * @param ry The y radius.
      * @param color The stroke color.
      */
-    ovals(x: number, y: number, rx: number, ry: number, color: string) {
+    ovals(x: number, y: number, rx: number, ry: number, color: GFill) {
         this.__oval(x, y, rx, ry, color, "s");
     }
     /**
@@ -4502,7 +4892,7 @@ class Scene {
      * @param color The stroke color.
      */
     ovalsc(x: number, y: number, rx: number, ry: number) {
-        this.ovals(x, y, rx, ry, this.color as string);
+        this.ovals(x, y, rx, ry, this.color);
     }
     /**
      * Fills a circle at `(x, y)` with a radius of `r`.
@@ -4513,7 +4903,7 @@ class Scene {
      * @param r The radius.
      * @param color The fill color.
      */
-    circ(x: number, y: number, r: number, color: string) {
+    circ(x: number, y: number, r: number, color: GFill) {
         this.oval(x, y, r, r, color);
     }
     /**
@@ -4526,7 +4916,7 @@ class Scene {
      * @param color The fill color.
      */
     circc(x: number, y: number, r: number) {
-        this.circ(x, y, r, this.color as string);
+        this.circ(x, y, r, this.color);
     }
     /**
      * Strokes a circle at `(x, y)` with a radius of `r`.
@@ -4537,7 +4927,7 @@ class Scene {
      * @param r The radius.
      * @param color The stroke color.
      */
-    circs(x: number, y: number, r: number, color: string) {
+    circs(x: number, y: number, r: number, color: GFill) {
         this.ovals(x, y, r, r, color);
     }
     /**
@@ -4550,7 +4940,7 @@ class Scene {
      * @param color The stroke color.
      */
     circsc(x: number, y: number, r: number) {
-        this.circs(x, y, r, this.color as string);
+        this.circs(x, y, r, this.color);
     }
     rgrad(x: number, y: number, r: number, ...stops: (string | [number, string])[]) {
         const g = this.ctx.createRadialGradient(x, y, r, x, y, r);
@@ -4560,6 +4950,51 @@ class Scene {
     col(e: Entity) {
         return this.items.some(x => x != e && isCol(e, x));
     }
+    /**
+     * Creates and returns an implementation of the `Temporary` interface.
+     * 
+     * Does **not** assign a value.
+     * @param key The key to assign to.
+     * @returns A `Temporary` implementation.
+     */
+    temp<T extends keyof Scene>(key: T): Temporary<Scene, T>;
+    /**
+     * Creates and returns an implementation of the `Temporary` interface.
+     * 
+     * Applies a `take` call upon construction.
+     * @param key The key to assign to.
+     * @param newValue The new value to be assigned.
+     * @returns A `Temporary` implementation.
+     */
+    temp<T extends keyof Scene>(key: T, newValue: Scene[T]): Temporary<Scene, T>;
+    temp<T extends keyof Scene>(key: T, newValue?: Scene[T]) {
+        // have to trick TS here
+        // due to this error:
+        // Type 'Scene[T]' is not assignable to type 'this[T]'.
+        // Type 'Scene' is not assignable to type 'this'.
+        // 'Scene' is assignable to the constraint of type 'this', but 'this' could be instantiated with a different subtype of constraint 'Scene'.
+        const self = this as Scene;
+        // have to declare instead of direct return
+        // since some methods have return-self
+        const tmp: Temporary<Scene, T> = {
+            key,
+            old: self[key],
+            take: (v) => {
+                self[key] = v;
+                return tmp;
+            },
+            then: (run) => {
+                run(self);
+                return tmp;
+            },
+            done: () => {
+                self[key] = tmp.old;
+            }
+        };
+        // apply `take` when `newValue` exists
+        if(newValue) tmp.take(newValue);
+        return tmp;
+    }
 }
 /**
  * A collection of items.
@@ -4568,21 +5003,21 @@ class Scene {
  * @since v0.0.0
  */
 class Level {
-    items: ItemBox<Entity>;
+    items: Entity[];
     constructor() {
-        this.items = new ItemBox();
+        this.items = [];
     }
     add(...items: Entity[]) {
-        this.items.add(...items);
+        ArrayUtil.add(this.items, ...items);
     }
     rm(...items: Entity[]) {
-        this.items.rm(...items);
+        ArrayUtil.rm(this.items, ...items);
     }
     has(...items: Entity[]): boolean {
-        return this.items.has(...items);
+        return ArrayUtil.has(this.items, ...items);
     }
     idxOf(item: Entity): number {
-        return this.items.stuff.indexOf(item);
+        return this.items.indexOf(item);
     }
     filter(cb: Callback<unknown>): Entity[] {
         return this.items.filter(cb);
@@ -4699,7 +5134,7 @@ class RaycastBase {
     }
     cast(onHit: (i: Entity, hit: number, dir: Vector) => void) {
         const dir = this.dir();
-        for(const i of this.scene.items.stuff) {
+        for(const i of this.scene.items) {
             const hit = rayInterRect(this.origin, dir, i, this.scene);
             if(hit && !this.ign.some(c => objIs(i, c))) {
                 onHit(i, hit, dir);
@@ -4752,9 +5187,9 @@ class DebugRay extends Raycast implements Renderable {
         super(opts);
         this.color = opts.color;
         this.life = opts.life ?? Infinity;
-        this.scene.misc.add(this);
+        ArrayUtil.add(this.scene.misc, this);
         if(Number.isFinite(this.life)) {
-            setTimeout(() => this.scene.misc.rm(this), this.life);
+            setTimeout(() => ArrayUtil.rm(this.scene.misc, (this)), this.life);
         }
     }
     update() {}
@@ -4894,8 +5329,11 @@ class StorageRoot {
     constructor(obj: Storage) {
         this.storage = obj;
     }
-    get(k: string): string | null {
-        return this.storage.getItem(k);
+    get(k: string): string | null;
+    get(k: string, def: string): string | null;
+    get(k: string, def?: string) {
+        const r = this.storage.getItem(k);
+        return def ? (r ?? def) : r;
     }
     set(k: string, v: any) {
         this.storage.setItem(k, Util.strOf(v));
@@ -4922,6 +5360,14 @@ class StorageRoot {
     }
     clear() {
         this.storage.clear();
+    }
+    /**
+     * Creates a key-value pair, when there is no key-value pair there.
+     * @param key The key to set.
+     * @param value The value to use.
+     */
+    add(key: string, value: any) {
+        if(!this.has(key)) this.set(key, value);
     }
 }
 const Local = new StorageRoot(localStorage);
@@ -5557,7 +6003,14 @@ class Tag {
         }
     }
 }
-class TagList extends ItemBox<Tag> {}
+class TagList extends Array<Tag> {
+    has(tag: string | Tag) {
+        return this.some(x => x.test(tag as Tag));
+    }
+    add(tag: Tag) {
+        this.push(tag);
+    }
+}
 class SavedState {
     atts: { any?: any };
     timestamp: string;
@@ -5645,6 +6098,73 @@ interface SceneUIOptions {
     rend?: Function;
     upd?: Function;
     alpha?: number;
+    style?: Partial<SceneUICSS>;
+}
+type UICSSDisplay = "block" | "flex" | "grid";
+type UICSSGap = number;
+type UICSSFlexDirection = "row" | "column";
+type UICSSTemplateRows = "auto" | number;
+type UICSSTemplateColumns = number;
+type UICSSJustifyContent = "normal" | "start" | "end" | "center" | "space-evenly";
+type UICSSAlignItems = "normal" | "start" | "end" | "center";
+interface SceneUICSS {
+    /**
+     * The way to render the UI.
+     * 
+     * When the value is `block`, it will
+     * render like normal.
+     * 
+     * When the value is `flex`, it will
+     * render like a flexbox.
+     * 
+     * When the value is `grid`, it will
+     * render like a grid.
+     */
+    display: UICSSDisplay;
+    /**
+     * The gap between elements when
+     * the display is `flex`.
+     */
+    gap: UICSSGap;
+    /**
+     * The direction to flex in
+     * when the display is `flex`.
+     */
+    flexDirection: UICSSFlexDirection;
+    /**
+     * SImplified version of `grid-template-rows`.
+     * 
+     * The number of explicit rows. Children beyond them continue into
+     * additional rows.
+     * 
+     * A value of `auto` means it will not force
+     * children to fit into a set amount of rows.
+     */
+    gridTemplateRows: UICSSTemplateRows;
+    /**
+     * SImplified version of `grid-template-columns`.
+     * 
+     * The amount of columsn to fit children into.
+     */
+    gridTemplateColumns: UICSSTemplateColumns;
+    /**
+     * How content should be justified.
+     * 
+     * This is the x-alignment for a flexbox.
+     * 
+     * Current support is limited to `normal`, `start`,
+     * `end`, `center` and `space-evenly`.
+     */
+    justifyContent: UICSSJustifyContent;
+    /**
+     * How content should be aligned.
+     * 
+     * This is the y-alignment for a flexbox.
+     * 
+     * Current support is limited to `normal`, `start`,
+     * `end` and `center`.
+     */
+    alignItems: UICSSAlignItems;
 }
 /**
  * The core class for UI elements.
@@ -5670,6 +6190,12 @@ class SceneUI {
      * @since v1.1.0
      */
     child: ChildUI;
+    /**
+     * The active CSS-mimick rendering hints.
+     * 
+     * Includes properties such as `display` and `gap`.
+     */
+    style: SceneUICSS;
     constructor(opts: SceneUIOptions) {
         this.scene = opts.scene;
         this.x = opts.x ?? 0;
@@ -5684,10 +6210,142 @@ class SceneUI {
         this.child = new ChildUI();
         this.alpha = opts.alpha ?? 1;
         this.rendRect = true;
+        this.style = {
+            display: "block",
+            gap: 0,
+            flexDirection: "row",
+            gridTemplateRows: "auto",
+            gridTemplateColumns: 1,
+            justifyContent: "normal",
+            alignItems: "normal",
+            ...opts.style
+        };
+    }
+    /**
+     * Assume and apply the rendering hints for a flexbox
+     * when the display is that of `flex`.
+     * @param vec The vector to apply to.
+     * @param child The active index.
+     */
+    __assumeFlexHints(vec: Vector, child: number) {
+        if(this.style.display == "flex" && child > 0) {
+            const siblings = this.child;
+            if(this.style.flexDirection == "row") {
+                vec.x = this.x + siblings[0].x;
+                for(let i = 0; i < child; i++) {
+                    vec.x += siblings[i].width + this.style.gap;
+                }
+            } else {
+                vec.y = this.y + siblings[0].y;
+                for(let i = 0; i < child; i++) {
+                    vec.y += siblings[i].height + this.style.gap;
+                }
+            }
+        }
+    }
+    /**
+     * Assume and apply the rendering hints for a flexbox
+     * when the display is that of `flex`.
+     * @param vec The vector to apply to.
+     * @param i The active index.
+     */
+    __assumeGridHints(vec: Vector, i: number) {
+        if(this.style.display == "grid") {
+            const columns = Math.floor(this.style.gridTemplateColumns);
+            if(!Number.isFinite(columns) || columns < 1) {
+                throw new BadGridColumnRangeError();
+            }
+            const row = Math.floor(i / columns);
+            if(this.style.gridTemplateRows != "auto") {
+                const rows = Math.floor(this.style.gridTemplateRows);
+                if(!Number.isFinite(rows) || rows < 1) {
+                    throw new BadGridRowsRangeError();
+                }
+            }
+            const col = i % columns;
+            const children = this.child;
+            let xOffset = 0;
+            for(let column = 0; column < col; column++) {
+                let columnWidth = 0;
+                for(let childIndex = column; childIndex < children.length; childIndex += columns) {
+                    columnWidth = Math.max(columnWidth, children[childIndex].width);
+                }
+                xOffset += columnWidth + this.style.gap;
+            }
+            let yOffset = 0;
+            for(let gridRow = 0; gridRow < row; gridRow++) {
+                let rowHeight = 0;
+                const rowStart = gridRow * columns;
+                const rowEnd = Math.min(rowStart + columns, children.length);
+                for(let childIndex = rowStart; childIndex < rowEnd; childIndex++) {
+                    rowHeight = Math.max(rowHeight, children[childIndex].height);
+                }
+                yOffset += rowHeight + this.style.gap;
+            }
+            vec.x += xOffset;
+            vec.y += yOffset;
+        }
+    }
+    /**
+     * Assumes and applies a justification rendering hint.
+     * 
+     * Overrides previous flexbox alignment justification
+     * when the value is not `normal` or `start`.
+     * @param vec The vector.
+     * @param i The active index.
+     */
+    __assumeJustifyHints(vec: Vector, i: number) {
+        // since start is the same as the standard flex
+        // then do nothing for start
+        if(this.style.display == "flex" && this.style.justifyContent != "normal" && this.style.justifyContent != "start") {
+            if(this.style.justifyContent == "center") {
+                // apply centering with gap respect
+                // this width / expected x
+                // is the gap-respected centered x
+                vec.x = this.width / (this.style.gap * (i + 1));
+            } else if(this.style.justifyContent == "space-evenly") {
+                // otherwise this width / index
+                // is the even-spaced x
+                vec.x = this.width / (i + 1);
+            } else {
+                // otherwise, end can be figured out by
+                // this.width - vec.x
+                // since this is following flex styling
+                vec.x = this.width - vec.x;
+            }
+        }
+    }
+    /**
+     * Assumes and applies an alignment rendering hint.
+     * 
+     * Overrides previous flexbox alignment when the value is not `normal` or `start`.
+     * @param vec The vector.
+     * @param i The current index.
+     */
+    __assumeAlignHints(vec: Vector, i: number) {
+        if(this.style.display == "flex" && this.style.alignItems != "normal" && this.style.alignItems != "start") {
+            if(this.style.alignItems == "center") {
+                // same idea as justify
+                // just height instead
+                vec.y = this.height / (this.style.gap * (i + 1));
+            } else {
+                // again, same idea as justify
+                vec.y = this.height - vec.y;
+            }
+        }
     }
     render() {
         this.rend();
-        this.child.forEach((c) => {
+        this.child.forEach((c, i) => {
+            // rendering hints: display = block
+            // (do nothing different)
+            // rendering hints: display = flex
+            // update position with gap
+            // rendering hints: flexDirection => row
+            // apply on x
+            // rendering hints: flexDirection => column
+            // apply on y
+
             // to avoid overwriting original pos
             // in the case of detachment at later stage
             // store the original position
@@ -5698,6 +6356,20 @@ class SceneUI {
             // to this position
             c.x = this.x + cx;
             c.y = this.y + cy;
+            const v = new Vector(c.x, c.y);
+            // assume flex
+            this.__assumeFlexHints(v, i);
+            // assume grid (safe to use v)
+            // (again since if flex failed)
+            // (then v never changed)
+            this.__assumeGridHints(v, i);
+            // assume justify
+            this.__assumeJustifyHints(v, i);
+            // assume align
+            this.__assumeAlignHints(v, i);
+            // apply post-assumption for hints
+            c.x = v.x;
+            c.y = v.y;
             c.render();
             // restore original position
             c.x = cx;
@@ -5711,22 +6383,22 @@ class SceneUI {
         });
     }
     addChild(child: SceneUI) {
-        this.child.add(child);
+        ArrayUtil.add(this.child, child);
     }
     addChilds(...childs: SceneUI[]) {
-        this.child.add(...childs);
+        ArrayUtil.add(this.child, ...childs);
     }
     rmChild(child: SceneUI) {
-        this.child.rm(child);
+        ArrayUtil.rm(this.child, child);
     }
     rmChilds(...childs: SceneUI[]) {
-        this.child.rm(...childs);
+        ArrayUtil.rm(this.child, ...childs);
     }
     hasChild(child: SceneUI): boolean {
-        return this.child.has(child);
+        return ArrayUtil.has(this.child, child);
     }
     hasChilds(...childs: SceneUI[]): boolean {
-        return this.child.has(...childs);
+        return ArrayUtil.has(this.child, ...childs);
     }
     pos() {
         return new Vector(this.x, this.y);
@@ -5760,8 +6432,22 @@ class SceneUI {
     lerpHeight(scene: Scene, to: number, mode?: LerpDeviceLerpMode, rate?: number) {
         return new SceneUIHeightLerpDevice(scene, this, to, mode, rate);
     }
+    /**
+     * Applies a simulated `HTMLBreakStatement`.
+     * 
+     * It shifts each element at and after the index by the specified size on the y-axis.
+     * @param index The index to start at.
+     * @param size The size of the break.
+     */
+    br(index: number, size: number) {
+        for(let i = index; i < this.child.length; i++) {
+            // shift everything down
+            // (simulate break statement)
+            this.child[i].y += size;
+        }
+    }
 }
-class ChildUI extends ItemBox<SceneUI> {}
+class ChildUI extends Array<SceneUI> {}
 interface ButtonUIMouseInteractionStyling {
     /**
      * Applied when there is no interactions from the mouse.
@@ -5875,6 +6561,19 @@ class TextUI extends SceneUI {
         this.scene.text(this.tx, this.x, this.y, this.color, this.mw);
         this.scene.font = f;
         super.render();
+    }
+}
+interface TextfulButtonUIOptions extends ButtonUIOptions, TextUIOptions {}
+class TextfulButtonUI extends ButtonUI {
+    tx: TextUI;
+    constructor(opt: TextfulButtonUIOptions) {
+        super(opt);
+        // create textui as property
+        // so you can access it
+        // even after it becomes a child
+        // (no orphans)
+        this.tx = new TextUI(opt);
+        this.addChild(this.tx);
     }
 }
 interface KeyedTextUIOptions<T> extends TextUIOptions {
@@ -6052,6 +6751,23 @@ class UpgradeMenuUI<C extends CostMap> extends SceneUI {
         this.kopt = opt.kopt;
         this.topt = opt.topt;
         this.mult = opt.mult;
+    }
+}
+/**
+ * Collection for `SceneUI` to manage showing and hiding UI collections.
+ */
+class ScreenUI extends Array<SceneUI> {
+    scene: Scene;
+    constructor(scene: Scene, ...ui: SceneUI[]) {
+        super();
+        this.scene = scene;
+        this.push(...ui);
+    }
+    show() {
+        this.scene.addUI(...this);
+    }
+    hide() {
+        this.scene.rmUI(...this);
     }
 }
 
@@ -6352,6 +7068,13 @@ interface Terrain1DOptions {
      */
     fy: number;
 }
+interface Terrain1DGeneratorOptions extends Terrain1DOptions {
+    y?: (height: number) => number;
+    width: number;
+    color: GFill;
+    scene: Scene;
+    boss: Entity;
+}
 class Perlin {
     perm: Uint8Array;
     constructor() {
@@ -6403,6 +7126,9 @@ class Perlin {
     static terrain1D(opt: Terrain1DOptions) {
         return new PerlinTerrain1D(opt);
     }
+    static terGen1D(opt: Terrain1DGeneratorOptions) {
+        return new PerlinTerrain1DGenerator(opt);
+    }
 }
 class PerlinTerrain1D {
     perlin: Perlin;
@@ -6447,6 +7173,57 @@ class PerlinTerrain1D {
     next(x: number) {
         const n = this.perlin.noise(x * this.frq, this.fy);
         return this.bh + (((n + 1) / 2) * this.amp);
+    }
+}
+class PerlinTerrain1DGenerator extends PerlinTerrain1D {
+    scene: Scene;
+    y: (h: number) => number;
+    width: number;
+    color: GFill;
+    gen: FloorObject[];
+    stillGen: boolean;
+    boss: Entity;
+    nx: number;
+    constructor(opt: Terrain1DGeneratorOptions) {
+        super(opt);
+        this.scene = opt.scene;
+        this.y = opt.y ?? ((h) => this.scene.height - h);
+        this.width = opt.width;
+        this.color = opt.color;
+        this.gen = [];
+        this.stillGen = true;
+        this.boss = opt.boss;
+        this.nx = -this.scene.width / 2;
+    }
+    on() {
+        this.stillGen = true;
+    }
+    off() {
+        this.stillGen = false;
+    }
+    add(x: number, atStart = false) {
+        if(!this.stillGen) return;
+        const h = this.next(x);
+        const f = new FloorObject({ x, y: this.y(h), width: this.width, height: h, color: this.color });
+        if(atStart) this.gen.unshift(f);
+        else this.gen.push(f);
+        this.scene.add(f);
+    }
+    update() {
+        if(!this.stillGen) return;
+        const le = this.boss.x - this.scene.width / 2;
+        const re = this.boss.x + this.scene.width / 2;
+        while(this.nx <= re) {
+            this.add(this.nx);
+            this.nx += this.width;
+        }
+        while(this.gen.length > 0 && this.gen[0].x > le) {
+            this.add(this.gen[0].x - this.width, true);
+        }
+        while(this.gen.length > 0 && this.gen[0].x + this.gen[0].width < le - this.width) {
+            const oldFloor = this.gen.shift();
+            if(oldFloor) this.scene.rm(oldFloor);
+        }
     }
 }
 
@@ -6711,7 +7488,10 @@ function easeSmoothStep(t: number) {
 function aspectRatio() {
     return window.innerWidth / window.innerHeight;
 }
-function mulberry32(a: number) {
+function mulberry32(): () => number;
+function mulberry32(seed: number): () => number;
+function mulberry32(seed?: number) {
+    let a = seed ?? mulberrySeed();
     return function() {
       let t = a += 0x6D2B79F5;
       t = Math.imul(t ^ (t >>> 15), t | 1);
@@ -6724,6 +7504,43 @@ function clamp(val: number, min: number, max: number) {
 }
 function clone<T>(object: T) {
     return Object.assign({}, object) as T;
+}
+/**
+ * Center a positioned container-in-container (CIC).
+ * 
+ * Adjusts the position of `innerContainer` to `outerContainer` to be centered.
+ * @param innerContainer The innermost container.
+ * @param outerContainer The outermost container.
+ */
+function centerCIC(innerContainer: PositionedContainer, outerContainer: PositionedContainer) {
+    innerContainer.x = (outerContainer.width - innerContainer.width) / 2;
+    innerContainer.y = (outerContainer.height - outerContainer.height) / 2;
+}
+/**
+ * A simple factory for `Temporary` implementations.
+ * @param parent The parent object.
+ * @param key The key to assign to.
+ * @returns A simple `Temporary` implementation.
+ */
+export function tempFactory<T, K extends keyof T>(parent: T, key: K) {
+    // have to declare instead of direct return
+    // since some methods have return-self
+    const tmp: Temporary<T, K> = {
+        key,
+        old: parent[key],
+        take: (v) => {
+            parent[key] = v;
+            return tmp;
+        },
+        then: (run) => {
+            run(parent);
+            return tmp;
+        },
+        done: () => {
+            parent[key] = tmp.old;
+        }
+    };
+    return tmp;
 }
 
 export {
@@ -6763,6 +7580,10 @@ export {
 
     randomx, mulberrySeed,
 
-    Joint, Bone, Skeleton, SkeletalEntity, clamp, clone, Color, PerlinTerrain1D
+    Joint, Bone, Skeleton, SkEnt, clamp, clone, Color, PerlinTerrain1D,
+
+    SoundQueue, ScreenUI, TextfulButtonUI, centerCIC, GlobalInputs,
+
+    PerlinTerrain1DGenerator,
 };
-export type { Renderable, Constructor, AbstractConstructor, KeyCode };
+export type { Renderable, Constructor, AbstractConstructor, KeyCode, Clean, Temporary };

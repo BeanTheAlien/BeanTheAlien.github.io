@@ -24,9 +24,13 @@ class ArrayUtil {
         arr.push(...items);
     }
     static rm(arr, ...items) {
+        ArrayUtil.rmx(arr, () => { }, ...items);
+    }
+    static rmx(arr, then, ...items) {
         for (const i of items) {
             if (ArrayUtil.has(arr, i)) {
                 arr.splice(arr.indexOf(i), 1);
+                then(i, 0, arr);
             }
         }
     }
@@ -157,8 +161,39 @@ class OutOfBoundsError extends ErrRoot {
     }
 }
 /**
+ * Thrown when `Color` receives a hexadecimal value that is not a critical length.
+ * @example
+ * ```
+ * // absurd example
+ * // total length 10
+ * // which is not a regular hex string
+ * const color = Color.fromHex("#fffffffff");
+ * ```
+ */
+class UnexpectedHexLengthError extends ErrRoot {
+    constructor(hex) {
+        super("UnexpectedHexLengthError", `Hex string '${hex}' has unexpected length of '${hex.length}'.`);
+    }
+}
+class __RootBadGridError extends ErrRoot {
+    constructor(name) {
+        super("BadGridRangeError", `Value of gridTemplate${name} must be a positive number when display is grid.`);
+    }
+}
+class BadGridColumnRangeError extends __RootBadGridError {
+    constructor() {
+        super("Columns");
+    }
+}
+class BadGridRowsRangeError extends __RootBadGridError {
+    constructor() {
+        super("Rows");
+    }
+}
+/**
  * A storage for items.
  * @since v0.0.0
+ * @deprecated Since v3.0.0.
  */
 class Store {
     store;
@@ -231,6 +266,7 @@ class Store {
  *
  * Useful for array-based classes.
  * @since v1.0.8
+ * @deprecated Since v3.0.0. Replaced with arrays.
  */
 class ItemBox {
     stuff;
@@ -242,6 +278,9 @@ class ItemBox {
     }
     rm(...stuff) {
         ArrayUtil.rm(this.stuff, ...stuff);
+    }
+    rmx(then, ...stuff) {
+        ArrayUtil.rmx(this.stuff, then, ...stuff);
     }
     forEach(cb) {
         this.stuff.forEach(cb);
@@ -762,11 +801,76 @@ for (const [k, v] of Object.entries(KeyCodeMap)) {
         continue;
     KeyCodeMapReverse[v] = k;
 }
-var Color;
-(function (Color) {
-    Color["invis"] = "rgba(0, 0, 0, 0)";
-})(Color || (Color = {}));
-;
+class Color {
+    static invis = "rgba(0, 0, 0, 0)";
+    r;
+    g;
+    b;
+    a;
+    constructor(r, g, b, a) {
+        this.r = r ?? 0;
+        this.g = g ?? 0;
+        this.b = b ?? 0;
+        this.a = a ?? 255;
+    }
+    toHex() {
+        return `${this.r.toString(16)}${this.g.toString(16)}${this.b.toString(16)}${this.a.toString(16)}`;
+    }
+    static from(value) {
+        if (objIs(value, Color)) {
+            // then simply return the value
+            return value;
+        }
+        else {
+            // then we can return it from a hex string
+            return Color.fromHex(value);
+        }
+    }
+    static fromHex(hexString) {
+        if (hexString.length == 9) {
+            // then it starts with a #
+            // ...or not
+            if (!hexString.startsWith("#"))
+                throw new UnexpectedHexLengthError(hexString);
+            return Color.fromHex(hexString.slice(1));
+        }
+        else if (hexString.length == 8) {
+            // long (expected) hex string
+            return new Color(
+            // slice 0-1
+            parseInt(hexString.slice(0, 2), 16), 
+            // slice 2-3
+            parseInt(hexString.slice(2, 4), 16), 
+            // slice 4-5
+            parseInt(hexString.slice(4, 6), 16), 
+            // slice 6-7
+            parseInt(hexString.slice(6, 8), 16));
+        }
+        else if (hexString.length == 3 || hexString.length == 4) {
+            // create long hex string and re-process
+            // safely process alpha if present
+            return Color.fromHex(`${hexString.charAt(0).repeat(2)}${hexString.charAt(1).repeat(2)}${hexString.charAt(2).repeat(2)}${(hexString.charAt(3) ?? "0").repeat(2)}`);
+        }
+        else if (hexString.length == 6) {
+            // otherwise re-process with alpha hex attached
+            return Color.fromHex(hexString + "FF");
+        }
+        else {
+            throw new UnexpectedHexLengthError(hexString);
+        }
+    }
+    static lerp(a, b, time) {
+        const cl = (channel, c1, c2) => {
+            // C1 + (C2 - C1) * t
+            return c1[channel] + (c2[channel] - c1[channel]) * time;
+        };
+        // convert to colors
+        const c1 = Color.from(a);
+        const c2 = Color.from(b);
+        // run on each channel (r, g, b, a)
+        return new Color(cl("r", c1, c2), cl("g", c1, c2), cl("b", c1, c2), cl("a", c1, c2));
+    }
+}
 /**
  * The root class of all entities, providing base functionality.
  * @since v0.0.0
@@ -863,13 +967,13 @@ class Entity {
         this.evMng = new PhantomEventManager(this, this.evStore);
         this.tags = new TagList();
         this.initState = new SavedState(this, "The state this object was in, at the time of construction.");
-        this.child = new ItemBox();
+        this.child = [];
         this.legCol = opts?.legCol ?? false;
         if (opts && "expr" in opts) {
             this.expire(opts.expr, opts.scene);
         }
         this.render = opts?.render ?? NoFunc;
-        this.bounds = new ItemBox();
+        this.bounds = [];
     }
     setPos(x, y, z) {
         if (typeof x == "number" && typeof y == "number") {
@@ -1159,6 +1263,7 @@ class Entity {
             throw new AlreadyUsingError();
         const _opts = (opts ?? {});
         this.comps.set(c, new (PhantomCompRecord[c])(this, _opts));
+        return this.comp(c);
     }
     /**
      * Removes a component.
@@ -1269,10 +1374,10 @@ class Entity {
         this.y += (dy / d) * spd;
     }
     bound(boundary) {
-        this.bounds.add(boundary);
+        ArrayUtil.add(this.bounds, boundary);
     }
     unbound(boundary) {
-        this.bounds.rm(boundary);
+        ArrayUtil.rm(this.bounds, boundary);
     }
 }
 /**
@@ -1544,7 +1649,7 @@ class WallObject extends Entity {
 class FloorObject extends WallObject {
     constructor(opts) {
         super(opts);
-        this.tags.add(new Tag("floor"));
+        ArrayUtil.add(this.tags, new Tag("floor"));
     }
     static from(opts) {
         if (opts instanceof Preset) {
@@ -1712,20 +1817,14 @@ class PlayableCharacter extends Character {
         return objIs(obj, PlayableCharacter);
     }
 }
-class KeyInputs {
+class KeyBinder {
     kbinds;
-    keys;
     bindCD;
-    constructor(binds) {
+    constructor(binds, keyDown, keyUp) {
         this.kbinds = binds ?? new Store();
-        this.keys = new Store();
         this.bindCD = new Store();
-        window.addEventListener("keydown", (e) => {
-            this.keys.set(e.code, true);
-        });
-        window.addEventListener("keyup", (e) => {
-            this.keys.set(e.code, false);
-        });
+        window.addEventListener("keydown", keyDown);
+        window.addEventListener("keyup", keyUp);
     }
     bind(code, exec, cd) {
         this.__createBinding(code, exec, cd);
@@ -1760,22 +1859,28 @@ class KeyInputs {
     bindCDOf(code) {
         return this.bindCD.get(code);
     }
+    exec(key) {
+        const e = this.kbinds.get(key);
+        const ce = this.bindCD.get(key);
+        if (e) {
+            e();
+        }
+        else if (ce && ce[1].ready) {
+            ce[0]();
+            ce[1].consume();
+        }
+    }
+}
+class KeyInputs extends KeyBinder {
+    keys;
+    constructor(binds) {
+        super(binds, (e) => this.keys.set(e.code, true), (e) => this.keys.set(e.code, false));
+        this.keys = new Store();
+    }
     update() {
         for (const [k, v] of this.keys.items()) {
-            if (v) {
-                const _k = KeyCodeMapReverse[k];
-                const exec = this.kbinds.get(_k);
-                const cdExec = this.bindCD.get(_k);
-                if (exec) {
-                    exec();
-                }
-                else if (cdExec) {
-                    if (cdExec[1].ready) {
-                        cdExec[0]();
-                        cdExec[1].consume();
-                    }
-                }
-            }
+            if (v)
+                this.exec(KeyCodeMapReverse[k]);
         }
     }
     isDown(key) {
@@ -1785,6 +1890,7 @@ class KeyInputs {
         return !this.isDown(key);
     }
 }
+const GlobalInputs = new KeyBinder(undefined, (e) => GlobalInputs.exec(e.code), () => { });
 class Aircraft extends Entity {
     thrust;
     drag;
@@ -1964,6 +2070,10 @@ class Vector {
     trace(strength) {
         return new Joint(this.x, this.y, strength);
     }
+    centerIn(container) {
+        this.x = this.x - (container.width / 2);
+        this.y = this.y - (container.height / 2);
+    }
 }
 /**
  * Used for ragdoll bone joints.
@@ -2067,7 +2177,7 @@ class Skeleton {
         this.bw = opts.bw;
         this.jr = opts.jr;
         this.scene = opts.scene;
-        this.bounds = new ItemBox();
+        this.bounds = [];
     }
     setSoft(enabled = true) {
         this.soft = enabled;
@@ -2136,14 +2246,27 @@ class Skeleton {
         return this.joints.map(j => j.x);
     }
     bound(boundary) {
-        this.bounds.add(boundary);
+        ArrayUtil.add(this.bounds, boundary);
     }
     unbound(boundary) {
-        this.bounds.rm(boundary);
+        ArrayUtil.rm(this.bounds, boundary);
+    }
+    jointProp(k, v) {
+        this.eachJoint(j => (typeof v == "function") ? v(j[k]) : v);
+    }
+    jointStrength(newStrength) {
+        this.jointProp("strength", newStrength);
+    }
+    jointDamp(newDamp) {
+        this.jointProp("damp", newDamp);
+    }
+    eachJoint(callback) {
+        this.joints.forEach(callback);
     }
 }
-class SkeletalEntity extends Entity {
+class SkEnt extends Entity {
     sk;
+    colStruct;
     constructor(opts) {
         super(opts);
         this.sk = opts.sk;
@@ -2155,10 +2278,72 @@ class SkeletalEntity extends Entity {
             j.y += y;
             j.oy += y;
         });
-        this.upd = () => this.#syncBounds();
-        this.#syncBounds();
+        this.upd = () => this.syncBounds();
+        this.syncBounds();
+        this.colStruct = opts.colStruct;
+        this.collide = () => {
+            if (this.colStruct) {
+                const b = this.colStruct.boss;
+                const s = this.colStruct.src;
+                const scene = this.colStruct.scene;
+                const leftEdge = b.x - scene.width / 2 - this.width * 2;
+                for (let i = s.length - 1; i >= 0; i--) {
+                    const x = s[i];
+                    if (x && (!scene.has(x) || x.x + x.width < leftEdge)) {
+                        scene.rm(x);
+                        scene.rmMisc(x.sk);
+                        s.splice(i, 1);
+                    }
+                }
+                for (let i = 0; i < s.length; i++) {
+                    const a = s[i];
+                    if (!a || !scene.has(a))
+                        continue;
+                    for (let j = i + 1; j < s.length; j++) {
+                        const q = s[j];
+                        if (!q || !scene.has(q))
+                            continue;
+                        a.syncBounds();
+                        q.syncBounds();
+                        const moveBox = (box, x, y) => {
+                            box.sk.joints.forEach(j => {
+                                j.x += x;
+                                j.ox += x;
+                                j.y += y;
+                                j.oy += y;
+                            });
+                            box.syncBounds();
+                        };
+                        const overlapX = Math.min(a.x + a.width, q.x + q.width) - Math.max(a.x, q.x);
+                        const overlapY = Math.min(a.y + a.height, q.y + q.height) - Math.max(a.y, q.y);
+                        if (overlapX <= 0 || overlapY <= 0)
+                            continue;
+                        const horizontal = overlapX < overlapY;
+                        const normalX = horizontal ? (q.x + q.width / 2 < a.x + a.width / 2 ? -1 : 1) : 0;
+                        const normalY = horizontal ? 0 : (q.y + q.height / 2 < a.y + a.height / 2 ? -1 : 1);
+                        const overlap = horizontal ? overlapX : overlapY;
+                        moveBox(a, -normalX * overlap / 2, -normalY * overlap / 2);
+                        moveBox(q, normalX * overlap / 2, normalY * overlap / 2);
+                        const averageVelocity = (box, axis) => box.sk.joints.reduce((sum, joint) => sum + joint[axis] - joint[axis == "x" ? "ox" : "oy"], 0) / box.sk.joints.length;
+                        const relativeVelocity = (averageVelocity(q, "x") - averageVelocity(a, "x")) * normalX
+                            + (averageVelocity(q, "y") - averageVelocity(a, "y")) * normalY;
+                        if (relativeVelocity < 0) {
+                            const impulse = -(1.1 * relativeVelocity) / 2;
+                            a.sk.joints.forEach(j => {
+                                j.ox += impulse * normalX;
+                                j.oy += impulse * normalY;
+                            });
+                            q.sk.joints.forEach(j => {
+                                j.ox -= impulse * normalX;
+                                j.oy -= impulse * normalY;
+                            });
+                        }
+                    }
+                }
+            }
+        };
     }
-    #syncBounds() {
+    syncBounds() {
         const xs = this.sk.joints.map(j => j.x);
         const ys = this.sk.joints.map(j => j.y);
         const minX = Math.min(...xs);
@@ -2343,6 +2528,9 @@ class Sound {
     play() {
         this.aud.play();
     }
+    stop() {
+        this.aud.pause();
+    }
     /**
      * Fires a one-shot player for this sound.
      *
@@ -2371,6 +2559,107 @@ class Sound {
     }
     set vol(vol) {
         this.aud.volume = vol;
+    }
+    /**
+     * Promises a new `Promise` that is automatically resolved when `aud` is completed.
+     * @returns A `Promise` that resolves on end.
+     */
+    done() {
+        return new Promise((resolve) => {
+            const e = () => {
+                this.aud.removeEventListener("ended", e);
+                resolve(null);
+            };
+            this.aud.addEventListener("ended", e);
+        });
+    }
+    /**
+     * Loops this `Sound` for the specified amount of times.
+     *
+     * Returns a `SoundLoop` controller.
+     *
+     * When `count` is a non-finite value (such as `Infinity`), it does not subtract from the
+     * continued looping count. Instead, it continues looping indefinitely.
+     * @param count The amount of times to repeat (may be non-finite, like `Infinity`).
+     * @returns A `SoundLoop` controller.
+     */
+    loop(count) {
+        return new SoundLoop(this, count);
+    }
+}
+class SoundLoop {
+    count;
+    pre;
+    tgs;
+    constructor(tgs, count) {
+        this.count = count;
+        this.pre = false;
+        this.tgs = tgs;
+    }
+    /**
+     * Kills (aborts) the active loop.
+     */
+    kill() {
+        this.pre = true;
+    }
+    loop() {
+        if (this.pre || this.count <= 0)
+            return;
+        if (Number.isFinite(this.count)) {
+            this.count--;
+        }
+        this.tgs.play();
+        this.tgs.done().then(() => this.loop());
+    }
+}
+class SoundQueue extends Array {
+    active;
+    cur;
+    constructor() {
+        super();
+        this.active = false;
+        this.cur = undefined;
+    }
+    add(sound, count, ...sounds) {
+        if (typeof count == "number") {
+            for (let i = 0; i < count; i++) {
+                super.push(sound);
+            }
+        }
+        else {
+            super.push(sound);
+            if (count)
+                super.push(count);
+            super.push(...sounds);
+        }
+    }
+    async play() {
+        if (this.active)
+            return;
+        this.active = true;
+        while (this.active && this.length > 0) {
+            // Peek at the first sound in the queue
+            this.cur = this[0];
+            this.cur.play();
+            await this.cur.done();
+            // If stopped while playing, break out before removing
+            if (!this.active)
+                break;
+            // Remove the completed sound from the front of the queue
+            const c = this.shift();
+            if (c) {
+                ArrayUtil.rm(this, c);
+            }
+        }
+        this.cur = undefined;
+        this.active = false;
+    }
+    stop() {
+        this.active = false;
+        if (this.cur) {
+            this.cur.stop();
+            this.cur = undefined;
+        }
     }
 }
 /**
@@ -2536,7 +2825,7 @@ class Scene {
         if (!ctx)
             throw new NoContextError();
         this.ctx = ctx;
-        this.items = new ItemBox();
+        this.items = [];
         this.evStore = new Store();
         this.lvlStore = new Store();
         this.mousePos = new Vector(0, 0);
@@ -2546,13 +2835,13 @@ class Scene {
         this.runtime = new Runtime();
         this.comps = new Store();
         this.evMng = new SceneEventManager(this, this.evStore);
-        this.ui = new ItemBox();
+        this.ui = [];
         this.fontControl = {
             size: 10,
             family: "sans-serif"
         };
-        this.misc = new ItemBox();
-        this.post = new ItemBox();
+        this.misc = [];
+        this.post = [];
         this.dualRuntime = new Runtime();
         this.scaleX = 1;
         this.scaleY = 1;
@@ -2583,58 +2872,79 @@ class Scene {
         this.canvas.style.height = h;
     }
     add(...items) {
-        this.items.add(...items);
+        ArrayUtil.add(this.items, ...items);
     }
     addIf(predicate, ...items) {
-        this.items.add(...items.filter(predicate));
+        ArrayUtil.add(this.items, ...items.filter(predicate));
     }
     addIfNotHas(...items) {
         this.addIf(i => !this.has(i), ...items);
     }
     addUI(...items) {
-        this.ui.add(...items);
+        ArrayUtil.add(this.ui, ...items);
     }
     addUIIf(predicate, ...items) {
-        this.ui.add(...items.filter(predicate));
+        ArrayUtil.add(this.ui, ...items.filter(predicate));
     }
     addUIIfNotHas(...items) {
         this.addUIIf(u => !this.hasUI(u), ...items);
     }
+    isClean(value) {
+        return "clean" in value && typeof value.clean == "function";
+    }
+    __globalOnRemove(init, then, index, src) {
+        if (this.isClean(init)) {
+            init.clean();
+        }
+        if (then && index && src) {
+            then(init, index, src);
+        }
+    }
     rm(...items) {
-        this.items.rm(...items);
+        this.rmx(() => { }, ...items);
+    }
+    rmx(removed, ...items) {
+        ArrayUtil.rmx(this.items, (e, i, a) => {
+            this.__globalOnRemove(e, removed, i, a);
+        }, ...items);
     }
     rmUI(...items) {
-        this.ui.rm(...items);
+        this.rmUIx(() => { }, ...items);
+    }
+    rmUIx(removed, ...items) {
+        ArrayUtil.rmx(this.ui, (e, i, a) => {
+            this.__globalOnRemove(e, removed, i, a);
+        }, ...items);
     }
     has(...items) {
-        return this.items.has(...items);
+        return ArrayUtil.has(this.items, ...items);
     }
     hasUI(...items) {
-        return this.ui.has(...items);
+        return ArrayUtil.has(this.ui, ...items);
     }
     idxOf(item) {
-        return this.items.stuff.indexOf(item);
+        return this.items.indexOf(item);
     }
     idxOfUI(item) {
-        return this.ui.stuff.indexOf(item);
+        return this.ui.indexOf(item);
     }
     filter(cb) {
         return this.items.filter(cb);
     }
     deepFilter(cb) {
-        this.items.stuff = this.filter(cb);
+        this.items = this.filter(cb);
     }
     filterUI(cb) {
         return this.ui.filter(cb);
     }
     deepFilterUI(cb) {
-        this.ui.stuff = this.filterUI(cb);
+        this.ui = this.filterUI(cb);
     }
     filterMisc(cb) {
         return this.misc.filter(cb);
     }
     deepFilterMisc(cb) {
-        this.misc.stuff = this.filterMisc(cb);
+        this.misc = this.filterMisc(cb);
     }
     on(name, handle) {
         this.evMng.on(name, handle);
@@ -2687,17 +2997,22 @@ class Scene {
         lvl.items = this.items;
         return lvl;
     }
+    demote(color) {
+        return objIs(color, Color) ? color.toHex() : color;
+    }
     get color() {
         return this.ctx.fillStyle;
     }
     set color(color) {
-        this.ctx.fillStyle = color;
+        // reduce color to hex
+        // if it is a Color
+        this.ctx.fillStyle = this.demote(color);
     }
     get colorsk() {
         return this.ctx.strokeStyle;
     }
     set colorsk(color) {
-        this.ctx.strokeStyle = color;
+        this.ctx.strokeStyle = this.demote(color);
     }
     get alpha() {
         return this.ctx.globalAlpha;
@@ -2822,13 +3137,13 @@ class Scene {
         this.testCols();
     }
     testCols() {
-        const len = this.items.stuff.length;
+        const len = this.items.length;
         for (let i = 0; i < len; i++) {
             for (let j = 0; j < len; j++) {
                 if (i == j)
                     continue;
-                const a = this.items.stuff[i];
-                const b = this.items.stuff[j];
+                const a = this.items[i];
+                const b = this.items[j];
                 // if both a and b are using legacy
                 // collision detection, then run legacy
                 // instead of modern
@@ -3109,7 +3424,7 @@ class Scene {
     }
     #tagTest(ent, tagName) {
         if (objIs(tagName, Tag)) {
-            return ent.tags.has(tagName);
+            return ArrayUtil.has(ent.tags, tagName);
         }
         else {
             return ent.tags.some((t) => t.test(tagName));
@@ -3448,25 +3763,30 @@ class Scene {
         this.cones(p0, p1, rad, this.color);
     }
     addMisc(...items) {
-        this.misc.add(...items);
+        ArrayUtil.add(this.misc, ...items);
     }
     rmMisc(...items) {
-        this.misc.rm(...items);
+        this.rmMiscx(() => { }, ...items);
+    }
+    rmMiscx(removed, ...items) {
+        ArrayUtil.rmx(this.misc, (e, i, a) => {
+            this.__globalOnRemove(e, removed, i, a);
+        }, ...items);
     }
     hasMisc(...items) {
-        return this.misc.has(...items);
+        return ArrayUtil.has(this.misc, ...items);
     }
     postAdd(fn) {
-        this.post.add(fn);
+        ArrayUtil.add(this.post, fn);
     }
     postRm(fn) {
-        this.post.rm(fn);
+        ArrayUtil.rm(this.post, fn);
     }
     postHas(fn) {
-        return this.post.has(fn);
+        return ArrayUtil.has(this.post, fn);
     }
     __sortByLayer() {
-        this.items.stuff.sort((a, b) => a.z - b.z);
+        this.items.sort((a, b) => a.z - b.z);
     }
     *loopLvls() {
         for (const lvl of this.lvlStore.items()) {
@@ -3640,6 +3960,35 @@ class Scene {
     col(e) {
         return this.items.some(x => x != e && isCol(e, x));
     }
+    temp(key, newValue) {
+        // have to trick TS here
+        // due to this error:
+        // Type 'Scene[T]' is not assignable to type 'this[T]'.
+        // Type 'Scene' is not assignable to type 'this'.
+        // 'Scene' is assignable to the constraint of type 'this', but 'this' could be instantiated with a different subtype of constraint 'Scene'.
+        const self = this;
+        // have to declare instead of direct return
+        // since some methods have return-self
+        const tmp = {
+            key,
+            old: self[key],
+            take: (v) => {
+                self[key] = v;
+                return tmp;
+            },
+            then: (run) => {
+                run(self);
+                return tmp;
+            },
+            done: () => {
+                self[key] = tmp.old;
+            }
+        };
+        // apply `take` when `newValue` exists
+        if (newValue)
+            tmp.take(newValue);
+        return tmp;
+    }
 }
 /**
  * A collection of items.
@@ -3650,19 +3999,19 @@ class Scene {
 class Level {
     items;
     constructor() {
-        this.items = new ItemBox();
+        this.items = [];
     }
     add(...items) {
-        this.items.add(...items);
+        ArrayUtil.add(this.items, ...items);
     }
     rm(...items) {
-        this.items.rm(...items);
+        ArrayUtil.rm(this.items, ...items);
     }
     has(...items) {
-        return this.items.has(...items);
+        return ArrayUtil.has(this.items, ...items);
     }
     idxOf(item) {
-        return this.items.stuff.indexOf(item);
+        return this.items.indexOf(item);
     }
     filter(cb) {
         return this.items.filter(cb);
@@ -3776,7 +4125,7 @@ class RaycastBase {
     }
     cast(onHit) {
         const dir = this.dir();
-        for (const i of this.scene.items.stuff) {
+        for (const i of this.scene.items) {
             const hit = rayInterRect(this.origin, dir, i, this.scene);
             if (hit && !this.ign.some(c => objIs(i, c))) {
                 onHit(i, hit, dir);
@@ -3825,9 +4174,9 @@ class DebugRay extends Raycast {
         super(opts);
         this.color = opts.color;
         this.life = opts.life ?? Infinity;
-        this.scene.misc.add(this);
+        ArrayUtil.add(this.scene.misc, this);
         if (Number.isFinite(this.life)) {
-            setTimeout(() => this.scene.misc.rm(this), this.life);
+            setTimeout(() => ArrayUtil.rm(this.scene.misc, (this)), this.life);
         }
     }
     update() { }
@@ -3971,8 +4320,9 @@ class StorageRoot {
     constructor(obj) {
         this.storage = obj;
     }
-    get(k) {
-        return this.storage.getItem(k);
+    get(k, def) {
+        const r = this.storage.getItem(k);
+        return def ? (r ?? def) : r;
     }
     set(k, v) {
         this.storage.setItem(k, Util.strOf(v));
@@ -3999,6 +4349,15 @@ class StorageRoot {
     }
     clear() {
         this.storage.clear();
+    }
+    /**
+     * Creates a key-value pair, when there is no key-value pair there.
+     * @param key The key to set.
+     * @param value The value to use.
+     */
+    add(key, value) {
+        if (!this.has(key))
+            this.set(key, value);
     }
 }
 const Local = new StorageRoot(localStorage);
@@ -4532,7 +4891,13 @@ class Tag {
         }
     }
 }
-class TagList extends ItemBox {
+class TagList extends Array {
+    has(tag) {
+        return this.some(x => x.test(tag));
+    }
+    add(tag) {
+        this.push(tag);
+    }
 }
 class SavedState {
     atts;
@@ -4622,6 +4987,12 @@ class SceneUI {
      * @since v1.1.0
      */
     child;
+    /**
+     * The active CSS-mimick rendering hints.
+     *
+     * Includes properties such as `display` and `gap`.
+     */
+    style;
     constructor(opts) {
         this.scene = opts.scene;
         this.x = opts.x ?? 0;
@@ -4636,10 +5007,145 @@ class SceneUI {
         this.child = new ChildUI();
         this.alpha = opts.alpha ?? 1;
         this.rendRect = true;
+        this.style = {
+            display: "block",
+            gap: 0,
+            flexDirection: "row",
+            gridTemplateRows: "auto",
+            gridTemplateColumns: 1,
+            justifyContent: "normal",
+            alignItems: "normal",
+            ...opts.style
+        };
+    }
+    /**
+     * Assume and apply the rendering hints for a flexbox
+     * when the display is that of `flex`.
+     * @param vec The vector to apply to.
+     * @param child The active index.
+     */
+    __assumeFlexHints(vec, child) {
+        if (this.style.display == "flex" && child > 0) {
+            const siblings = this.child;
+            if (this.style.flexDirection == "row") {
+                vec.x = this.x + siblings[0].x;
+                for (let i = 0; i < child; i++) {
+                    vec.x += siblings[i].width + this.style.gap;
+                }
+            }
+            else {
+                vec.y = this.y + siblings[0].y;
+                for (let i = 0; i < child; i++) {
+                    vec.y += siblings[i].height + this.style.gap;
+                }
+            }
+        }
+    }
+    /**
+     * Assume and apply the rendering hints for a flexbox
+     * when the display is that of `flex`.
+     * @param vec The vector to apply to.
+     * @param i The active index.
+     */
+    __assumeGridHints(vec, i) {
+        if (this.style.display == "grid") {
+            const columns = Math.floor(this.style.gridTemplateColumns);
+            if (!Number.isFinite(columns) || columns < 1) {
+                throw new BadGridColumnRangeError();
+            }
+            const row = Math.floor(i / columns);
+            if (this.style.gridTemplateRows != "auto") {
+                const rows = Math.floor(this.style.gridTemplateRows);
+                if (!Number.isFinite(rows) || rows < 1) {
+                    throw new BadGridRowsRangeError();
+                }
+            }
+            const col = i % columns;
+            const children = this.child;
+            let xOffset = 0;
+            for (let column = 0; column < col; column++) {
+                let columnWidth = 0;
+                for (let childIndex = column; childIndex < children.length; childIndex += columns) {
+                    columnWidth = Math.max(columnWidth, children[childIndex].width);
+                }
+                xOffset += columnWidth + this.style.gap;
+            }
+            let yOffset = 0;
+            for (let gridRow = 0; gridRow < row; gridRow++) {
+                let rowHeight = 0;
+                const rowStart = gridRow * columns;
+                const rowEnd = Math.min(rowStart + columns, children.length);
+                for (let childIndex = rowStart; childIndex < rowEnd; childIndex++) {
+                    rowHeight = Math.max(rowHeight, children[childIndex].height);
+                }
+                yOffset += rowHeight + this.style.gap;
+            }
+            vec.x += xOffset;
+            vec.y += yOffset;
+        }
+    }
+    /**
+     * Assumes and applies a justification rendering hint.
+     *
+     * Overrides previous flexbox alignment justification
+     * when the value is not `normal` or `start`.
+     * @param vec The vector.
+     * @param i The active index.
+     */
+    __assumeJustifyHints(vec, i) {
+        // since start is the same as the standard flex
+        // then do nothing for start
+        if (this.style.display == "flex" && this.style.justifyContent != "normal" && this.style.justifyContent != "start") {
+            if (this.style.justifyContent == "center") {
+                // apply centering with gap respect
+                // this width / expected x
+                // is the gap-respected centered x
+                vec.x = this.width / (this.style.gap * (i + 1));
+            }
+            else if (this.style.justifyContent == "space-evenly") {
+                // otherwise this width / index
+                // is the even-spaced x
+                vec.x = this.width / (i + 1);
+            }
+            else {
+                // otherwise, end can be figured out by
+                // this.width - vec.x
+                // since this is following flex styling
+                vec.x = this.width - vec.x;
+            }
+        }
+    }
+    /**
+     * Assumes and applies an alignment rendering hint.
+     *
+     * Overrides previous flexbox alignment when the value is not `normal` or `start`.
+     * @param vec The vector.
+     * @param i The current index.
+     */
+    __assumeAlignHints(vec, i) {
+        if (this.style.display == "flex" && this.style.alignItems != "normal" && this.style.alignItems != "start") {
+            if (this.style.alignItems == "center") {
+                // same idea as justify
+                // just height instead
+                vec.y = this.height / (this.style.gap * (i + 1));
+            }
+            else {
+                // again, same idea as justify
+                vec.y = this.height - vec.y;
+            }
+        }
     }
     render() {
         this.rend();
-        this.child.forEach((c) => {
+        this.child.forEach((c, i) => {
+            // rendering hints: display = block
+            // (do nothing different)
+            // rendering hints: display = flex
+            // update position with gap
+            // rendering hints: flexDirection => row
+            // apply on x
+            // rendering hints: flexDirection => column
+            // apply on y
             // to avoid overwriting original pos
             // in the case of detachment at later stage
             // store the original position
@@ -4650,6 +5156,20 @@ class SceneUI {
             // to this position
             c.x = this.x + cx;
             c.y = this.y + cy;
+            const v = new Vector(c.x, c.y);
+            // assume flex
+            this.__assumeFlexHints(v, i);
+            // assume grid (safe to use v)
+            // (again since if flex failed)
+            // (then v never changed)
+            this.__assumeGridHints(v, i);
+            // assume justify
+            this.__assumeJustifyHints(v, i);
+            // assume align
+            this.__assumeAlignHints(v, i);
+            // apply post-assumption for hints
+            c.x = v.x;
+            c.y = v.y;
             c.render();
             // restore original position
             c.x = cx;
@@ -4663,22 +5183,22 @@ class SceneUI {
         });
     }
     addChild(child) {
-        this.child.add(child);
+        ArrayUtil.add(this.child, child);
     }
     addChilds(...childs) {
-        this.child.add(...childs);
+        ArrayUtil.add(this.child, ...childs);
     }
     rmChild(child) {
-        this.child.rm(child);
+        ArrayUtil.rm(this.child, child);
     }
     rmChilds(...childs) {
-        this.child.rm(...childs);
+        ArrayUtil.rm(this.child, ...childs);
     }
     hasChild(child) {
-        return this.child.has(child);
+        return ArrayUtil.has(this.child, child);
     }
     hasChilds(...childs) {
-        return this.child.has(...childs);
+        return ArrayUtil.has(this.child, ...childs);
     }
     pos() {
         return new Vector(this.x, this.y);
@@ -4698,8 +5218,22 @@ class SceneUI {
     lerpHeight(scene, to, mode, rate) {
         return new SceneUIHeightLerpDevice(scene, this, to, mode, rate);
     }
+    /**
+     * Applies a simulated `HTMLBreakStatement`.
+     *
+     * It shifts each element at and after the index by the specified size on the y-axis.
+     * @param index The index to start at.
+     * @param size The size of the break.
+     */
+    br(index, size) {
+        for (let i = index; i < this.child.length; i++) {
+            // shift everything down
+            // (simulate break statement)
+            this.child[i].y += size;
+        }
+    }
 }
-class ChildUI extends ItemBox {
+class ChildUI extends Array {
 }
 class ButtonUI extends SceneUI {
     click;
@@ -4797,6 +5331,18 @@ class TextUI extends SceneUI {
         this.scene.text(this.tx, this.x, this.y, this.color, this.mw);
         this.scene.font = f;
         super.render();
+    }
+}
+class TextfulButtonUI extends ButtonUI {
+    tx;
+    constructor(opt) {
+        super(opt);
+        // create textui as property
+        // so you can access it
+        // even after it becomes a child
+        // (no orphans)
+        this.tx = new TextUI(opt);
+        this.addChild(this.tx);
     }
 }
 class KeyedTextUI extends TextUI {
@@ -4942,6 +5488,23 @@ class UpgradeMenuUI extends SceneUI {
         this.kopt = opt.kopt;
         this.topt = opt.topt;
         this.mult = opt.mult;
+    }
+}
+/**
+ * Collection for `SceneUI` to manage showing and hiding UI collections.
+ */
+class ScreenUI extends Array {
+    scene;
+    constructor(scene, ...ui) {
+        super();
+        this.scene = scene;
+        this.push(...ui);
+    }
+    show() {
+        this.scene.addUI(...this);
+    }
+    hide() {
+        this.scene.rmUI(...this);
     }
 }
 class Itvl {
@@ -5197,6 +5760,9 @@ class Perlin {
     static terrain1D(opt) {
         return new PerlinTerrain1D(opt);
     }
+    static terGen1D(opt) {
+        return new PerlinTerrain1DGenerator(opt);
+    }
 }
 class PerlinTerrain1D {
     perlin;
@@ -5241,6 +5807,62 @@ class PerlinTerrain1D {
     next(x) {
         const n = this.perlin.noise(x * this.frq, this.fy);
         return this.bh + (((n + 1) / 2) * this.amp);
+    }
+}
+class PerlinTerrain1DGenerator extends PerlinTerrain1D {
+    scene;
+    y;
+    width;
+    color;
+    gen;
+    stillGen;
+    boss;
+    nx;
+    constructor(opt) {
+        super(opt);
+        this.scene = opt.scene;
+        this.y = opt.y ?? ((h) => this.scene.height - h);
+        this.width = opt.width;
+        this.color = opt.color;
+        this.gen = [];
+        this.stillGen = true;
+        this.boss = opt.boss;
+        this.nx = -this.scene.width / 2;
+    }
+    on() {
+        this.stillGen = true;
+    }
+    off() {
+        this.stillGen = false;
+    }
+    add(x, atStart = false) {
+        if (!this.stillGen)
+            return;
+        const h = this.next(x);
+        const f = new FloorObject({ x, y: this.y(h), width: this.width, height: h, color: this.color });
+        if (atStart)
+            this.gen.unshift(f);
+        else
+            this.gen.push(f);
+        this.scene.add(f);
+    }
+    update() {
+        if (!this.stillGen)
+            return;
+        const le = this.boss.x - this.scene.width / 2;
+        const re = this.boss.x + this.scene.width / 2;
+        while (this.nx <= re) {
+            this.add(this.nx);
+            this.nx += this.width;
+        }
+        while (this.gen.length > 0 && this.gen[0].x > le) {
+            this.add(this.gen[0].x - this.width, true);
+        }
+        while (this.gen.length > 0 && this.gen[0].x + this.gen[0].width < le - this.width) {
+            const oldFloor = this.gen.shift();
+            if (oldFloor)
+                this.scene.rm(oldFloor);
+        }
     }
 }
 /**
@@ -5464,7 +6086,8 @@ function easeSmoothStep(t) {
 function aspectRatio() {
     return window.innerWidth / window.innerHeight;
 }
-function mulberry32(a) {
+function mulberry32(seed) {
+    let a = seed ?? mulberrySeed();
     return function () {
         let t = a += 0x6D2B79F5;
         t = Math.imul(t ^ (t >>> 15), t | 1);
@@ -5478,4 +6101,41 @@ function clamp(val, min, max) {
 function clone(object) {
     return Object.assign({}, object);
 }
-export { Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, FloorObject, Aircraft, Weapon, Gun, Pistol, Burst, SceneUI, ButtonUI, TextUI, MenuUI, ImgUI, ProgressUI, KeyedTextUI, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, DebugRay, Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag, External, MultiRaycast, ConeRaycast, ConeDebugRay, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, randItem, lerp, mulberry32, Local, LocalDeprecated, Session, Clipboard, Cookies, Params, Comp, HealthComp, InvComp, EnhancedPhysicsComp, GravityComp, Trigger, Itvl, FixedItvl, KeyInputs, LerpDevice, VectorBasedLerpDevice, VectorLerpDevice, EntityLerpDevice, SceneUILerpDevice, EntityRotationLerpDevice, AngleBasedLerpDevice, SceneUIRotationLerpDevice, ParamKey, Spawner, Perlin, randomx, mulberrySeed, Joint, Bone, Skeleton, SkeletalEntity, clamp, clone, Color, PerlinTerrain1D };
+/**
+ * Center a positioned container-in-container (CIC).
+ *
+ * Adjusts the position of `innerContainer` to `outerContainer` to be centered.
+ * @param innerContainer The innermost container.
+ * @param outerContainer The outermost container.
+ */
+function centerCIC(innerContainer, outerContainer) {
+    innerContainer.x = (outerContainer.width - innerContainer.width) / 2;
+    innerContainer.y = (outerContainer.height - outerContainer.height) / 2;
+}
+/**
+ * A simple factory for `Temporary` implementations.
+ * @param parent The parent object.
+ * @param key The key to assign to.
+ * @returns A simple `Temporary` implementation.
+ */
+export function tempFactory(parent, key) {
+    // have to declare instead of direct return
+    // since some methods have return-self
+    const tmp = {
+        key,
+        old: parent[key],
+        take: (v) => {
+            parent[key] = v;
+            return tmp;
+        },
+        then: (run) => {
+            run(parent);
+            return tmp;
+        },
+        done: () => {
+            parent[key] = tmp.old;
+        }
+    };
+    return tmp;
+}
+export { Entity, StaticObject, PhysicsObject, MovingObject, BulletObject, Scene, Character, PlayableCharacter, WallObject, FloorObject, Aircraft, Weapon, Gun, Pistol, Burst, SceneUI, ButtonUI, TextUI, MenuUI, ImgUI, ProgressUI, KeyedTextUI, Save, SaveJSON, Sound, Preset, Level, Items, Store, Vector, Pixel, Raycast, DebugRay, Cooldown, FilePicker, DirPicker, SaveFilePicker, Img, Angle, Tag, External, MultiRaycast, ConeRaycast, ConeDebugRay, Config, SceneConfig, ImgConfig, isCol, rayInterRect, uvVec, wait, random, chance, shallow, objIs, randItem, lerp, mulberry32, Local, LocalDeprecated, Session, Clipboard, Cookies, Params, Comp, HealthComp, InvComp, EnhancedPhysicsComp, GravityComp, Trigger, Itvl, FixedItvl, KeyInputs, LerpDevice, VectorBasedLerpDevice, VectorLerpDevice, EntityLerpDevice, SceneUILerpDevice, EntityRotationLerpDevice, AngleBasedLerpDevice, SceneUIRotationLerpDevice, ParamKey, Spawner, Perlin, randomx, mulberrySeed, Joint, Bone, Skeleton, SkEnt, clamp, clone, Color, PerlinTerrain1D, SoundQueue, ScreenUI, TextfulButtonUI, centerCIC, GlobalInputs, PerlinTerrain1DGenerator, };
