@@ -339,6 +339,7 @@ const crs: Car = {
 };
 function saveCRS() {
     Local.set("drobl-saved-game", { ...crsInit, fs: crs.fs, dd: crs.dd });
+    console.log("Game saved");
 }
 function loadCRS() {
     const out = Local.get("drobl-saved-game");
@@ -356,9 +357,11 @@ function loadCRS() {
     }
 }
 loadCRS();
+// autosave every min
+setInterval(saveCRS, 60000);
 car.use("enhancedphys", { scene });
 const p = car.comp("enhancedphys");
-var inTheMenus = false;
+var inTheMenus = true;
 car.binds(["a", () => {
     if(inTheMenus) return;
     if(crs.benzin <= 0) return;
@@ -386,11 +389,12 @@ car.binds(["a", () => {
 }]);
 Img.config.set("root", "assets");
 const carspr = new Img("car/2012toyotacamry.jpg");
-SpawnDeer(200);
+//SpawnDeer(200);
 scene.add(car);
 const spawner = () => setInterval(() => SpawnDeer(car.x + random(-scene.width / 2 + 100, scene.width / 2 - 100)), 5000);
 const unspawner = () => clearInterval(spawn);
 var spawn = spawner();
+unspawner();
 const murder = new KeyedTextUI<number>({ scene, change: (v) => `Murder: ${v}`, x: scene.width / 2, y: 50 });
 murder.val = 0;
 const destruct = new KeyedTextUI<number>({ scene, change: (v) => `Destruction: ${v}`, x: scene.width / 2, y: 75 });
@@ -447,7 +451,6 @@ const upgFactory = (k: string, then: Upgrade["then"], og: number, max?: number):
             upgMap[k].cnt++;
             then();
             saveCRS();
-            console.log("Game saved successfully");
         },
         cnt: 0,
         og,
@@ -567,7 +570,7 @@ scoreSeries.push(scorePUI);
  * with the bug fix put in place, so this flag
  * further prevents terrain from being generated.
  */
-var waitDontTerrain = false;
+var waitDontTerrain = true;
 const exitBut = new ButtonUI({ scene, x: scene.width / 2 - 250 / 2, y: scene.height / 2 + 50, w: 250, h: 50, styles: {
     idle: "#0c97d8", hover: "#014ad1", click: "#200cd8" }, click: () => {
         scoreQue = false;
