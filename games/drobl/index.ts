@@ -689,7 +689,7 @@ function updateTerrain() {
 const mainMenu = new ScreenUI(scene,
     new SceneUI({ scene, w: scene.width, h: scene.height, color: "#00337b" }),
     new TextUI({ scene, x: scene.width / 2, y: 100, tx: "Deer Obliterator: The Final Drive" }),
-    new ButtonUI({ scene, x: scene.width / 2 - 250 / 2, w: 250, h: 150, y: 300,
+    new ButtonUI({ scene, x: scene.width / 2 - 150 / 2, w: 150, h: 75, y: 300,
         styles: {
             idle: "#00b575",
             hover: "#007b50",
@@ -702,10 +702,42 @@ const mainMenu = new ScreenUI(scene,
             scene.add(car);
         }
      }),
-    new TextUI({ scene, x: scene.width / 2, y: 400, tx: "Play" }),
-    new ImgUI({ scene, x: scene.width / 2 - 400, y: 400, w: 200, h: 200, img: new Img("drobl-thumb.png") })
+    new TextUI({ scene, x: scene.width / 2, y: 300 + 75 / 2, tx: "Play" }),
+    new ImgUI({ scene, x: scene.width / 2 - 460, y: 380, w: 200, h: 200, img: new Img("drobl-thumb.png") })
 );
 mainMenu.show();
+
+const backgroundColors = ["#033369", "#0052af", "#06c9a8", "#0052af"] as const;
+type BackgroundColorIndex = 0 | 1 | 2 | 3;
+function backgroundColor(time: number) {
+    const hour = ((time % 24) + 24) % 24;
+    let from: BackgroundColorIndex;
+    let to: BackgroundColorIndex;
+    let progress: number;
+    if(hour >= 20) {
+        from = 0;
+        to = 1;
+        progress = (hour - 20) / 11;
+    } else if(hour < 7) {
+        from = 0;
+        to = 1;
+        progress = (hour + 4) / 11;
+    } else if(hour < 11) {
+        from = 1;
+        to = 2;
+        progress = (hour - 7) / 4;
+    } else if(hour < 16) {
+        from = 2;
+        to = 3;
+        progress = (hour - 11) / 5;
+    } else {
+        from = 3;
+        to = 0;
+        progress = (hour - 16) / 4;
+    }
+    const color = Color.lerp(backgroundColors[from], backgroundColors[to], progress);
+    return `rgb(${Math.round(color.r)}, ${Math.round(color.g)}, ${Math.round(color.b)})`;
+}
 
 scene.start(() => {
     scene.align = "center";
@@ -731,12 +763,7 @@ scene.start(() => {
     // 7 - 10 dawn
     // 11 - 15 noon
     // 16 - 19 dusk
-    const tmc = (20 <= time.val) || (0 <= time.val && time.val <= 6) ? "#033369" :
-        (7 <= time.val && time.val <= 10) ? "#0052af" :
-        (11 <= time.val && time.val <= 15) ? "#06c9a8" :
-        (16 <= time.val && time.val <= 19) ? "#0052af" :
-        "#fff";
-    scene.bg(tmc);
+    scene.bg(backgroundColor(time.val));
     updateTerrain();
     scene.misc.forEach(deer => {
         const dr = deer as Skeleton;
