@@ -703,7 +703,7 @@ const mainMenu = new ScreenUI(scene,
         }
      }),
     new TextUI({ scene, x: scene.width / 2, y: 400, tx: "Play" }),
-    new ImgUI({ scene, x: scene.width / 2 - 400, y: 400, w: 200, h: 200, img: carspr })
+    new ImgUI({ scene, x: scene.width / 2 - 400, y: 400, w: 200, h: 200, img: new Img("drobl-thumb.png") })
 );
 mainMenu.show();
 
