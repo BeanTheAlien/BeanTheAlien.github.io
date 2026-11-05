@@ -1,4 +1,4 @@
-import { Bone, ButtonUI, chance, clamp, Color, Entity, FloorObject, Img, Joint, KeyedTextUI, Local, objIs, Perlin, PlayableCharacter, randItem, random, Scene, SceneUI, ScreenUI, Skeleton, Spawner, Tag, TextUI, Vector } from "../../phantom2d.js";
+import { Bone, ButtonUI, chance, clamp, Color, Entity, FloorObject, Img, ImgUI, Joint, KeyedTextUI, Local, objIs, Perlin, PlayableCharacter, randItem, random, Scene, SceneUI, ScreenUI, Skeleton, Spawner, Tag, TextUI, Vector } from "../../phantom2d.js";
 const scene = new Scene({ canvas: "deer", w: 1000, h: 600, border: "2px solid red" });
 
 const sp = 20;
@@ -359,12 +359,6 @@ function loadCRS() {
 loadCRS();
 // autosave every min
 setInterval(saveCRS, 60000);
-// main menu
-const mainMenu = new ScreenUI(scene,
-    new TextUI({ scene, x: scene.width / 2, y: 200, tx: "Deer Obliterator: The Final Drive" }),
-    new ButtonUI({ scene, x: scene.width / 2 - 250 / 2 + 150, w: 250, h: 150, y: 600 })
-);
-mainMenu.show();
 car.use("enhancedphys", { scene });
 const p = car.comp("enhancedphys");
 var inTheMenus = true;
@@ -690,6 +684,27 @@ function updateTerrain() {
         if(oldFloor) scene.rm(oldFloor);
     }
 }
+
+// main menu
+const mainMenu = new ScreenUI(scene,
+    new SceneUI({ scene, w: scene.width, h: scene.height, color: "#00337b" }),
+    new TextUI({ scene, x: scene.width / 2, y: 200, tx: "Deer Obliterator: The Final Drive" }),
+    new ButtonUI({ scene, x: scene.width / 2 - 250 / 2 + 150, w: 250, h: 150, y: 600,
+        styles: {
+            idle: "#00b575",
+            hover: "#007b50",
+            click: "#005537"
+        }, click: () => {
+            mainMenu.hide();
+            loadCRS();
+            inTheMenus = false;
+            waitDontTerrain = false;
+        }
+     }),
+    new TextUI({ scene, x: scene.width / 2, y: 600, tx: "Play" }),
+    new ImgUI({ scene, x: scene.width / 2 - 400, y: 750, img: carspr })
+);
+mainMenu.show();
 
 scene.start(() => {
     scene.align = "center";
