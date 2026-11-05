@@ -390,7 +390,7 @@ car.binds(["a", () => {
 Img.config.set("root", "assets");
 const carspr = new Img("car/2012toyotacamry.jpg");
 //SpawnDeer(200);
-scene.add(car);
+//scene.add(car);
 const spawner = () => setInterval(() => SpawnDeer(car.x + random(-scene.width / 2 + 100, scene.width / 2 - 100)), 5000);
 const unspawner = () => clearInterval(spawn);
 var spawn = spawner();
@@ -688,8 +688,8 @@ function updateTerrain() {
 // main menu
 const mainMenu = new ScreenUI(scene,
     new SceneUI({ scene, w: scene.width, h: scene.height, color: "#00337b" }),
-    new TextUI({ scene, x: scene.width / 2, y: 200, tx: "Deer Obliterator: The Final Drive" }),
-    new ButtonUI({ scene, x: scene.width / 2 - 250 / 2 + 150, w: 250, h: 150, y: 600,
+    new TextUI({ scene, x: scene.width / 2, y: 100, tx: "Deer Obliterator: The Final Drive" }),
+    new ButtonUI({ scene, x: scene.width / 2 - 250 / 2, w: 250, h: 150, y: 300,
         styles: {
             idle: "#00b575",
             hover: "#007b50",
@@ -699,10 +699,11 @@ const mainMenu = new ScreenUI(scene,
             loadCRS();
             inTheMenus = false;
             waitDontTerrain = false;
+            scene.add(car);
         }
      }),
-    new TextUI({ scene, x: scene.width / 2, y: 600, tx: "Play" }),
-    new ImgUI({ scene, x: scene.width / 2 - 400, y: 750, img: carspr })
+    new TextUI({ scene, x: scene.width / 2, y: 400, tx: "Play" }),
+    new ImgUI({ scene, x: scene.width / 2 - 400, y: 400, w: 200, h: 200, img: carspr })
 );
 mainMenu.show();
 
