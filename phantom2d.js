@@ -814,7 +814,9 @@ class Color {
         this.a = a ?? 255;
     }
     toHex() {
-        return `${this.r.toString(16)}${this.g.toString(16)}${this.b.toString(16)}${this.a.toString(16)}`;
+        return [this.r, this.g, this.b, this.a]
+            .map(channel => channel.toString(16).padStart(2, "0"))
+            .join("");
     }
     static from(value) {
         if (objIs(value, Color)) {
@@ -827,37 +829,18 @@ class Color {
         }
     }
     static fromHex(hexString) {
-        if (hexString.length == 9) {
-            // then it starts with a #
-            // ...or not
-            if (!hexString.startsWith("#"))
-                throw new UnexpectedHexLengthError(hexString);
-            return Color.fromHex(hexString.slice(1));
-        }
-        else if (hexString.length == 8) {
-            // long (expected) hex string
-            return new Color(
-            // slice 0-1
-            parseInt(hexString.slice(0, 2), 16), 
-            // slice 2-3
-            parseInt(hexString.slice(2, 4), 16), 
-            // slice 4-5
-            parseInt(hexString.slice(4, 6), 16), 
-            // slice 6-7
-            parseInt(hexString.slice(6, 8), 16));
-        }
-        else if (hexString.length == 3 || hexString.length == 4) {
-            // create long hex string and re-process
-            // safely process alpha if present
-            return Color.fromHex(`${hexString.charAt(0).repeat(2)}${hexString.charAt(1).repeat(2)}${hexString.charAt(2).repeat(2)}${(hexString.charAt(3) ?? "0").repeat(2)}`);
-        }
-        else if (hexString.length == 6) {
-            // otherwise re-process with alpha hex attached
-            return Color.fromHex(hexString + "FF");
-        }
-        else {
+        const hex = hexString.startsWith("#") ? hexString.slice(1) : hexString;
+        if (![3, 4, 6, 8].includes(hex.length)) {
             throw new UnexpectedHexLengthError(hexString);
         }
+        if (!/^[\da-f]+$/i.test(hex)) {
+            throw new TypeError(`Hex string '${hexString}' contains non-hexadecimal characters.`);
+        }
+        const expanded = hex.length <= 4
+            ? [...hex].map(channel => channel.repeat(2)).join("")
+            : hex;
+        const rgba = expanded.length == 6 ? `${expanded}FF` : expanded;
+        return new Color(parseInt(rgba.slice(0, 2), 16), parseInt(rgba.slice(2, 4), 16), parseInt(rgba.slice(4, 6), 16), parseInt(rgba.slice(6, 8), 16));
     }
     static lerp(a, b, time) {
         const cl = (channel, c1, c2) => {
