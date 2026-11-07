@@ -350,7 +350,6 @@ function loadCRS() {
         console.log("No save detected; no content loaded");
     }
 }
-loadCRS();
 // autosave every min
 setInterval(saveCRS, 60000);
 car.use("enhancedphys", { scene });
@@ -698,7 +697,18 @@ const mainMenu = new ScreenUI(scene, new SceneUI({ scene, w: scene.width, h: sce
         waitDontTerrain = false;
         scene.add(car);
     }
-}), new TextUI({ scene, x: scene.width / 2, y: 300 + 75 / 2, tx: "Play" }), new ImgUI({ scene, x: scene.width / 2 - 460, y: 380, w: 200, h: 200, img: new Img("drobl-thumb.png") }));
+}), new TextUI({ scene, x: scene.width / 2, y: 300 + 75 / 2, tx: "Play" }), new ButtonUI({ scene, x: scene.width / 2 - 150 / 2, w: 150, h: 75, y: 450, styles: {
+        idle: "#00b575",
+        hover: "#7b0800",
+        click: "#3d0400"
+    }, click: () => {
+        mainMenu.hide();
+        Local.rm("drobl-saved-game");
+        inTheMenus = false;
+        waitDontTerrain = false;
+        scene.add(car);
+        console.log("Saved data deleted");
+    } }), new TextUI({ scene, x: scene.width / 2, y: 450 + 75 / 2, tx: "Delete Savedata" }), new ImgUI({ scene, x: scene.width / 2 - 460, y: 380, w: 200, h: 200, img: new Img("drobl-thumb.png") }));
 mainMenu.show();
 const backgroundColors = ["#033369", "#0052af", "#06c9a8", "#0052af"];
 function backgroundColor(time) {
