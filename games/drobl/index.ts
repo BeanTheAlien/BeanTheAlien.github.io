@@ -129,6 +129,10 @@ function Box() {
     });
 }
 const DeerNametag = new Tag("Deer");
+const OldDeerNameTag = new Tag("Old Deer");
+const TrumpDeerNameTag = new Tag("Trump Deer");
+const CommieDeerNameTag = new Tag("Communist Deer");
+const GermanDeerNameTag = new Tag("German Deer");
 const BoxNametag = new Tag("Box");
 class SkeleEnt extends Entity {
     skeleton: Skeleton;
@@ -277,6 +281,13 @@ const car = new PlayableCharacter({ strength: 0.35, width: 85, height: 40, color
             });
             if(e.tags.has(DeerNametag)) murder.val++;
             else destruct.val++;
+            // then also add to KC
+            if(e.tags.has(DeerNametag)) {
+                // then get the toString
+                // of the last tag
+                // (either Deer or special)
+                kopdr(e.tags[e.tags.length - 1].get());
+            }
             // also slow down the player (why the wedge exists)
             // slowing factor
             const slow = 2.5;
@@ -715,9 +726,79 @@ const mainMenu = new ScreenUI(scene,
         console.log("Saved data deleted");
     } }),
     new TextUI({ scene, x: scene.width / 2, y: 425 + 75 / 2, tx: "Delete Savedata" }),
+    new ButtonUI({ scene, x: scene.width / 2 - 150 / 2, w: 150, h: 75, y: 550, styles: {
+        idle: "#00b575",
+        hover: "#007b50",
+        click: "#005537"
+    }, click: () => {
+        mainMenu.hide();
+        killopedia.show();
+    } }),
+    new TextUI({ scene, x: scene.width / 2, y: 550 + 75 / 2, tx: "Kill-o-pedia" }),
     new ImgUI({ scene, x: scene.width / 2 - 460, y: 380, w: 200, h: 200, img: new Img("drobl-thumb.png") })
 );
 mainMenu.show();
+var kopPg = 0;
+const changeKOPP = (dir: number) => {
+    kopActive.hide();
+    kopPg += dir;
+    kopPg = kopPg >= kopDeer.length ? 0 : kopPg;
+    const a = kopDeer[kopPg];
+    kopActive = new ScreenUI(scene,
+        new ImgUI({ scene, img: Img.from("deer/" + a.thumb), x: scene.width / 2 - 350 / 2, y: scene.height / 2 - 200, w: 350, h: 350 }),
+        new TextUI({ scene, x: scene.width / 2, y: 200, tx: a.name }),
+        new TextUI({ scene, x: scene.width / 2, y: 250, tx: `Killcount: ${a.kc}` }),
+        new TextUI({ scene, x: scene.width / 2, y: scene.height - 200, tx: a.desc })
+    );
+    kopActive.show();
+};
+interface KOPDeer {
+    thumb: string;
+    name: string;
+    desc: string;
+    kc: number;
+}
+const kopdr = (name: string) => {
+    const e = kopDeer.find(x => x.name == name);
+    if(e) {
+        e.kc++;
+        const ent: Record<string, number> = {};
+        kopDeer.forEach(x => ent[x.name] = x.kc)
+        Local.set("drobl-kc", ent);
+    }
+};
+const kopDeer: KOPDeer[] = [
+    { thumb: "placeholder.jpg", name: "Deer", desc: "Just a deer.", kc: 0 },
+    { thumb: "placeholder.jpg", name: "Old Deer", desc: "Ancient, to say the least.", kc: 0 },
+    { thumb: "placeholder.png", name: "Trump Deer", desc: "The best deer. The very best.", kc: 0 },
+    { thumb: "placeholder.png", name: "Communist Deer", desc: "SPREAD THE WEALTH!", kc: 0 },
+    { thumb: "placeholder.png", name: "German Deer", desc: "Schlag mich? Nee. Ich schlag *dich*.", kc: 0 }
+];
+if(Local.has("drobl-kc")) {
+    const kc = JSON.parse(Local.get("drobl-kc") as string) as Record<string, number>;
+    Object.entries(kc).forEach(x => {
+        const k = kopDeer.find(y => y.name == x[0]);
+        if(k) {
+            k.kc = x[1];
+        }
+    });
+}
+var kopActive: ScreenUI = new ScreenUI(scene);
+const killopedia = new ScreenUI(scene,
+    new ButtonUI({ scene, x: scene.width / 2 - 150 / 2, w: 150, h: 75, y: scene.height - 125, styles: {
+        idle: "#00b575",
+        hover: "#007b50",
+        click: "#005537"
+    }, click: () => {
+        mainMenu.show();
+        killopedia.hide();
+    } }),
+    new TextUI({ scene, x: scene.width / 2 - 150 / 2, y: scene.height - 125 + 75 / 2, tx: "Exit" }),
+    new ButtonUI({ scene, x: 75, y: scene.height / 2, w: 50, h: 50, color: Color.invis, click: () => changeKOPP(-1) }),
+    new ImgUI({ scene, x: 50, y: scene.height / 2, w: 50, h: 50, img: Img.from("icon/leftarrow.png") }),
+    new ButtonUI({ scene, x: scene.width - 75, y: scene.height / 2, w: 50, h: 50, color: Color.invis, click: () => changeKOPP(1) }),
+    new ImgUI({ scene, x: 50, y: scene.height / 2, w: 50, h: 50, img: Img.from("icon/rightarrow.png") })
+);
 
 const backgroundColors = ["#033369", "#0052af", "#06c9a8", "#0052af"] as const;
 type BackgroundColorIndex = 0 | 1 | 2 | 3;
