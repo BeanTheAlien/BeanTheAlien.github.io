@@ -729,6 +729,7 @@ const mainMenu = new ScreenUI(scene, new TextUI({ scene, x: scene.width / 2, y: 
     }, click: () => {
         mainMenu.hide();
         killopedia.show();
+        changeKOPP(0);
     } }), new TextUI({ scene, x: scene.width / 2, y: 440 + 75 / 2, tx: "Kill-o-pedia" }), new ImgUI({ scene, x: scene.width / 2 - 460, y: 380, w: 200, h: 200, img: new Img("drobl-thumb.png") }));
 scene.addUI(bgUI);
 mainMenu.show();
@@ -774,6 +775,7 @@ const killopedia = new ScreenUI(scene, new ButtonUI({ scene, x: scene.width / 2 
     }, click: () => {
         mainMenu.show();
         killopedia.hide();
+        kopActive.hide();
     } }), new TextUI({ scene, x: scene.width / 2, y: scene.height - 80 + 75 / 2, tx: "Exit" }), new ButtonUI({ scene, x: 50, y: scene.height / 2, w: 50, h: 50, color: Color.invis, click: () => changeKOPP(-1) }), new ImgUI({ scene, x: 50, y: scene.height / 2, w: 50, h: 50, img: Img.from("icon/leftarrow.png") }), new ButtonUI({ scene, x: scene.width - 85, y: scene.height / 2, w: 50, h: 50, color: Color.invis, click: () => changeKOPP(1) }), new ImgUI({ scene, x: scene.width - 85, y: scene.height / 2, w: 50, h: 50, img: Img.from("icon/rightarrow.png") }));
 const backgroundColors = ["#033369", "#0052af", "#06c9a8", "#0052af"];
 function backgroundColor(time) {
