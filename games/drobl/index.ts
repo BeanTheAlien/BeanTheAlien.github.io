@@ -184,20 +184,13 @@ function SpawnDeer(x: number) {
         scene.ctx.save();
         scene.ctx.translate(scene.goff.x, 0);
         render();
+        if(deer.tags.has(OldDeerNameTag)) DeerDrawing.beard(skeleton);
         scene.ctx.restore();
     };
     const deer = new SkeleEnt(skeleton, x);
     scene.addMisc(skeleton); // draw and update the skeleton
     scene.add(deer); // include hitbox in entity collisions
     deer.tags.add(DeerNametag);
-    const br = skeleton.render.bind(skeleton);
-    skeleton.render = () => {
-        scene.ctx.save();
-        scene.ctx.translate(scene.goff.x, 0);
-        br();
-        if(deer.tags.has(OldDeerNameTag)) DeerDrawing.beard(skeleton);
-        scene.ctx.restore();
-    };
     // possible special tag
     const spawnRates = [
         [10, OldDeerNameTag],

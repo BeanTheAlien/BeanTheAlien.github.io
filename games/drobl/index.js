@@ -183,21 +183,14 @@ function SpawnDeer(x) {
         scene.ctx.save();
         scene.ctx.translate(scene.goff.x, 0);
         render();
+        if (deer.tags.has(OldDeerNameTag))
+            DeerDrawing.beard(skeleton);
         scene.ctx.restore();
     };
     const deer = new SkeleEnt(skeleton, x);
     scene.addMisc(skeleton); // draw and update the skeleton
     scene.add(deer); // include hitbox in entity collisions
     deer.tags.add(DeerNametag);
-    const br = skeleton.render.bind(skeleton);
-    skeleton.render = () => {
-        scene.ctx.save();
-        scene.ctx.translate(scene.goff.x, 0);
-        br();
-        if (deer.tags.has(OldDeerNameTag))
-            DeerDrawing.beard(skeleton);
-        scene.ctx.restore();
-    };
     // possible special tag
     const spawnRates = [
         [10, OldDeerNameTag],
@@ -460,7 +453,7 @@ Img.config.set("root", "assets");
 const carspr = new Img("car/2012toyotacamry.jpg");
 //SpawnDeer(200);
 //scene.add(car);
-var GlobalSpawnRate = 5000;
+var GlobalSpawnRate = 2500;
 const spawner = () => setInterval(() => SpawnDeer(car.x + random(-scene.width / 2 + 100, scene.width / 2 - 100)), GlobalSpawnRate);
 const unspawner = () => clearInterval(spawn);
 var spawn = spawner();
