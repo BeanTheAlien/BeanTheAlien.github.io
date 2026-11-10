@@ -238,6 +238,14 @@ const DeerDrawing = {
         scene.ctx.quadraticCurveTo(x1 + 10, y1 + 12, x2 + 4, y2 + 8);
         scene.ctx.stroke();
         scene.ctx.restore();
+    },
+    trump: (skeleton) => {
+        const h0 = skeleton.joints[0];
+        const h1 = skeleton.joints[1];
+        const x1 = (h0.x + h1.x) / 2;
+        const y1 = (h0.y + h1.y) / 2;
+        const x2 = x1;
+        const y2 = y1 + 10;
     }
 };
 function SpawnBox(x, y) {
@@ -591,17 +599,28 @@ const doneUpg = new ButtonUI({ scene, x: scene.width / 2 - 125, w: 250, h: 50, y
         hover: "#04a133",
         click: "#026921"
     } });
-const doneUpgText = new TextUI({ scene, x: scene.width / 2, y: scene.height - 150 / 2, tx: "Done" });
+const doneUpgText = new TextUI({ scene, x: scene.width / 2, y: doneUpg.y + doneUpg.height / 2, tx: "Done" });
 const mainUpg = new ButtonUI({ scene, x: scene.width / 2 - 125, w: 250, h: 50, y: scene.height - 75, click: () => {
         scene.rmUI(upgMenuOuter, doneUpg, doneUpgText, pointsHead, mainUpg, mainUpgText);
         upgUI.forEach(u => scene.rmUI(...u));
+        scene.addUI(bgUI);
+        unspawner();
+        inTheMenus = true;
+        // restore init state
+        // and cleanup dependencies
+        car.x = 0;
+        car.y = 50;
+        crs.benzin = crsInit.benzin;
+        crs.rocket = crsInit.rocket;
+        waitDontTerrain = true;
+        scene.rm(car);
         mainMenu.show();
     }, styles: {
         idle: "#06d444",
         hover: "#04a133",
         click: "#026921"
     } });
-const mainUpgText = new TextUI({ scene, x: scene.width / 2, y: scene.height - 75 / 2, tx: "Home" });
+const mainUpgText = new TextUI({ scene, x: scene.width / 2, y: mainUpg.y + mainUpg.height / 2, tx: "Home" });
 function showUpg() {
     scene.addUI(upgMenuOuter, doneUpg, doneUpgText, mainUpg, mainUpgText);
     upgUI.forEach(u => scene.addUI(...u));
