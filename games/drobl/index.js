@@ -165,12 +165,13 @@ class SkeleEnt extends Entity {
 }
 const boxes = [];
 const deerEntities = [];
+var GlobalCullCeil = 20;
 function SpawnDeer(x) {
     for (let i = deerEntities.length - 1; i >= 0; i--) {
         if (!scene.has(deerEntities[i]))
             deerEntities.splice(i, 1);
     }
-    if (deerEntities.length >= 20) {
+    if (deerEntities.length >= GlobalCullCeil) {
         const oldestDeer = deerEntities.shift();
         if (oldestDeer) {
             scene.rm(oldestDeer);
@@ -185,6 +186,8 @@ function SpawnDeer(x) {
         render();
         if (deer.tags.has(OldDeerNameTag))
             DeerDrawing.beard(skeleton);
+        else if (deer.tags.has(TrumpDeerNameTag))
+            DeerDrawing.trump(skeleton);
         scene.ctx.restore();
     };
     const deer = new SkeleEnt(skeleton, x);
@@ -237,8 +240,11 @@ const DeerDrawing = {
         const h1 = skeleton.joints[1];
         const x1 = (h0.x + h1.x) / 2;
         const y1 = (h0.y + h1.y) / 2;
-        const x2 = x1;
-        const y2 = y1 + 10;
+        scene.ctx.save();
+        scene.color = "orange";
+        const s = 35;
+        scene.rectc(x1 - s / 2, y1 - (s / 2.5), s, s / 2.5);
+        scene.ctx.restore();
     }
 };
 function SpawnBox(x, y) {
@@ -500,9 +506,27 @@ window.addEventListener("keydown", (e) => {
             crs.dd = Number(s[1]);
         }
         else if (s[0] == "spawn") {
-            GlobalSpawnRate = Number(s[1]);
+            // constants
+            const gsr = {
+                slow: 10000,
+                med: 5000,
+                fast: 1000,
+                blitz: 100
+            };
+            GlobalSpawnRate = s[1] in gsr ? gsr[s[1]] : Number(s[1]);
             unspawner();
             spawn = spawner();
+        }
+        else if (s[0] == "cull") {
+            // constants
+            const gcc = {
+                low: 10,
+                some: 20,
+                many: 50,
+                huge: 100,
+                inf: 1000000
+            };
+            GlobalCullCeil = s[1] in gcc ? gcc[s[1]] : Number(s[1]);
         }
     }
 });
