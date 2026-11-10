@@ -462,7 +462,7 @@ Img.config.set("root", "assets");
 const carspr = new Img("car/2012toyotacamry.jpg");
 //SpawnDeer(200);
 //scene.add(car);
-var GlobalSpawnRate = 5000;
+var GlobalSpawnRate = 2500;
 const spawner = () => setInterval(() => SpawnDeer(car.x + random(-scene.width / 2 + 100, scene.width / 2 - 100)), GlobalSpawnRate);
 const unspawner = () => clearInterval(spawn);
 var spawn = spawner();
