@@ -190,9 +190,70 @@ function SpawnDeer(x: number) {
     scene.addMisc(skeleton); // draw and update the skeleton
     scene.add(deer); // include hitbox in entity collisions
     deer.tags.add(DeerNametag);
+    const br = skeleton.render.bind(skeleton);
+    skeleton.render = () => {
+        scene.ctx.save();
+        scene.ctx.translate(scene.goff.x, 0);
+        br();
+        if(deer.tags.has(OldDeerNameTag)) DeerDrawing.beard(skeleton);
+        scene.ctx.restore();
+    };
+    // possible special tag
+    const spawnRates = [
+        [10, OldDeerNameTag],
+        [5, TrumpDeerNameTag],
+        [3, CommieDeerNameTag],
+        [1, GermanDeerNameTag]
+    ] as const;
+    let found = false;
+    spawnRates.forEach(r => {
+        if(chance(r[0]) && !found) {
+            deer.tags.add(r[1]);
+            console.log("Deer spawned with special tag:", r[1].get())
+            return found = true;
+        }
+    });
     deerEntities.push(deer);
     return deer;
 }
+const DeerDrawing = {
+    beard: (skeleton: Skeleton) => {
+        // Choose joints that match the deer face/neck area.
+        // For this deer, the head cluster is at the front of the skeleton.
+        const head0 = skeleton.joints[0];
+        const head1 = skeleton.joints[1];
+        const neck0 = skeleton.joints[5]; // neck start
+        const neck1 = skeleton.joints[6]; // neck end
+        const x1 = (head0.x + head1.x) / 2;
+        const y1 = (head0.y + head1.y) / 2;
+        const x2 = (neck0.x + neck1.x) / 2;
+        const y2 = (neck0.y + neck1.y) / 2;
+        scene.ctx.save();
+        scene.ctx.strokeStyle = "#a5a5a5";
+        scene.ctx.lineWidth = 4;
+        scene.ctx.beginPath();
+        scene.ctx.moveTo(x1, y1);
+        scene.ctx.quadraticCurveTo(
+            x1 - 12, y1 + 10,
+            x2 - 4, y2 + 8
+        );
+        scene.ctx.moveTo(x1 + 2, y1);
+        scene.ctx.quadraticCurveTo(
+            x1 + 10, y1 + 12,
+            x2 + 4, y2 + 8
+        );
+        scene.ctx.stroke();
+        scene.ctx.restore();
+    },
+    trump: (skeleton: Skeleton) => {
+        const h0 = skeleton.joints[0];
+        const h1 = skeleton.joints[1];
+        const x1 = (h0.x + h1.x) / 2;
+        const y1 = (h0.y + h1.y) / 2;
+        const x2 = x1;
+        const y2 = y1 + 10;
+    }
+} as const;
 function SpawnBox(x: number, y?: number) {
     const skeleton = Box();
     const render = skeleton.render.bind(skeleton);
@@ -401,7 +462,8 @@ Img.config.set("root", "assets");
 const carspr = new Img("car/2012toyotacamry.jpg");
 //SpawnDeer(200);
 //scene.add(car);
-const spawner = () => setInterval(() => SpawnDeer(car.x + random(-scene.width / 2 + 100, scene.width / 2 - 100)), 5000);
+var GlobalSpawnRate = 5000;
+const spawner = () => setInterval(() => SpawnDeer(car.x + random(-scene.width / 2 + 100, scene.width / 2 - 100)), GlobalSpawnRate);
 const unspawner = () => clearInterval(spawn);
 var spawn = spawner();
 unspawner();
@@ -444,6 +506,10 @@ window.addEventListener("keydown", (e) => {
             crs.benzin = Number(s[1]);
         } else if(s[0] == "giveme") {
             crs.dd = Number(s[1]);
+        } else if(s[0] == "spawn") {
+            GlobalSpawnRate = Number(s[1]);
+            unspawner();
+            spawn = spawner();
         }
     }
 });
@@ -533,14 +599,24 @@ for(const [K, v] of Object.entries(upgMap)) {
 }
 const upgMenuOuter = new SceneUI({ scene, x: 0, y: 0, w: scene.width, h: scene.height, color: "#03552c" });
 const pointsHead = new KeyedTextUI<number>({ scene, change: (v) => `${v} Points`, x: scene.width / 2, y: 100 });
-const doneUpg = new ButtonUI({ scene, x: scene.width / 2 - 125, w: 250, h: 50, y: scene.height - 75, click: hideUpg, styles: {
+const doneUpg = new ButtonUI({ scene, x: scene.width / 2 - 125, w: 250, h: 50, y: scene.height - 150, click: hideUpg, styles: {
     idle: "#06d444",
     hover: "#04a133",
     click: "#026921"
 } });
-const doneUpgText = new TextUI({ scene, x: scene.width / 2, y: scene.height - 50, tx: "Done" });
+const doneUpgText = new TextUI({ scene, x: scene.width / 2, y: scene.height - 150 / 2, tx: "Done" });
+const mainUpg = new ButtonUI({ scene, x: scene.width / 2 - 125, w: 250, h: 50, y: scene.height - 75, click: () => {
+    scene.rmUI(upgMenuOuter, doneUpg, doneUpgText, pointsHead, mainUpg, mainUpgText);
+    upgUI.forEach(u => scene.rmUI(...u));
+    mainMenu.show();
+}, styles: {
+    idle: "#06d444",
+    hover: "#04a133",
+    click: "#026921"
+} });
+const mainUpgText = new TextUI({ scene, x: scene.width / 2, y: scene.height - 75 / 2, tx: "Home" });
 function showUpg() {
-    scene.addUI(upgMenuOuter, doneUpg, doneUpgText);
+    scene.addUI(upgMenuOuter, doneUpg, doneUpgText, mainUpg, mainUpgText);
     upgUI.forEach(u => scene.addUI(...u));
     pointsHead.val = crs.dd;
     scene.addUI(pointsHead);
@@ -548,7 +624,7 @@ function showUpg() {
     refreshUpgUI.forEach(r => r());
 }
 function hideUpg() {
-    scene.rmUI(upgMenuOuter, doneUpg, doneUpgText, pointsHead);
+    scene.rmUI(upgMenuOuter, doneUpg, doneUpgText, pointsHead, mainUpg, mainUpgText);
     upgUI.forEach(u => scene.rmUI(...u));
     spawn = spawner();
     inTheMenus = false;
@@ -743,16 +819,21 @@ const mainMenu = new ScreenUI(scene,
 scene.addUI(bgUI);
 mainMenu.show();
 var kopPg = 0;
+const kopAva = () => kopDeer.filter(x => !!x.kc);
 const changeKOPP = (dir: number) => {
     kopActive.hide();
     kopPg += dir;
-    kopPg = kopPg >= kopDeer.length ? 0 : kopPg;
-    const a = kopDeer[kopPg];
+    kopPg = kopPg >= kopAva().length ? 0 : kopPg;
+    if(kopAva().length == 0) {
+        kopActive = new ScreenUI(scene, new TextUI({ scene, x: scene.width / 2, y: scene.height / 2, tx: "No deer to show. Kill a deer to discover it!" }));
+        return kopActive.show();
+    }
+    const a = kopAva()[kopPg];
     kopActive = new ScreenUI(scene,
-        new ImgUI({ scene, img: Img.from("deer/" + a.thumb), x: scene.width / 2 - 350 / 2, y: scene.height / 2 - 200, w: 350, h: 350 }),
-        new TextUI({ scene, x: scene.width / 2, y: 200, tx: a.name }),
-        new TextUI({ scene, x: scene.width / 2, y: 250, tx: `Killcount: ${a.kc}` }),
-        new TextUI({ scene, x: scene.width / 2, y: scene.height - 200, tx: a.desc })
+        new ImgUI({ scene, img: Img.from("deer/" + a.thumb), x: scene.width / 2 - 150 / 2, y: scene.height / 2 - 50, w: 150, h: 150 }),
+        new TextUI({ scene, x: scene.width / 2, y: 100, tx: a.name }),
+        new TextUI({ scene, x: scene.width / 2, y: 150, tx: `Killcount: ${a.kc}` }),
+        new TextUI({ scene, x: scene.width / 2, y: scene.height - 150, tx: a.desc })
     );
     kopActive.show();
 };
@@ -774,9 +855,9 @@ const kopdr = (name: string) => {
 const kopDeer: KOPDeer[] = [
     { thumb: "placeholder.jpg", name: "Deer", desc: "Just a deer.", kc: 0 },
     { thumb: "placeholder.jpg", name: "Old Deer", desc: "Ancient, to say the least.", kc: 0 },
-    { thumb: "placeholder.png", name: "Trump Deer", desc: "The best deer. The very best.", kc: 0 },
-    { thumb: "placeholder.png", name: "Communist Deer", desc: "SPREAD THE WEALTH!", kc: 0 },
-    { thumb: "placeholder.png", name: "German Deer", desc: "Schlag mich? Nee. Ich schlag *dich*.", kc: 0 }
+    { thumb: "placeholder.jpg", name: "Trump Deer", desc: "The best deer. The very best.", kc: 0 },
+    { thumb: "placeholder.jpg", name: "Communist Deer", desc: "SPREAD THE WEALTH!", kc: 0 },
+    { thumb: "placeholder.jpg", name: "German Deer", desc: "Schlag mich? Nee. Ich schlag *dich*.", kc: 0 }
 ];
 if(Local.has("drobl-kc")) {
     const kc = JSON.parse(Local.get("drobl-kc") as string) as Record<string, number>;
