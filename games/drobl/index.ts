@@ -523,7 +523,7 @@ window.addEventListener("keydown", (e) => {
                 many: 50,
                 huge: 100,
                 inf: 1000000
-            };
+            } as const;
             GlobalCullCeil = s[1] in gcc ? gcc[s[1] as keyof typeof gcc] : Number(s[1]);
         }
     }
