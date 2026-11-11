@@ -188,6 +188,8 @@ function SpawnDeer(x) {
             DeerDrawing.beard(skeleton);
         else if (deer.tags.has(TrumpDeerNameTag))
             DeerDrawing.trump(skeleton);
+        else if (deer.tags.has(CommieDeerNameTag))
+            DeerDrawing.commie(skeleton);
         scene.ctx.restore();
     };
     const deer = new SkeleEnt(skeleton, x);
@@ -353,9 +355,16 @@ const car = new PlayableCharacter({ strength: 0.35, width: 85, height: 40, color
                 const slow = 2.5;
                 // only apply when existing
                 // velocity is positive
-                if (Math.sign(p.vx) == 1) {
+                // Math.sign(p.vx) == 1
+                // FIX: while existing approach
+                // was good, it doesn't consider
+                // the aftermath being negative
+                // (ie v could be 0.0001, which)
+                // (would cause a negative v)
+                const bf = -(slow / (crs.wedge + 1));
+                if (Math.sign(p.vx + bf) == 1) {
                     // divide by wedge + 1 to avoid NaN
-                    p.addForceX(-(slow / (crs.wedge + 1)));
+                    p.addForceX(bf);
                 }
                 // FIX: avoid creating new timeouts
                 // for already-hit elements
@@ -464,7 +473,8 @@ const carspr = new Img("car/2012toyotacamry.jpg");
 //SpawnDeer(200);
 //scene.add(car);
 var GlobalSpawnRate = 2500;
-const spawner = () => setInterval(() => SpawnDeer(car.x + random(-scene.width / 2 + 100, scene.width / 2 - 100)), GlobalSpawnRate);
+const GenericDeerSpawn = () => SpawnDeer(car.x + random(-scene.width / 2 + 100, scene.width / 2 - 100));
+const spawner = () => setInterval(GenericDeerSpawn, GlobalSpawnRate);
 const unspawner = () => clearInterval(spawn);
 var spawn = spawner();
 unspawner();
@@ -502,6 +512,7 @@ window.addEventListener("keydown", (e) => {
         if (h == "" || !h.length)
             return;
         const s = h.split(" ");
+        const co = (map, callCtor) => s[1] in map ? map[s[1]] : callCtor(s[1]);
         // numeric branch
         if (s[0] == "benzin") {
             crs.benzin = Number(s[1]);
@@ -509,28 +520,44 @@ window.addEventListener("keydown", (e) => {
         else if (s[0] == "giveme") {
             crs.dd = Number(s[1]);
         }
-        else if (s[0] == "spawn") {
-            // constants
-            const gsr = {
+        else if (s[0] == "rate") {
+            GlobalSpawnRate = co({
                 slow: 10000,
                 med: 5000,
                 fast: 1000,
                 blitz: 100
-            };
-            GlobalSpawnRate = s[1] in gsr ? gsr[s[1]] : Number(s[1]);
+            }, Number);
             unspawner();
             spawn = spawner();
         }
         else if (s[0] == "cull") {
-            // constants
-            const gcc = {
+            GlobalCullCeil = co({
                 low: 10,
                 some: 20,
                 many: 50,
                 huge: 100,
                 inf: 1000000
-            };
-            GlobalCullCeil = s[1] in gcc ? gcc[s[1]] : Number(s[1]);
+            }, Number);
+        }
+        else if (s[0] == "sped") {
+            p.addForceX(Number(s[1]));
+        }
+        // tag branch
+        else if (s[0] == "summon") {
+            const tag = co({
+                deer: DeerNametag,
+                old: OldDeerNameTag,
+                trump: TrumpDeerNameTag,
+                commie: CommieDeerNameTag,
+                german: GermanDeerNameTag
+            }, () => new Tag(s.slice(1).join(" ")));
+            const spawn = GenericDeerSpawn();
+            if (!spawn.tags.has(tag))
+                spawn.tags.add(tag);
+        }
+        // void branch
+        else if (s[0] == "killmenow") {
+            crs.benzin = -10000;
         }
     }
 });

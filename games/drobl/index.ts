@@ -357,9 +357,16 @@ const car = new PlayableCharacter({ strength: 0.35, width: 85, height: 40, color
             const slow = 2.5;
             // only apply when existing
             // velocity is positive
-            if(Math.sign(p.vx) == 1) {
+            // Math.sign(p.vx) == 1
+            // FIX: while existing approach
+            // was good, it doesn't consider
+            // the aftermath being negative
+            // (ie v could be 0.0001, which)
+            // (would cause a negative v)
+            const bf = -(slow / (crs.wedge + 1));
+            if(Math.sign(p.vx + bf) == 1) {
                 // divide by wedge + 1 to avoid NaN
-                p.addForceX(-(slow / (crs.wedge + 1)));
+                p.addForceX(bf);
             }
             // FIX: avoid creating new timeouts
             // for already-hit elements
@@ -528,12 +535,24 @@ window.addEventListener("keydown", (e) => {
                 huge: 100,
                 inf: 1000000
             }, Number);
+        } else if(s[0] == "sped") {
+            p.addForceX(Number(s[1]));
         }
         // tag branch
         else if(s[0] == "summon") {
-            const tag = new Tag(s[1]);
+            const tag = co({
+                deer: DeerNametag,
+                old: OldDeerNameTag,
+                trump: TrumpDeerNameTag,
+                commie: CommieDeerNameTag,
+                german: GermanDeerNameTag
+            }, () => new Tag(s.slice(1).join(" ")));
             const spawn = GenericDeerSpawn();
             if(!spawn.tags.has(tag)) spawn.tags.add(tag);
+        }
+        // void branch
+        else if(s[0] == "killmenow") {
+            crs.benzin = -10000;
         }
     }
 });
