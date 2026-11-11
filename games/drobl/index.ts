@@ -255,6 +255,21 @@ const DeerDrawing = {
     commie: (skeleton: Skeleton) => {
         skeleton.jc = "#9c0000";
         skeleton.bc = "#4e0000";
+    },
+    german: (skeleton: Skeleton) => {
+        const h0 = skeleton.joints[0];
+        const h1 = skeleton.joints[1];
+        const x1 = (h0.x + h1.x) / 2;
+        const y1 = (h0.y + h1.y) / 2;
+        scene.ctx.save();
+        scene.color = "green";
+        const bw = 15;
+        const bh = 10;
+        const uw = bw - 2.5;
+        const uh = 15;
+        scene.rectc(x1 - bw / 2, y1 - bh / 2, bw, bh);
+        scene.rectc(x1 - bw / 2 + uw / 2, y1 - bh - uh / 2, uw, uh);
+        scene.ctx.restore();
     }
 } as const;
 function SpawnBox(x: number, y?: number) {
