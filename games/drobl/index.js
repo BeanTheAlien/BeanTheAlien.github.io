@@ -366,6 +366,17 @@ const car = new PlayableCharacter({ strength: 0.35, width: 85, height: 40, color
                     // divide by wedge + 1 to avoid NaN
                     p.addForceX(bf);
                 }
+                else if (Math.sign(p.vx) == 1) {
+                    // make the vx zero
+                    // since the vx is positive
+                    p.vx = 0;
+                }
+                else if (Math.sign(p.vx) == -1) {
+                    // push backwards (backwards backwards)
+                    // (since vx is already negative)
+                    // (pushing by bf would increase speed)
+                    p.addForceX(-bf);
+                }
                 // FIX: avoid creating new timeouts
                 // for already-hit elements
                 setTimeout(() => {
