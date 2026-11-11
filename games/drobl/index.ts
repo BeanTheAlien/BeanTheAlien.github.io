@@ -1,4 +1,4 @@
-import { Bone, ButtonUI, chance, clamp, Color, Entity, FloorObject, Img, ImgUI, Joint, KeyedTextUI, Local, objIs, Perlin, PlayableCharacter, randItem, random, Scene, SceneUI, ScreenUI, Skeleton, Spawner, Tag, TextUI, Vector } from "../../phantom2d.js";
+import { Bone, ButtonUI, chance, clamp, Color, Constructor, Entity, FloorObject, Img, ImgUI, Joint, KeyedTextUI, Local, objIs, Perlin, PlayableCharacter, randItem, random, Scene, SceneUI, ScreenUI, Skeleton, Spawner, Tag, TextUI, Vector } from "../../phantom2d.js";
 const scene = new Scene({ canvas: "deer", w: 1000, h: 600, border: "2px solid red" });
 
 const sp = 20;
@@ -187,6 +187,7 @@ function SpawnDeer(x: number) {
         render();
         if(deer.tags.has(OldDeerNameTag)) DeerDrawing.beard(skeleton);
         else if(deer.tags.has(TrumpDeerNameTag)) DeerDrawing.trump(skeleton);
+        else if(deer.tags.has(CommieDeerNameTag)) DeerDrawing.commie(skeleton);
         scene.ctx.restore();
     };
     const deer = new SkeleEnt(skeleton, x);
@@ -200,13 +201,13 @@ function SpawnDeer(x: number) {
         [3, CommieDeerNameTag],
         [1, GermanDeerNameTag]
     ] as const;
-    let found = false;
-    spawnRates.forEach(r => {
-        if(chance(r[0]) && !found) {
+    spawnRates.some(r => {
+        if(chance(r[0])) {
             deer.tags.add(r[1]);
             console.log("Deer spawned with special tag:", r[1].get())
-            return found = true;
+            return true;
         }
+        return false;
     });
     deerEntities.push(deer);
     return deer;
@@ -250,6 +251,10 @@ const DeerDrawing = {
         const s = 35;
         scene.rectc(x1 - s / 2, y1 - (s / 2.5), s, s / 2.5);
         scene.ctx.restore();
+    },
+    commie: (skeleton: Skeleton) => {
+        skeleton.jc = "#9c0000";
+        skeleton.bc = "#4e0000";
     }
 } as const;
 function SpawnBox(x: number, y?: number) {
@@ -461,7 +466,8 @@ const carspr = new Img("car/2012toyotacamry.jpg");
 //SpawnDeer(200);
 //scene.add(car);
 var GlobalSpawnRate = 2500;
-const spawner = () => setInterval(() => SpawnDeer(car.x + random(-scene.width / 2 + 100, scene.width / 2 - 100)), GlobalSpawnRate);
+const GenericDeerSpawn = () => SpawnDeer(car.x + random(-scene.width / 2 + 100, scene.width / 2 - 100));
+const spawner = () => setInterval(GenericDeerSpawn, GlobalSpawnRate);
 const unspawner = () => clearInterval(spawn);
 var spawn = spawner();
 unspawner();
@@ -499,32 +505,35 @@ window.addEventListener("keydown", (e) => {
         const h = prompt("Enter Hack") ?? "";
         if(h == "" || !h.length) return;
         const s = h.split(" ");
+        const co = <T>(map: Readonly<Record<string, T>>, callCtor: (v: unknown) => T) => s[1] in map ? map[s[1]] : callCtor(s[1]);
         // numeric branch
         if(s[0] == "benzin") {
             crs.benzin = Number(s[1]);
         } else if(s[0] == "giveme") {
             crs.dd = Number(s[1]);
-        } else if(s[0] == "spawn") {
-            // constants
-            const gsr = {
+        } else if(s[0] == "rate") {
+            GlobalSpawnRate = co({
                 slow: 10000,
                 med: 5000,
                 fast: 1000,
                 blitz: 100
-            } as const;
-            GlobalSpawnRate = s[1] in gsr? gsr[s[1] as keyof typeof gsr] : Number(s[1]);
+            }, Number);
             unspawner();
             spawn = spawner();
         } else if(s[0] == "cull") {
-            // constants
-            const gcc = {
+            GlobalCullCeil = co({
                 low: 10,
                 some: 20,
                 many: 50,
                 huge: 100,
                 inf: 1000000
-            } as const;
-            GlobalCullCeil = s[1] in gcc ? gcc[s[1] as keyof typeof gcc] : Number(s[1]);
+            }, Number);
+        }
+        // tag branch
+        else if(s[0] == "summon") {
+            const tag = new Tag(s[1]);
+            const spawn = GenericDeerSpawn();
+            if(!spawn.tags.has(tag)) spawn.tags.add(tag);
         }
     }
 });

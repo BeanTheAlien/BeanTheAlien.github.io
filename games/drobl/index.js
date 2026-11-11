@@ -201,13 +201,13 @@ function SpawnDeer(x) {
         [3, CommieDeerNameTag],
         [1, GermanDeerNameTag]
     ];
-    let found = false;
-    spawnRates.forEach(r => {
-        if (chance(r[0]) && !found) {
+    spawnRates.some(r => {
+        if (chance(r[0])) {
             deer.tags.add(r[1]);
             console.log("Deer spawned with special tag:", r[1].get());
-            return found = true;
+            return true;
         }
+        return false;
     });
     deerEntities.push(deer);
     return deer;
@@ -245,6 +245,10 @@ const DeerDrawing = {
         const s = 35;
         scene.rectc(x1 - s / 2, y1 - (s / 2.5), s, s / 2.5);
         scene.ctx.restore();
+    },
+    commie: (skeleton) => {
+        skeleton.jc = "#9c0000";
+        skeleton.bc = "#4e0000";
     }
 };
 function SpawnBox(x, y) {
